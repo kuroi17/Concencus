@@ -3,7 +3,7 @@ import VoteWidget from "./VoteWidget";
 
 function ForumThread({ item }) {
   return (
-    <article className="soft-enter flex gap-3 border border-slate-200 bg-white px-3 py-3 transition-colors hover:border-slate-300 sm:px-4 sm:py-4">
+    <article className="soft-enter flex gap-3 rounded-[14px] border border-slate-200/80 bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-colors hover:border-slate-300 sm:px-4 sm:py-4">
       <VoteWidget baseScore={item.score} />
 
       <div className="min-w-0 flex-1">

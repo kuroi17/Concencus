@@ -55,7 +55,7 @@ function ForumBoard() {
               <button
                 key={filter.id}
                 type="button"
-                className={`inline-flex items-center gap-1 rounded px-2.5 py-1.5 text-sm transition-colors ${
+                className={`inline-flex items-center gap-1 rounded-[10px] px-2.5 py-1.5 text-sm transition-colors ${
                   filter.isActive
                     ? "bg-slate-200 text-slate-900"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -76,7 +76,7 @@ function ForumBoard() {
           <input
             type="text"
             placeholder="Search within channel..."
-            className="w-full border border-slate-300 bg-white py-1.5 pl-9 pr-3 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+            className="w-full rounded-[12px] border border-slate-300 bg-white py-1.5 pl-9 pr-3 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
           />
         </label>
       </div>

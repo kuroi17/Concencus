@@ -10,10 +10,10 @@ const rules = [
 function ForumInfoPanel() {
   return (
     <aside className="space-y-3" aria-label="Forum details">
-      <section className="border border-slate-200 bg-white p-4">
+      <section className="rounded-[14px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
         <button
           type="button"
-          className="w-full bg-[#7f1d1d] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#991b1b]"
+          className="w-full rounded-[12px] bg-[#7f1d1d] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#991b1b]"
         >
           Start Discussion
         </button>
@@ -35,7 +35,7 @@ function ForumInfoPanel() {
         </div>
       </section>
 
-      <section className="border border-slate-200 bg-white p-4">
+      <section className="rounded-[14px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
         <h3 className="m-0 border-b border-slate-200 pb-2 text-lg font-semibold text-slate-900">
           Posting Rules
         </h3>
@@ -46,7 +46,7 @@ function ForumInfoPanel() {
         </ol>
       </section>
 
-      <section className="border border-slate-200 bg-white p-4">
+      <section className="rounded-[14px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
         <h3 className="m-0 border-b border-slate-200 pb-2 text-lg font-semibold text-slate-900">
           Anonymous Mode
         </h3>

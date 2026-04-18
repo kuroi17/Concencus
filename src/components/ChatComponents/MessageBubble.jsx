@@ -4,7 +4,7 @@ function MessageBubble({ message }) {
   return (
     <div className={`flex gap-2 ${isOwn ? "justify-end" : "justify-start"}`}>
       {!isOwn && (
-        <div className="mt-1 h-8 w-8 shrink-0 rounded bg-slate-800 text-center text-xs font-semibold leading-8 text-white">
+        <div className="mt-1 h-8 w-8 shrink-0 rounded-[10px] bg-slate-800 text-center text-xs font-semibold leading-8 text-white">
           {message.avatar}
         </div>
       )}
@@ -19,8 +19,8 @@ function MessageBubble({ message }) {
         <div
           className={`mt-1 inline-block px-3 py-2 text-sm leading-relaxed ${
             isOwn
-              ? "bg-[#7f1d1d] text-white"
-              : "border border-slate-200 bg-white text-slate-800"
+              ? "rounded-[14px] bg-[#7f1d1d] text-white"
+              : "rounded-[14px] border border-slate-200 bg-white text-slate-800"
           }`}
         >
           {message.text}
@@ -28,7 +28,7 @@ function MessageBubble({ message }) {
       </div>
 
       {isOwn && (
-        <div className="mt-1 h-8 w-8 shrink-0 rounded bg-slate-700 text-center text-xs font-semibold leading-8 text-white">
+        <div className="mt-1 h-8 w-8 shrink-0 rounded-[10px] bg-slate-700 text-center text-xs font-semibold leading-8 text-white">
           {message.avatar}
         </div>
       )}

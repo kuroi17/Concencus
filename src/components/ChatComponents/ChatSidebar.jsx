@@ -25,7 +25,7 @@ function ChatSidebar() {
 
       <button
         type="button"
-        className="mt-4 flex w-full items-center justify-center gap-2 bg-[#7f1d1d] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#991b1b]"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-[12px] bg-[#7f1d1d] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#991b1b]"
       >
         <Plus size={15} />
         <span>New Resolution</span>
@@ -38,7 +38,7 @@ function ChatSidebar() {
             <button
               key={item.label}
               type="button"
-              className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100"
+              className="flex w-full items-center gap-2 rounded-[10px] px-2 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100"
             >
               <Icon size={14} className="text-slate-500" />
               <span>{item.label}</span>
