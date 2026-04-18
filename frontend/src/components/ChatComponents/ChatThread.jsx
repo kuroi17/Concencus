@@ -1,77 +1,125 @@
-import { Users } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { CircleOff, Wifi, WifiOff } from "lucide-react";
 import MessageBubble from "./MessageBubble";
 import MessageComposer from "./MessageComposer";
 
-const messages = [
-  {
-    id: "m-01",
-    sender: "Prof. M. Vance",
-    time: "09:15 AM",
-    type: "received",
-    avatar: "MV",
-    text: "I reviewed the latest structural report from engineering. The foundation work required for the west wing is more extensive than projected in the baseline budget.",
-  },
-  {
-    id: "m-02",
-    sender: "Dr. A. Sterling",
-    time: "10:02 AM",
-    type: "sent",
-    avatar: "AS",
-    text: "Understood. I will flag this for the Finance Committee and request the revised estimate before Thursday's plenary session.",
-  },
-  {
-    id: "m-03",
-    sender: "E. Chen",
-    time: "10:45 AM",
-    type: "received",
-    avatar: "EC",
-    text: "Any variance over 15% triggers the addendum process per statute 4.B. I can draft the preliminary notice this afternoon.",
-  },
-];
+function ConnectionBadge({ socketStatus }) {
+  if (socketStatus === "connected") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-[9px] border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
+        <Wifi size={12} />
+        Live
+      </span>
+    );
+  }
 
-function ChatThread() {
+  if (socketStatus === "connecting") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-[9px] border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+        <CircleOff size={12} />
+        Connecting
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded-[9px] border border-slate-300 bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+      <WifiOff size={12} />
+      Offline
+    </span>
+  );
+}
+
+function ChatThread({
+  conversation,
+  messages,
+  currentUserId,
+  isLoadingMessages,
+  messagesError,
+  socketStatus,
+  onSendMessage,
+  isOpeningConversation,
+}) {
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (!listRef.current) return;
+
+    listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [messages, conversation?.id]);
+
+  if (!conversation) {
+    return (
+      <section className="space-y-4" aria-label="Chat thread">
+        <header className="soft-enter border-b border-slate-200 pb-3">
+          <h2 className="m-0 text-[1.7rem] font-semibold leading-tight text-slate-900 sm:text-[1.95rem] lg:text-[2.1rem]">
+            Direct Messages
+          </h2>
+          <p className="m-0 mt-1 text-sm text-slate-600">
+            Select an existing conversation or use the search bar to start one.
+          </p>
+        </header>
+
+        <div className="rounded-[12px] border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500">
+          No conversation selected.
+        </div>
+
+        <MessageComposer onSendMessage={onSendMessage} disabled />
+      </section>
+    );
+  }
+
   return (
     <section className="space-y-4" aria-label="Chat thread">
       <header className="soft-enter flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="m-0 text-[1.7rem] font-semibold leading-tight text-slate-900 sm:text-[1.95rem] lg:text-[2.1rem]">
-            # Block A: Infrastructure Planning
+            {conversation.otherUser?.full_name || "Conversation"}
           </h2>
           <p className="m-0 mt-1 text-sm text-slate-600">
-            Discussion thread regarding Q3 resource allocation for the physical
-            sciences annex renovation.
+            {conversation.otherUser?.campus_role
+              ? `${conversation.otherUser.campus_role} • ${conversation.otherUser?.sr_code || "No SR Code"}`
+              : "Private direct message"}
           </p>
         </div>
 
-        <span className="inline-flex items-center gap-1.5 rounded-[10px] border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
-          <Users size={13} />
-          14 Participants
-        </span>
+        <ConnectionBadge socketStatus={socketStatus} />
       </header>
 
-      <div className="space-y-4 py-1">
-        <p className="m-0 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-          Today, Oct 24
+      {messagesError && (
+        <p className="m-0 rounded-[10px] border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+          {messagesError}
         </p>
+      )}
+
+      <div
+        ref={listRef}
+        className="max-h-[55vh] space-y-4 overflow-y-auto rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3"
+      >
+        {isLoadingMessages || isOpeningConversation ? (
+          <p className="m-0 text-center text-sm text-slate-500">Loading conversation...</p>
+        ) : null}
+
+        {!isLoadingMessages && !isOpeningConversation && messages.length === 0 ? (
+          <p className="m-0 text-center text-sm text-slate-500">
+            No messages yet. Start the conversation below.
+          </p>
+        ) : null}
 
         {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
+          <MessageBubble
+            key={message.id || message.client_message_id}
+            message={message}
+            currentUserId={currentUserId}
+            otherUser={conversation.otherUser}
+          />
         ))}
-
-        <div className="ml-0 rounded-[12px] border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 sm:ml-12 sm:max-w-[420px]">
-          <p className="m-0 font-medium">West_Wing_Structural_Assess_v2.pdf</p>
-          <p className="m-0 mt-0.5 text-xs text-slate-500">
-            4.2 MB • Uploaded 09:15 AM
-          </p>
-        </div>
-
-        <p className="m-0 text-sm italic text-slate-500">
-          Dr. A. Sterling pinned West_Wing_Structural_Assess_v2.pdf to this
-          channel.
-        </p>
       </div>
 
-      <MessageComposer />
+      <MessageComposer
+        onSendMessage={onSendMessage}
+        disabled={socketStatus !== "connected" || isOpeningConversation}
+      />
     </section>
   );
 }

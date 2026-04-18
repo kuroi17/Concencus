@@ -100,7 +100,7 @@ function App() {
       <Route
         path="/chat"
         element={
-          <ProtectedRoute isAllowed={isAuthorized}>
+          <ProtectedRoute isAllowed={Boolean(session)}>
             <ChatPage />
           </ProtectedRoute>
         }
