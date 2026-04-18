@@ -1,32 +1,32 @@
-import Header from '../common/Header'
+import AnnouncementChannelTabs from "../components/AnnouncementComponents/AnnouncementChannelTabs";
+import AnnouncementSidebar from "../components/AnnouncementComponents/AnnouncementSidebar";
+import Header from "../common/Header";
 
 function AnnouncementPage() {
   return (
-    <div className="grid min-h-screen grid-cols-1 gap-4 bg-gradient-to-b from-[#f8f9fb] to-[#f2f4f7] p-3 sm:p-4 lg:grid-cols-[230px_1fr] lg:p-6">
-      <aside
-        className="min-h-[72px] rounded-[18px] bg-white px-[18px] py-[22px] font-medium text-slate-600 shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
-        aria-label="Sidebar"
-      >
-        <span>Sidebar</span>
-      </aside>
+    <div className="min-h-screen bg-gradient-to-b from-[#f8f9fb] to-[#f2f4f7] p-3 sm:p-4 lg:p-6">
+      <div className="mx-auto grid max-w-[1500px] grid-cols-1 gap-4 xl:grid-cols-[280px_1fr]">
+        <AnnouncementSidebar />
 
-      <div className="flex flex-col gap-4">
-        <Header />
+        <div className="flex flex-col gap-4">
+          <Header />
 
-        <main
-          className="flex-1 rounded-[18px] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
-          role="main"
-        >
-          <section className="min-h-[280px] rounded-[14px] bg-[#fbfcff] p-5">
-            <h2 className="m-0 text-[1.6rem] font-semibold">Announcement Page</h2>
-            <p className="mt-[10px] leading-relaxed text-[#333333]">
-              Minimal placeholder for announcements, events, and school updates.
-            </p>
-          </section>
-        </main>
+          <main
+            className="flex-1 rounded-[18px] bg-white p-4 shadow-[0_14px_30px_rgba(15,23,42,0.08)] sm:p-5"
+            role="main"
+          >
+            <section className="flex min-h-[540px] flex-col gap-4 rounded-[14px] bg-[#f7f9fd] p-4 sm:p-5">
+              <AnnouncementChannelTabs />
+
+              <div className="flex min-h-[280px] flex-1 items-center justify-center rounded-[14px] border border-dashed border-slate-300 bg-white px-4 text-center text-sm text-slate-500">
+                Card board placeholder for announcement posts.
+              </div>
+            </section>
+          </main>
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default AnnouncementPage
+export default AnnouncementPage;
