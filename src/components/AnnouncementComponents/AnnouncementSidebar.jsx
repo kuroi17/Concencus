@@ -5,6 +5,7 @@ import {
   Megaphone,
   ShieldCheck,
 } from "lucide-react";
+import SidebarLogoutAction from "../../common/SidebarLogoutAction";
 
 const groupHierarchy = [
   {
@@ -24,7 +25,7 @@ const groupHierarchy = [
 function AnnouncementSidebar() {
   return (
     <aside
-      className="soft-enter border-b border-slate-200 px-1 pb-5 pt-1 sm:px-2 xl:sticky xl:top-6 xl:border-b-0 xl:border-r xl:pr-5"
+      className="soft-enter flex flex-col border-b border-slate-200 px-1 pb-5 pt-1 sm:px-2 xl:sticky xl:top-6 xl:min-h-[calc(100vh-3rem)] xl:border-b-0 xl:border-r xl:pr-5"
       aria-label="Announcement Sidebar"
     >
       <button
@@ -67,6 +68,10 @@ function AnnouncementSidebar() {
             </section>
           ))}
         </div>
+      </div>
+
+      <div className="mt-6 border-t border-slate-200 pt-4 xl:mt-auto">
+        <SidebarLogoutAction />
       </div>
     </aside>
   );

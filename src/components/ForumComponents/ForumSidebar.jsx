@@ -1,4 +1,5 @@
 import { Plus, Network, Users, BookMarked, Scale } from "lucide-react";
+import SidebarLogoutAction from "../../common/SidebarLogoutAction";
 
 const channels = [
   { label: "Organization", icon: Network },
@@ -10,7 +11,7 @@ const channels = [
 function ForumSidebar() {
   return (
     <aside
-      className="border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:border-b-0 lg:border-r"
+      className="flex flex-col border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:min-h-[calc(100vh-3rem)] lg:border-b-0 lg:border-r"
       aria-label="Forum sidebar"
     >
       <div className="border-b border-slate-200 pb-4">
@@ -45,6 +46,10 @@ function ForumSidebar() {
           );
         })}
       </nav>
+
+      <div className="mt-6 border-t border-slate-200 pt-4 lg:mt-auto">
+        <SidebarLogoutAction />
+      </div>
     </aside>
   );
 }

@@ -25,7 +25,7 @@ function ForumInfoPanel() {
           Community for curriculum concerns, governance feedback, and technical
           concerns for BS Computer Science.
         </p>
-        <div className="mt-3 flex items-center gap-3 text-sm text-slate-700">
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-700">
           <span className="inline-flex items-center gap-1.5">
             <Users size={14} /> 1,204 Members
           </span>

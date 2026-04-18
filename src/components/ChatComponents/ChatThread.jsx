@@ -34,7 +34,7 @@ function ChatThread() {
     <section className="space-y-4" aria-label="Chat thread">
       <header className="soft-enter flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="m-0 text-[2.1rem] font-semibold leading-tight text-slate-900">
+          <h2 className="m-0 text-[1.7rem] font-semibold leading-tight text-slate-900 sm:text-[1.95rem] lg:text-[2.1rem]">
             # Block A: Infrastructure Planning
           </h2>
           <p className="m-0 mt-1 text-sm text-slate-600">
@@ -58,7 +58,7 @@ function ChatThread() {
           <MessageBubble key={message.id} message={message} />
         ))}
 
-        <div className="ml-10 rounded-[12px] border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 sm:ml-12 sm:max-w-[420px]">
+        <div className="ml-0 rounded-[12px] border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 sm:ml-12 sm:max-w-[420px]">
           <p className="m-0 font-medium">West_Wing_Structural_Assess_v2.pdf</p>
           <p className="m-0 mt-0.5 text-xs text-slate-500">
             4.2 MB • Uploaded 09:15 AM

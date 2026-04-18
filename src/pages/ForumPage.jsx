@@ -12,12 +12,12 @@ function ForumPage() {
         <Header />
 
         <main className="flex-1 py-2" role="main">
-          <section className="space-y-4 border-t border-slate-200 pt-5">
+          <section className="space-y-4 border-t border-slate-200 pt-4 sm:pt-5">
             <header className="soft-enter">
               <p className="m-0 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
                 Undergraduate Programs
               </p>
-              <h2 className="m-0 mt-1 text-[2.55rem] font-semibold leading-tight text-slate-900">
+              <h2 className="m-0 mt-1 text-[1.9rem] font-semibold leading-tight text-slate-900 sm:text-[2.25rem] lg:text-[2.55rem]">
                 BS Computer Science
               </h2>
               <p className="m-0 mt-1 text-sm text-slate-600">

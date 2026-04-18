@@ -1,4 +1,5 @@
 import { Plus, Network, Users, BookMarked, Scale, Archive } from "lucide-react";
+import SidebarLogoutAction from "../../common/SidebarLogoutAction";
 
 const menuItems = [
   { label: "Organization", icon: Network },
@@ -11,7 +12,7 @@ const menuItems = [
 function ChatSidebar() {
   return (
     <aside
-      className="border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:border-b-0 lg:border-r"
+      className="flex flex-col border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:min-h-[calc(100vh-3rem)] lg:border-b-0 lg:border-r"
       aria-label="Chat sidebar"
     >
       <div className="border-b border-slate-200 pb-4">
@@ -52,6 +53,10 @@ function ChatSidebar() {
           Dr. A. Sterling
         </p>
         <p className="m-0 mt-0.5 text-xs text-slate-600">Chair, Block A</p>
+      </div>
+
+      <div className="mt-6 border-t border-slate-200 pt-4 lg:mt-auto">
+        <SidebarLogoutAction />
       </div>
     </aside>
   );

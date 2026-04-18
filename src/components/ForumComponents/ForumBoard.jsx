@@ -76,7 +76,7 @@ function ForumBoard() {
           <input
             type="text"
             placeholder="Search within channel..."
-            className="w-full rounded-[12px] border border-slate-300 bg-white py-1.5 pl-9 pr-3 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+            className="w-full rounded-[12px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
           />
         </label>
       </div>
