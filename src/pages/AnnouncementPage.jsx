@@ -1,4 +1,5 @@
 import AnnouncementChannelTabs from "../components/AnnouncementComponents/AnnouncementChannelTabs";
+import AnnouncementBoard from "../components/AnnouncementComponents/AnnouncementBoard";
 import AnnouncementSidebar from "../components/AnnouncementComponents/AnnouncementSidebar";
 import Header from "../common/Header";
 
@@ -17,10 +18,7 @@ function AnnouncementPage() {
           >
             <section className="flex min-h-[540px] flex-col gap-4 rounded-[14px] bg-[#f7f9fd] p-4 sm:p-5">
               <AnnouncementChannelTabs />
-
-              <div className="flex min-h-[280px] flex-1 items-center justify-center rounded-[14px] border border-dashed border-slate-300 bg-white px-4 text-center text-sm text-slate-500">
-                Card board placeholder for announcement posts.
-              </div>
+              <AnnouncementBoard />
             </section>
           </main>
         </div>
