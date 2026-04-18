@@ -1,4 +1,3 @@
-import AnnouncementChannelTabs from "../components/AnnouncementComponents/AnnouncementChannelTabs";
 import AnnouncementBoard from "../components/AnnouncementComponents/AnnouncementBoard";
 import AnnouncementSidebar from "../components/AnnouncementComponents/AnnouncementSidebar";
 import Header from "../common/Header";
@@ -14,7 +13,6 @@ function AnnouncementPage() {
 
           <main className="soft-enter flex-1 py-2 sm:py-3" role="main">
             <section className="flex min-h-[540px] flex-col gap-5 bg-transparent p-0">
-              <AnnouncementChannelTabs />
               <AnnouncementBoard />
             </section>
           </main>

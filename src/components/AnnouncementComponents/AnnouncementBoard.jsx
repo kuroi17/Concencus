@@ -97,13 +97,10 @@ const announcementItems = [
 function AnnouncementBoard() {
   return (
     <section className="soft-enter pb-2" aria-label="Announcement board">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between pb-4">
         <h2 className="m-0 text-base font-semibold text-slate-900 sm:text-lg">
           Announcement Board
         </h2>
-        <p className="m-0 text-xs font-medium uppercase tracking-[0.08em] text-slate-500">
-          Static Data
-        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:auto-rows-[108px] sm:grid-cols-8 xl:grid-cols-12">
