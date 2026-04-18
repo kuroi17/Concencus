@@ -24,7 +24,7 @@ const groupHierarchy = [
 function AnnouncementSidebar() {
   return (
     <aside
-      className="soft-enter rounded-[18px] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(15,23,42,0.08)] sm:px-5 xl:sticky xl:top-6"
+      className="soft-enter border-b border-slate-200 px-1 pb-5 pt-1 sm:px-2 xl:sticky xl:top-6 xl:border-b-0 xl:border-r xl:pr-5"
       aria-label="Announcement Sidebar"
     >
       <button
@@ -35,7 +35,7 @@ function AnnouncementSidebar() {
         <span>Post Announcement</span>
       </button>
 
-      <div className="mt-5 rounded-[12px] border border-slate-200/80 bg-[#fbfcff] p-3.5">
+      <div className="mt-5 border-t border-slate-200 pt-4">
         <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
           <FolderTree size={16} />
           <span>Group Hierarchy</span>

@@ -12,7 +12,7 @@ const navActiveClass = 'bg-slate-100 text-slate-900'
 
 function Header() {
   return (
-    <header className="flex flex-col items-start justify-between gap-4 rounded-[18px] bg-white px-5 py-4 shadow-[0_14px_30px_rgba(15,23,42,0.08)] md:flex-row md:items-center">
+    <header className="flex flex-col items-start justify-between gap-4 border-b border-slate-200/90 px-1 pb-3 pt-1 md:flex-row md:items-center md:pb-4">
       <h1 className="m-0 text-[1.35rem] font-semibold sm:text-[1.65rem]">Concensus</h1>
 
       <nav className="flex flex-wrap items-center gap-2" aria-label="Primary Navigation">
