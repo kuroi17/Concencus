@@ -23,7 +23,7 @@ const channels = [
 
 function AnnouncementChannelTabs() {
   return (
-    <section className="rounded-[14px] border border-slate-200 bg-[#fbfcff] p-4 sm:p-5">
+    <section className="soft-enter rounded-[14px] border border-slate-200 bg-[#fbfcff] p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="m-0 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">

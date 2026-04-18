@@ -24,7 +24,7 @@ const groupHierarchy = [
 function AnnouncementSidebar() {
   return (
     <aside
-      className="rounded-[18px] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(15,23,42,0.08)] sm:px-5"
+      className="soft-enter rounded-[18px] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(15,23,42,0.08)] sm:px-5 xl:sticky xl:top-6"
       aria-label="Announcement Sidebar"
     >
       <button

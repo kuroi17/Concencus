@@ -10,6 +10,7 @@ const announcementItems = [
     tag: "Academic",
     priority: "High",
     layout: "feature",
+    delay: 30,
     excerpt:
       "Enrollment windows were adjusted to reduce queue congestion. Submission cutoffs and validation checkpoints are now aligned by department.",
   },
@@ -22,6 +23,7 @@ const announcementItems = [
     tag: "Operations",
     priority: "Notice",
     layout: "tall",
+    delay: 90,
     excerpt:
       "Access to Lab B systems may be intermittent from Saturday 8:00 PM to Sunday 4:00 AM while core switches are upgraded.",
   },
@@ -34,6 +36,7 @@ const announcementItems = [
     tag: "Admin",
     priority: "Action",
     layout: "standard",
+    delay: 130,
     excerpt:
       "Recognized organizations are requested to submit officer rosters and financial activity summaries for this term.",
   },
@@ -46,6 +49,7 @@ const announcementItems = [
     tag: "Events",
     priority: "Update",
     layout: "wide",
+    delay: 180,
     excerpt:
       "Townhall sessions will run in two waves per department to accommodate class schedules and open Q&A segments.",
   },
@@ -58,6 +62,7 @@ const announcementItems = [
     tag: "Policy",
     priority: "Notice",
     layout: "standard",
+    delay: 220,
     excerpt:
       "Extended seating zones and booking limits are active. Group room reservations now prioritize capstone project teams.",
   },
@@ -70,6 +75,7 @@ const announcementItems = [
     tag: "Scholarship",
     priority: "Action",
     layout: "tall",
+    delay: 260,
     excerpt:
       "Qualified applicants should check panel room assignments and arrive 20 minutes early with complete verification documents.",
   },
@@ -82,6 +88,7 @@ const announcementItems = [
     tag: "Safety",
     priority: "High",
     layout: "standard",
+    delay: 310,
     excerpt:
       "The coordinated drill includes evacuation mapping for lecture halls, laboratories, and support offices.",
   },
@@ -90,7 +97,7 @@ const announcementItems = [
 function AnnouncementBoard() {
   return (
     <section
-      className="rounded-[14px] border border-slate-200 bg-[#fbfcff] p-3 sm:p-4"
+        className="soft-enter rounded-[14px] border border-slate-200 bg-[#fbfcff] p-3 sm:p-4"
       aria-label="Announcement board"
     >
       <div className="mb-3 flex items-center justify-between">

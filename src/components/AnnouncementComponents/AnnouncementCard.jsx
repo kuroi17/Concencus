@@ -16,10 +16,12 @@ const cardSpanMap = {
 
 function AnnouncementCard({ item }) {
   const spanClass = cardSpanMap[item.layout] || cardSpanMap.standard;
+  const delay = item.delay || 0;
 
   return (
     <article
-      className={`relative overflow-hidden rounded-[14px] border border-slate-200/80 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-colors hover:border-slate-300 ${spanClass}`}
+      className={`soft-rise relative overflow-hidden rounded-[14px] border border-slate-200/80 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-colors hover:border-slate-300 ${spanClass}`}
+      style={{ animationDelay: `${delay}ms` }}
     >
       <div className="absolute right-3 top-3">
         <button
