@@ -5,6 +5,7 @@ import AnnouncementPage from "./pages/AnnouncementPage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import ForumPage from "./pages/ForumPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
 
 const GUEST_MODE_KEY = "concencus_guest_mode";
 
@@ -110,6 +111,14 @@ function App() {
         element={
           <ProtectedRoute isAllowed={isAuthorized}>
             <ForumPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute isAllowed={Boolean(session)}>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />
