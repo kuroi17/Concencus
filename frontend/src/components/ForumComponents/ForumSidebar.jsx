@@ -1,4 +1,4 @@
-import { Plus, Network, Users, BookMarked, Scale } from "lucide-react";
+import { Network, Users, BookMarked, Scale } from "lucide-react";
 import SidebarLogoutAction from "../../common/SidebarLogoutAction";
 
 const channels = [
@@ -6,12 +6,13 @@ const channels = [
   { label: "Committees", icon: Users },
   { label: "Policy Library", icon: BookMarked },
   { label: "Faculty Senate", icon: Scale },
+  { label: "Archives", icon: BookMarked },
 ];
 
 function ForumSidebar() {
   return (
     <aside
-      className="flex flex-col border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:min-h-[calc(100vh-3rem)] lg:border-b-0 lg:border-r"
+      className="flex flex-col border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:border-b-0 lg:border-r"
       aria-label="Forum sidebar"
     >
       <div className="border-b border-slate-200 pb-4">
@@ -23,13 +24,7 @@ function ForumSidebar() {
         </p>
       </div>
 
-      <button
-        type="button"
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-[12px] bg-[#7f1d1d] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#991b1b]"
-      >
-        <Plus size={15} />
-        <span>Create Topic</span>
-      </button>
+
 
       <nav className="mt-5 space-y-1" aria-label="Forum channels">
         {channels.map((channel) => {

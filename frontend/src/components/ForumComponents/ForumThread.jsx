@@ -2,17 +2,27 @@ import { MessageSquare, Share2, Bookmark } from "lucide-react";
 import VoteWidget from "./VoteWidget";
 
 function ForumThread({ item }) {
+  const authorName = item.is_anonymous ? "Anonymous" : "User";
+  const dateObj = new Date(item.created_at);
+  const timeAgo = !isNaN(dateObj) ? dateObj.toLocaleDateString() : "Just now";
+
+  // Convert score from big query safely
+  const score = item.score ? parseInt(item.score, 10) : 0;
+  const comments = item.comment_count ? parseInt(item.comment_count, 10) : 0;
+
   return (
     <article className="soft-enter flex gap-2.5 rounded-[14px] border border-slate-200/80 bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-colors hover:border-slate-300 sm:gap-3 sm:px-4 sm:py-4">
-      <VoteWidget baseScore={item.score} />
+      <VoteWidget postId={item.id} baseScore={score} />
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-slate-500">
-          <span>Posted by {item.author}</span>
+          <span className={item.is_anonymous ? "font-semibold text-slate-600 bg-slate-100 px-1 rounded" : ""}>
+            {item.is_anonymous ? "🙈 " : ""}Posted by {authorName}
+          </span>
           <span className="text-slate-400">•</span>
-          <span>{item.timeAgo}</span>
-          <span className="inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
-            {item.channel}
+          <span>{timeAgo}</span>
+          <span className="inline-flex rounded bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 text-[11px] font-medium">
+            {item.tag || "General"}
           </span>
         </div>
 
@@ -20,7 +30,7 @@ function ForumThread({ item }) {
           {item.title}
         </h3>
 
-        <p className="m-0 mt-2 text-sm leading-relaxed text-slate-700">
+        <p className="m-0 mt-2 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
           {item.excerpt}
         </p>
 
@@ -30,7 +40,7 @@ function ForumThread({ item }) {
             className="inline-flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors hover:bg-slate-100"
           >
             <MessageSquare size={14} />
-            <span>{item.comments} Comments</span>
+            <span>{comments} Comments</span>
           </button>
           <button
             type="button"
