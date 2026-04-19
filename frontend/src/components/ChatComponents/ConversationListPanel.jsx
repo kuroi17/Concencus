@@ -30,15 +30,6 @@ function ConversationListPanel({
 }) {
   return (
     <section className="space-y-4" aria-label="Conversation list panel">
-      <header className="soft-enter border-b border-slate-200 pb-3">
-        <h2 className="m-0 text-[1.7rem] font-semibold leading-tight text-slate-900 sm:text-[1.95rem] lg:text-[2.1rem]">
-          Direct Messages
-        </h2>
-        <p className="m-0 mt-1 text-sm text-slate-600">
-          Click a conversation to open the thread and send messages.
-        </p>
-      </header>
-
       {isLoadingConversations ? (
         <p className="m-0 rounded-[12px] border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
           Loading conversations...

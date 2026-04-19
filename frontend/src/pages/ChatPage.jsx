@@ -299,23 +299,23 @@ function ChatPage() {
   const hasSearchText = searchQuery.trim().length >= 2;
 
   const searchSlot = (
-    <div className="relative">
+    <div className="relative max-w-[760px]">
       <Search
-        size={16}
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        size={18}
+        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
       />
       <input
         type="text"
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
         placeholder="Search by name or SR code"
-        className="w-full rounded-[12px] border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition-colors focus:border-slate-400"
+        className="w-full rounded-[14px] border border-slate-200 bg-white py-3 pl-12 pr-4 text-sm text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.05)] outline-none transition-all focus:border-slate-400 focus:shadow-[0_10px_26px_rgba(15,23,42,0.09)]"
       />
 
       {hasSearchText && (
-        <div className="absolute left-0 top-[calc(100%+8px)] z-20 max-h-64 w-full overflow-y-auto rounded-[12px] border border-slate-200 bg-white p-1 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+        <div className="absolute left-0 top-[calc(100%+10px)] z-20 max-h-72 w-full overflow-y-auto rounded-[14px] border border-slate-200 bg-white p-1.5 shadow-[0_14px_32px_rgba(15,23,42,0.12)]">
           {isSearchingProfiles && (
-            <p className="m-0 px-2 py-2 text-xs text-slate-500">Searching...</p>
+            <p className="m-0 px-3 py-2 text-xs text-slate-500">Searching...</p>
           )}
 
           {!isSearchingProfiles &&
@@ -326,7 +326,7 @@ function ChatPage() {
                 onClick={() => handleSelectSearchResult(profile)}
                 className="flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left transition-colors hover:bg-slate-100"
               >
-                <div className="h-8 w-8 rounded-[9px] bg-slate-800 text-center text-xs font-semibold leading-8 text-white">
+                <div className="h-9 w-9 rounded-full bg-slate-800 text-center text-xs font-semibold leading-9 text-white">
                   {(profile.full_name || "?")
                     .split(" ")
                     .filter(Boolean)
@@ -347,7 +347,7 @@ function ChatPage() {
             ))}
 
           {!isSearchingProfiles && searchResults.length === 0 && (
-            <p className="m-0 px-2 py-2 text-xs text-slate-500">
+            <p className="m-0 px-3 py-2 text-xs text-slate-500">
               No matching profiles found.
             </p>
           )}
@@ -363,10 +363,10 @@ function ChatPage() {
       />
 
       <div className="flex flex-col gap-4">
-        <Header searchSlot={searchSlot} />
+        <Header title="Direct Messages" searchSlot={searchSlot} />
 
         <main className="flex-1 py-2" role="main">
-          <section className="border-t border-slate-200 pt-5">
+          <section className="pt-2">
             {conversationsError && (
               <p className="mb-3 rounded-[10px] border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
                 {conversationsError}
