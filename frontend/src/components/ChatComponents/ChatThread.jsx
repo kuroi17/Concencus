@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { CircleOff, Wifi, WifiOff } from "lucide-react";
+import { ArrowLeft, CircleOff, Wifi, WifiOff } from "lucide-react";
 import MessageBubble from "./MessageBubble";
 import MessageComposer from "./MessageComposer";
 
@@ -39,6 +39,7 @@ function ChatThread({
   socketStatus,
   onSendMessage,
   isOpeningConversation,
+  onBack,
 }) {
   const listRef = useRef(null);
 
@@ -63,8 +64,6 @@ function ChatThread({
         <div className="rounded-[12px] border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500">
           No conversation selected.
         </div>
-
-        <MessageComposer onSendMessage={onSendMessage} disabled />
       </section>
     );
   }
@@ -73,6 +72,17 @@ function ChatThread({
     <section className="space-y-4" aria-label="Chat thread">
       <header className="soft-enter flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="mb-2 inline-flex items-center gap-1 rounded-[8px] border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
+            >
+              <ArrowLeft size={12} />
+              Back to conversations
+            </button>
+          )}
+
           <h2 className="m-0 text-[1.7rem] font-semibold leading-tight text-slate-900 sm:text-[1.95rem] lg:text-[2.1rem]">
             {conversation.otherUser?.full_name || "Conversation"}
           </h2>
