@@ -1,111 +1,150 @@
-# Student Hub (React + Tailwind)
+# Concencus Workspace
 
-Centralized student web app starter for hackathon development.
+Centralized governance app workspace with realtime DM chat.
+
+Current architecture:
+
+- `frontend/`: React + Vite + Tailwind + Supabase + Socket.IO client
+- `backend/`: Node.js + Express + Socket.IO + Supabase admin client
+- `database/`: SQL migrations (chat schema, RLS, realtime)
 
 ## Tech Stack
 
 - React + Vite
 - Tailwind CSS
-- ESLint
+- Node.js + Express
+- Socket.IO (backend + client)
+- Supabase (auth, database, realtime)
 
-## Prerequisites (For Collaborators)
+## Prerequisites
 
-Required:
+- Node.js 20+ and npm
+- Git
+- Supabase project
+- Modern browser
 
-- Node.js 20+ (LTS recommended)
-	- npm is included automatically when you install Node.js.
-- A modern browser (Chrome, Edge, Firefox)
-
-Needed to clone the repo:
-
-- Git (or you can download ZIP from GitHub if Git is not installed)
-
-Optional but recommended:
-
-- VS Code
-
-Important:
-
-- You do not install React or Tailwind globally.
-- You do not need a Python `requirements.txt` for this project.
-- `npm install` reads `package.json` and installs all project dependencies automatically.
-
-Install Node.js first (if not yet installed):
-
-1. Download and install Node.js LTS from [nodejs.org](https://nodejs.org/).
-2. Open a new terminal and run:
+Verify Node/npm:
 
 ```bash
 node -v
 npm -v
 ```
 
-If both commands print versions, the machine is ready.
+## Quick Teammate Setup
 
-## First-Time Setup
+1. Clone repo and open project folder.
+2. Install dependencies for all app parts.
+3. Create `frontend/.env` and `backend/.env` from examples.
+4. Add Supabase values.
+5. Run SQL migrations in Supabase.
+6. Start frontend and backend together.
+
+### Install Dependencies
 
 ```bash
 npm install
+npm install --prefix frontend
+npm install --prefix backend
 ```
 
-## Run Locally
+Manual package install fallback (if needed):
+
+```bash
+npm install --prefix frontend @supabase/supabase-js socket.io-client react-router-dom lucide-react
+npm install --prefix backend express socket.io cors dotenv @supabase/supabase-js
+```
+
+## Environment Files
+
+Copy from examples.
+
+PowerShell:
+
+```powershell
+Copy-Item frontend/.env.example frontend/.env
+Copy-Item backend/.env.example backend/.env
+```
+
+Git Bash:
+
+```bash
+cp frontend/.env.example frontend/.env
+cp backend/.env.example backend/.env
+```
+
+`frontend/.env`
+
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_ANON_PUBLIC_KEY
+VITE_SOCKET_URL=http://localhost:3001
+```
+
+`backend/.env`
+
+```env
+PORT=3001
+FRONTEND_ORIGIN=http://localhost:5173
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+```
+
+Supabase mapping:
+
+- Project URL -> `VITE_SUPABASE_URL`, `SUPABASE_URL`
+- anon public key -> `VITE_SUPABASE_ANON_KEY`
+- service_role key -> `SUPABASE_SERVICE_ROLE_KEY`
+
+Important:
+
+- `SUPABASE_SERVICE_ROLE_KEY` is backend-only. Never expose it in frontend.
+
+## Supabase SQL Migration Order
+
+Run these files in Supabase SQL Editor:
+
+1. `database/migrations/001_create_user_profiles.sql`
+2. `database/migrations/002_create_dm_conversations.sql`
+3. `database/migrations/003_create_dm_messages.sql`
+4. `database/migrations/004_create_dm_read_receipts.sql`
+5. `database/migrations/010_enable_rls_and_helpers.sql`
+6. `database/migrations/011_policies_user_profiles.sql`
+7. `database/migrations/012_policies_dm_conversations.sql`
+8. `database/migrations/013_policies_dm_messages.sql`
+9. `database/migrations/014_policies_dm_read_receipts.sql`
+10. `database/migrations/020_enable_realtime_publication.sql`
+
+See `database/README.md` for details.
+
+## Run The App
+
+Run both frontend and backend:
+
+```bash
+npm run dev:all
+```
+
+Run separately:
 
 ```bash
 npm run dev
+npm run backend:dev
 ```
 
-## Other Useful Commands
+Endpoints:
+
+- Frontend: `http://localhost:5173`
+- Backend health: `http://localhost:3001/health`
+
+## Useful Commands
 
 ```bash
+npm run lint
 npm run build
 npm run preview
-npm run lint
+npm run backend:start
 ```
 
-## For Collaborators
+## Full Setup Doc
 
-For React/Node projects, you do not use `requirements.txt`.
-
-Dependency management is handled by:
-
-- `package.json` (declares dependencies)
-- `package-lock.json` (locks exact versions)
-
-When teammates clone the repo, they just run:
-
-```bash
-npm install
-```
-
-Then start the app:
-
-```bash
-npm run dev
-```
-
-Open the local URL shown in terminal (usually http://localhost:5173) in any modern browser.
-Google Chrome is optional, not required.
-
-## Quick Start (First Timers)
-
-1. Install Node.js LTS from [nodejs.org](https://nodejs.org/).
-2. Install Git (optional if you will use ZIP download).
-3. Clone this repository.
-4. Open terminal in the project folder.
-5. Run `npm install`.
-6. Run `npm run dev`.
-7. Open the local URL in browser.
-
-## Common Questions
-
-Do I need to install ReactJS separately?
-
-- No. React is installed from `package.json` when you run `npm install`.
-
-Do I need to install Tailwind CSS separately?
-
-- No. Tailwind is already configured in this repo and is installed by `npm install`.
-
-Do I need Google Chrome?
-
-- No. Any modern browser is fine.
+For complete onboarding instructions and team workflow, see `SETUP.md`.

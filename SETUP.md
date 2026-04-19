@@ -1,54 +1,161 @@
-# Student Hub (React + Tailwind)
+# Concencus Setup Guide
 
-Centralized student web app starter for hackathon development.
+This is the full onboarding guide for teammates who need to catch up with the current implementation.
 
-## Tech Stack
+Current app architecture:
 
-- React + Vite
-- Tailwind CSS
-- ESLint
+- `frontend/`: React + Vite + Tailwind + Supabase client + Socket.IO client
+- `backend/`: Node.js + Express + Socket.IO + Supabase admin client
+- `database/`: SQL migrations for chat schema, RLS, and realtime publication
 
-## Prerequisites
+## 1. Prerequisites
 
 Required:
 
 - Node.js 20+ (LTS recommended)
-- npm is included automatically when you install Node.js.
-- A modern browser (Chrome, Edge, Firefox)
+- npm (included with Node.js)
+- Git
+- Supabase account + project
+- Modern browser (Chrome, Edge, Firefox)
 
-Install Node.js first (if not yet installed):
-
-1. Download and install Node.js LTS from [nodejs.org](https://nodejs.org/).
-2. Open a new terminal and run:
+Verify Node.js and npm:
 
 ```bash
 node -v
 npm -v
 ```
 
-If both commands print versions, the machine is ready.
-
-## First-Time Setup
-
-Clone and install dependencies:
+## 2. Clone And Install Dependencies
 
 ```bash
 git clone <your-repo-url>
 cd Concencus
-npm install
 ```
 
-If you downloaded ZIP instead of git clone, just open terminal inside the project folder and run:
+Install all required packages for workspace, frontend, and backend:
 
 ```bash
 npm install
+npm install --prefix frontend
+npm install --prefix backend
 ```
 
-## Run Locally
+## 3. Required Packages (Reference)
+
+These are already declared in package files. Teammates usually only need the install commands above.
+
+Frontend key dependencies:
+
+- `@supabase/supabase-js`
+- `socket.io-client`
+- `react-router-dom`
+- `lucide-react`
+
+Backend key dependencies:
+
+- `express`
+- `socket.io`
+- `cors`
+- `dotenv`
+- `@supabase/supabase-js`
+
+If anyone needs to reinstall specific packages manually:
+
+```bash
+npm install --prefix frontend @supabase/supabase-js socket.io-client react-router-dom lucide-react
+npm install --prefix backend express socket.io cors dotenv @supabase/supabase-js
+```
+
+## 4. Environment Setup
+
+Create local env files from examples.
+
+PowerShell:
+
+```powershell
+Copy-Item frontend/.env.example frontend/.env
+Copy-Item backend/.env.example backend/.env
+```
+
+Git Bash:
+
+```bash
+cp frontend/.env.example frontend/.env
+cp backend/.env.example backend/.env
+```
+
+Fill these values:
+
+`frontend/.env`
+
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_ANON_PUBLIC_KEY
+VITE_SOCKET_URL=http://localhost:3001
+```
+
+`backend/.env`
+
+```env
+PORT=3001
+FRONTEND_ORIGIN=http://localhost:5173
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+```
+
+Supabase dashboard mapping:
+
+- Project Settings -> API -> Project URL -> `VITE_SUPABASE_URL`, `SUPABASE_URL`
+- Project Settings -> API -> anon public key -> `VITE_SUPABASE_ANON_KEY`
+- Project Settings -> API -> service_role key -> `SUPABASE_SERVICE_ROLE_KEY`
+
+Security rule:
+
+- Never put `SUPABASE_SERVICE_ROLE_KEY` in `frontend/.env`.
+
+## 5. Supabase SQL Setup (Database + RLS + Realtime)
+
+Open Supabase SQL Editor and run files in this exact order:
+
+1. `database/migrations/001_create_user_profiles.sql`
+2. `database/migrations/002_create_dm_conversations.sql`
+3. `database/migrations/003_create_dm_messages.sql`
+4. `database/migrations/004_create_dm_read_receipts.sql`
+5. `database/migrations/010_enable_rls_and_helpers.sql`
+6. `database/migrations/011_policies_user_profiles.sql`
+7. `database/migrations/012_policies_dm_conversations.sql`
+8. `database/migrations/013_policies_dm_messages.sql`
+9. `database/migrations/014_policies_dm_read_receipts.sql`
+10. `database/migrations/020_enable_realtime_publication.sql`
+
+Reference: `database/README.md`
+
+## 6. Run Frontend + Backend (Socket.IO)
+
+Run both servers together:
+
+```bash
+npm run dev:all
+```
+
+Or run separately:
 
 ```bash
 npm run dev
+npm run backend:dev
 ```
+
+Expected local endpoints:
+
+- Frontend: `http://localhost:5173`
+- Backend health: `http://localhost:3001/health`
+
+## 7. Validation Checklist
+
+1. Login works with Supabase auth.
+2. Search profile starts/opens DM conversation.
+3. Sending message works in one tab and receives in another account/tab (realtime).
+4. Backend health endpoint returns `{ ok: true }`.
 
 Optional checks:
 
@@ -57,118 +164,36 @@ npm run lint
 npm run build
 ```
 
-Open the local URL shown in terminal (usually http://localhost:5173) in any modern browser.
-
-## Quick Start (First Timers)
-
-1. Install Node.js LTS from [nodejs.org](https://nodejs.org/).
-2. Install Git (optional if you will use ZIP download).
-3. Clone this repository.
-4. Open terminal in the project folder.
-5. Run `npm install`.
-6. Run `npm run dev`.
-7. Open the local URL in browser.
-
-## Project Flow (Pages and Components)
-
-Routing is already configured.
-
-Ang gagalawin na lang ng bawat member ay yung assigned folder nila sa `src/components`:
-
-- `AnnouncementComponents`
-- `ChatComponents`
-- `ForumComponents`
-
-Current structure:
-
-```text
-src/
-|-- pages/
-|   |-- AnnouncementPage.jsx
-|   |-- ChatPage.jsx
-|   `-- ForumPage.jsx
-|
-`-- components/
-    |-- AnnouncementComponents/
-    |-- ChatComponents/
-    `-- ForumComponents/
-```
-
-How the flow works:
-
-1. `App.jsx` routes users to a page file inside `src/pages`.
-2. Each page file should render UI from its matching folder in `src/components`.
-3. Build feature UI inside the assigned components folder.
-
-Example mapping:
-
-- `AnnouncementPage.jsx` -> `components/AnnouncementComponents/`
-- `ChatPage.jsx` -> `components/ChatComponents/`
-- `ForumPage.jsx` -> `components/ForumComponents/`
-
-## What Each Member Should Edit
-
-Default rule for contributors:
-
-- Work only inside your assigned folder under `src/components`.
-- Do not change app-level routing in `src/App.jsx` unless the lead asks.
-- Keep page ownership clear.
-- Announcement member: `src/components/AnnouncementComponents/`
-- Chat member: `src/components/ChatComponents/`
-- Forum member: `src/components/ForumComponents/`
-
-If needed, page files in `src/pages` can be updated only to import and render components from the correct folder.
-
-## How To Start Contributing
+## 8. Team Contribution Flow
 
 Rules:
 
 - Do not push directly to main.
-- Always create and work on your own branch.
-- Keep branch names clear.
+- Create your own feature branch.
 
-Suggested branch format:
+Example:
 
 ```bash
 git checkout main
 git pull origin main
-git checkout -b <pageImplementation>-<yourName>
+git checkout -b <task>-<yourName>
 ```
 
-Examples:
-
-- `announcementpage-jane`
-- `chatpage-mike`
-- `forumpage-alex`
-
-After creating your branch, start coding.
-
-## How To Push Your Work
-
-Before pushing, sync with latest main first:
+Before push, sync latest main:
 
 ```bash
 git checkout main
 git pull origin main
-git checkout <pageImplementation>-<yourName>
+git checkout <task>-<yourName>
 git merge main
 ```
 
-Then commit and push your branch:
+Then push:
 
 ```bash
 git add .
-git commit -m "<your message>"
-git push -u origin <pageImplementation>-<yourName>
+git commit -m "<message>"
+git push -u origin <task>-<yourName>
 ```
 
-## Create Pull Request
-
-After push, open GitHub and create a Pull Request:
-
-1. Base branch: `main`
-2. Compare branch: your feature branch
-3. Add clear title and description
-4. Request review from teammates
-
-Once approved, the owner will merge your Pull Request.
+Create PR to `main` and request review.
