@@ -1,62 +1,76 @@
-import { Flame, Sparkles, TrendingUp, Search } from "lucide-react";
+import { Flame, Sparkles, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
 import ForumThread from "./ForumThread";
 
 const filters = [
-  { id: "hot", label: "Hot", icon: Flame, isActive: true },
-  { id: "new", label: "New", icon: Sparkles, isActive: false },
-  { id: "top", label: "Top", icon: TrendingUp, isActive: false },
-];
-
-const threadItems = [
-  {
-    id: "f-01",
-    author: "Prof. A. Turing",
-    timeAgo: "3 months ago",
-    channel: "Announcement",
-    title: "Welcome to the BSCS Forum. Mandatory reading before posting.",
-    excerpt:
-      "This space is governed by the university code of conduct. Ensure all technical questions are well-formed and include necessary context before requesting help.",
-    comments: 24,
-    score: 142,
-  },
-  {
-    id: "f-02",
-    author: "E. Lovelace",
-    timeAgo: "4 hours ago",
-    channel: "Curriculum",
-    title: "Clarification needed on CS301 prerequisite changes for Fall term",
-    excerpt:
-      "The recent faculty memo indicated a shift in math prerequisites for Data Structures. Can an advisor confirm if discrete math is now required before enrollment?",
-    comments: 12,
-    score: 45,
-  },
-  {
-    id: "f-03",
-    author: "Anonymous",
-    timeAgo: "6 hours ago",
-    channel: "Feedback",
-    title:
-      "Concerns regarding the grading matrix for final projects in Networks",
-    excerpt:
-      "Submitting this anonymously to avoid bias. The rubric provided last week seems to heavily penalize creative implementations that deviate from the standard approach.",
-    comments: 34,
-    score: 28,
-  },
+  { id: "hot", label: "Hot", icon: Flame },
+  { id: "new", label: "New", icon: Sparkles },
 ];
 
 function ForumBoard() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState("hot");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const fetchPosts = async () => {
+    setLoading(true);
+    // Fetching from the view we created to securely handle anonymous authors
+    let query = supabase.from("forum_posts_view").select("*");
+
+    if (activeFilter === "hot") {
+      query = query.order("score", { ascending: false }).order("created_at", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      setPosts(data);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchPosts();
+
+    // Setup realtime subscription
+    const subscription = supabase
+      .channel('forum_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'forum_posts' }, () => {
+        fetchPosts();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'forum_votes' }, () => {
+        fetchPosts();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [activeFilter]);
+
+  const filteredPosts = posts.filter(post => 
+    post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <section className="space-y-3" aria-label="Forum board">
       <div className="soft-enter flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-1.5">
           {filters.map((filter) => {
             const Icon = filter.icon;
+            const isActive = activeFilter === filter.id;
             return (
               <button
                 key={filter.id}
                 type="button"
+                onClick={() => setActiveFilter(filter.id)}
                 className={`inline-flex items-center gap-1 rounded-[10px] px-2.5 py-1.5 text-sm transition-colors ${
-                  filter.isActive
+                  isActive
                     ? "bg-slate-200 text-slate-900"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
@@ -75,6 +89,8 @@ function ForumBoard() {
           />
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search within channel..."
             className="w-full rounded-[12px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
           />
@@ -82,9 +98,15 @@ function ForumBoard() {
       </div>
 
       <div className="space-y-3">
-        {threadItems.map((item) => (
-          <ForumThread key={item.id} item={item} />
-        ))}
+        {loading ? (
+          <div className="py-8 text-center text-sm text-slate-500">Loading threads...</div>
+        ) : posts.length === 0 ? (
+          <div className="py-8 text-center text-sm text-slate-500">No discussions found yet. Be the first to start one!</div>
+        ) : filteredPosts.length > 0 ? (
+          filteredPosts.map((item) => <ForumThread key={item.id} item={item} />)
+        ) : (
+          <div className="py-8 text-center text-sm text-slate-500">No discussions found matching your search.</div>
+        )}
       </div>
     </section>
   );
