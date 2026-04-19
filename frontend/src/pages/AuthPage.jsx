@@ -11,6 +11,7 @@ function AuthPage({ onGuestMode }) {
   const [password, setPassword] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   const isLoginMode = mode === "login";
 
@@ -61,6 +62,25 @@ function AuthPage({ onGuestMode }) {
   const handleGuestMode = () => {
     if (onGuestMode) onGuestMode();
     navigate("/announcements", { replace: true });
+  };
+
+  const handleGoogleSignIn = async () => {
+    setFeedback("");
+    setIsGoogleSubmitting(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/announcements`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      setFeedback(error.message || "Google sign-in failed. Please try again.");
+      setIsGoogleSubmitting(false);
+    }
   };
 
   return (
@@ -127,6 +147,26 @@ function AuthPage({ onGuestMode }) {
             >
               Sign Up
             </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={isGoogleSubmitting || isSubmitting}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[12px] border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 bg-white text-xs font-bold text-slate-700">
+              G
+            </span>
+            {isGoogleSubmitting ? "Redirecting..." : "Continue with Google"}
+          </button>
+
+          <div className="mt-4 flex items-center gap-2">
+            <span className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs uppercase tracking-[0.08em] text-slate-500">
+              or
+            </span>
+            <span className="h-px flex-1 bg-slate-200" />
           </div>
 
           <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
