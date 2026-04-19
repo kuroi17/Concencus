@@ -12,6 +12,7 @@ Run these SQL files in Supabase SQL Editor in order:
 8. migrations/013_policies_dm_messages.sql
 9. migrations/014_policies_dm_read_receipts.sql
 10. migrations/020_enable_realtime_publication.sql
+11. migrations/030_create_user_follows.sql
 
 ## Notes
 
