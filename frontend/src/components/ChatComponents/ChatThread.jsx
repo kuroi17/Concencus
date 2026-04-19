@@ -107,10 +107,14 @@ function ChatThread({
         className="max-h-[55vh] space-y-4 overflow-y-auto rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3"
       >
         {isLoadingMessages || isOpeningConversation ? (
-          <p className="m-0 text-center text-sm text-slate-500">Loading conversation...</p>
+          <p className="m-0 text-center text-sm text-slate-500">
+            Loading conversation...
+          </p>
         ) : null}
 
-        {!isLoadingMessages && !isOpeningConversation && messages.length === 0 ? (
+        {!isLoadingMessages &&
+        !isOpeningConversation &&
+        messages.length === 0 ? (
           <p className="m-0 text-center text-sm text-slate-500">
             No messages yet. Start the conversation below.
           </p>

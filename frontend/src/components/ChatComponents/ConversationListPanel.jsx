@@ -87,7 +87,10 @@ function ConversationListPanel({
                   </p>
                 </div>
 
-                <MessageCircle size={18} className="mt-1 shrink-0 text-slate-400" />
+                <MessageCircle
+                  size={18}
+                  className="mt-1 shrink-0 text-slate-400"
+                />
               </div>
             </button>
           );

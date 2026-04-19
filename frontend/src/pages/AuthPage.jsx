@@ -140,9 +140,12 @@ function AuthPage({ onGuestMode }) {
     setIsResetRequesting(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth`,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${window.location.origin}/auth`,
+        },
+      );
 
       if (error) throw error;
 
@@ -294,7 +297,11 @@ function AuthPage({ onGuestMode }) {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
-              placeholder={isRecoveryMode ? "Enter your new password" : "Enter your password"}
+              placeholder={
+                isRecoveryMode
+                  ? "Enter your new password"
+                  : "Enter your password"
+              }
               className="w-full rounded-[12px] border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
             />
           </label>
@@ -324,7 +331,9 @@ function AuthPage({ onGuestMode }) {
                 className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 transition-colors hover:text-slate-900 disabled:opacity-70"
               >
                 <CircleHelp size={13} />
-                {isResetRequesting ? "Sending reset link..." : "Forgot password?"}
+                {isResetRequesting
+                  ? "Sending reset link..."
+                  : "Forgot password?"}
               </button>
             </div>
           )}
@@ -355,7 +364,9 @@ function AuthPage({ onGuestMode }) {
 
         {!isRecoveryMode && (
           <div className="mt-6 space-y-2 rounded-[14px] border border-slate-200 bg-slate-50 p-4">
-            <p className="m-0 text-sm font-semibold text-slate-800">Guest Mode</p>
+            <p className="m-0 text-sm font-semibold text-slate-800">
+              Guest Mode
+            </p>
             <p className="m-0 text-sm text-slate-600">
               Browse the platform using static demo access while preparing your
               account.
@@ -380,7 +391,7 @@ function AuthPage({ onGuestMode }) {
             Back to Sign In
           </button>
         )}
-    </section>
+      </section>
     </div>
   );
 }
