@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { supabase } from "./lib/supabaseClient";
 import { ChannelProvider } from "./context/ChannelContext";
-import AnnouncementPage from "./pages/AnnouncementPage.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
-import ForumPage from "./pages/ForumPage.jsx";
 import HubPage from "./pages/HubPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 
@@ -79,9 +78,7 @@ function App() {
       <Routes>
         <Route
           path="/"
-          element={
-            <Navigate to={isAuthorized ? "/hub" : "/auth"} replace />
-          }
+          element={<Navigate to={isAuthorized ? "/hub" : "/auth"} replace />}
         />
         <Route
           path="/auth"
@@ -103,14 +100,8 @@ function App() {
           }
         />
         {/* ── Legacy routes kept during transition ─────────────────── */}
-        <Route
-          path="/announcements"
-          element={<Navigate to="/hub" replace />}
-        />
-        <Route
-          path="/forum"
-          element={<Navigate to="/hub" replace />}
-        />
+        <Route path="/announcements" element={<Navigate to="/hub" replace />} />
+        <Route path="/forum" element={<Navigate to="/hub" replace />} />
         <Route
           path="/chat"
           element={
@@ -128,10 +119,16 @@ function App() {
           }
         />
         <Route
-          path="*"
+          path="/admin"
           element={
-            <Navigate to={isAuthorized ? "/hub" : "/auth"} replace />
+            <ProtectedRoute isAllowed={Boolean(session)}>
+              <AdminPage />
+            </ProtectedRoute>
           }
+        />
+        <Route
+          path="*"
+          element={<Navigate to={isAuthorized ? "/hub" : "/auth"} replace />}
         />
       </Routes>
     </ChannelProvider>

@@ -1,8 +1,9 @@
 import { NavLink } from "react-router-dom";
+import { useCurrentUserProfile } from "../hooks/useCurrentUserProfile";
 
-const navItems = [
-  { to: "/hub",     label: "Hub"     },
-  { to: "/chat",    label: "Chat"    },
+const defaultNavItems = [
+  { to: "/hub", label: "Hub" },
+  { to: "/chat", label: "Chat" },
   { to: "/profile", label: "Profile" },
 ];
 
@@ -11,6 +12,11 @@ const navBaseClass =
 const navActiveClass = "bg-slate-100 text-slate-900";
 
 function Header({ title = "Concensus", searchSlot = null }) {
+  const { isAdmin } = useCurrentUserProfile();
+  const navItems = isAdmin
+    ? [...defaultNavItems, { to: "/admin", label: "Admin" }]
+    : defaultNavItems;
+
   return (
     <header className="border-b border-slate-200/90 px-1 pb-3 pt-1 md:pb-4">
       <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
