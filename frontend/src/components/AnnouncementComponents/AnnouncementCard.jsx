@@ -14,9 +14,16 @@ const cardSpanMap = {
   standard: "sm:col-span-4 xl:col-span-3 sm:row-span-2",
 };
 
-function AnnouncementCard({ item }) {
-  const spanClass = cardSpanMap[item.layout] || cardSpanMap.standard;
-  const delay = item.delay || 0;
+function AnnouncementCard({ item, delay = 0 }) {
+  // The DB doesn't have a layout field — all cards use standard span.
+  // This can be extended later when layout is added to the announcements table.
+  const spanClass = "sm:col-span-4 xl:col-span-3 sm:row-span-2";
+
+  // Format created_at timestamp to a readable date
+  const dateObj = item.created_at ? new Date(item.created_at) : null;
+  const postedAt = dateObj && !isNaN(dateObj)
+    ? dateObj.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })
+    : "—";
 
   return (
     <article
@@ -48,17 +55,15 @@ function AnnouncementCard({ item }) {
       </p>
 
       <footer className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] font-medium text-slate-500">
-        <span className="inline-flex items-center gap-1.5">
-          <ShieldCheck size={13} />
-          {item.unit}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <UserRound size={13} />
-          {item.author}
-        </span>
+        {item.unit && (
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck size={13} />
+            {item.unit}
+          </span>
+        )}
         <span className="inline-flex items-center gap-1.5">
           <CalendarDays size={13} />
-          {item.postedAt}
+          {postedAt}
         </span>
       </footer>
 

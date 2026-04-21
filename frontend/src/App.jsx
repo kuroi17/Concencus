@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { supabase } from "./lib/supabaseClient";
+import { ChannelProvider } from "./context/ChannelContext";
 import AnnouncementPage from "./pages/AnnouncementPage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import ForumPage from "./pages/ForumPage.jsx";
+import HubPage from "./pages/HubPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 
 const GUEST_MODE_KEY = "concencus_guest_mode";
@@ -73,62 +75,66 @@ function App() {
   }
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <Navigate to={isAuthorized ? "/announcements" : "/auth"} replace />
-        }
-      />
-      <Route
-        path="/auth"
-        element={
-          session ? (
-            <Navigate to="/announcements" replace />
-          ) : (
-            <AuthPage onGuestMode={enableGuestMode} />
-          )
-        }
-      />
-      <Route
-        path="/announcements"
-        element={
-          <ProtectedRoute isAllowed={isAuthorized}>
-            <AnnouncementPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute isAllowed={Boolean(session)}>
-            <ChatPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/forum"
-        element={
-          <ProtectedRoute isAllowed={isAuthorized}>
-            <ForumPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute isAllowed={Boolean(session)}>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="*"
-        element={
-          <Navigate to={isAuthorized ? "/announcements" : "/auth"} replace />
-        }
-      />
-    </Routes>
+    <ChannelProvider>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Navigate to={isAuthorized ? "/hub" : "/auth"} replace />
+          }
+        />
+        <Route
+          path="/auth"
+          element={
+            session ? (
+              <Navigate to="/hub" replace />
+            ) : (
+              <AuthPage onGuestMode={enableGuestMode} />
+            )
+          }
+        />
+        {/* ── New unified hub ──────────────────────────────────────── */}
+        <Route
+          path="/hub"
+          element={
+            <ProtectedRoute isAllowed={isAuthorized}>
+              <HubPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* ── Legacy routes kept during transition ─────────────────── */}
+        <Route
+          path="/announcements"
+          element={<Navigate to="/hub" replace />}
+        />
+        <Route
+          path="/forum"
+          element={<Navigate to="/hub" replace />}
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute isAllowed={Boolean(session)}>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute isAllowed={Boolean(session)}>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <Navigate to={isAuthorized ? "/hub" : "/auth"} replace />
+          }
+        />
+      </Routes>
+    </ChannelProvider>
   );
 }
 

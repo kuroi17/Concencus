@@ -8,16 +8,20 @@ const filters = [
   { id: "new", label: "New", icon: Sparkles },
 ];
 
-function ForumBoard() {
+function ForumBoard({ channelId }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("hot");
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchPosts = async () => {
+    if (!channelId) return;
     setLoading(true);
-    // Fetching from the view we created to securely handle anonymous authors
-    let query = supabase.from("forum_posts_view").select("*");
+
+    let query = supabase
+      .from("forum_posts_view")
+      .select("*")
+      .eq("channel_id", channelId); // ← filter by selected channel
 
     if (activeFilter === "hot") {
       query = query.order("score", { ascending: false }).order("created_at", { ascending: false });
@@ -29,32 +33,32 @@ function ForumBoard() {
 
     if (!error && data) {
       setPosts(data);
+    } else if (error) {
+      console.error("ForumBoard fetch error:", error);
     }
     setLoading(false);
   };
 
+  // Re-fetch whenever channel or filter changes
   useEffect(() => {
+    setPosts([]); // clear stale posts instantly on channel switch
     fetchPosts();
 
-    // Setup realtime subscription
     const subscription = supabase
-      .channel('forum_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'forum_posts' }, () => {
-        fetchPosts();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'forum_votes' }, () => {
-        fetchPosts();
-      })
+      .channel(`forum_updates_${channelId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "forum_posts" }, fetchPosts)
+      .on("postgres_changes", { event: "*", schema: "public", table: "forum_votes" }, fetchPosts)
       .subscribe();
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [activeFilter]);
+  }, [channelId, activeFilter]);
 
-  const filteredPosts = posts.filter(post => 
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPosts = posts.filter(
+    (post) =>
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.excerpt?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -101,11 +105,15 @@ function ForumBoard() {
         {loading ? (
           <div className="py-8 text-center text-sm text-slate-500">Loading threads...</div>
         ) : posts.length === 0 ? (
-          <div className="py-8 text-center text-sm text-slate-500">No discussions found yet. Be the first to start one!</div>
+          <div className="py-8 text-center text-sm text-slate-500">
+            No discussions in this channel yet. Be the first to start one!
+          </div>
         ) : filteredPosts.length > 0 ? (
           filteredPosts.map((item) => <ForumThread key={item.id} item={item} />)
         ) : (
-          <div className="py-8 text-center text-sm text-slate-500">No discussions found matching your search.</div>
+          <div className="py-8 text-center text-sm text-slate-500">
+            No discussions match your search.
+          </div>
         )}
       </div>
     </section>

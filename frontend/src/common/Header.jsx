@@ -1,9 +1,9 @@
 import { NavLink } from "react-router-dom";
 
 const navItems = [
-  { to: "/announcements", label: "Announcement" },
-  { to: "/forum", label: "Forum" },
-  { to: "/chat", label: "Chat" },
+  { to: "/hub",     label: "Hub"     },
+  { to: "/chat",    label: "Chat"    },
+  { to: "/profile", label: "Profile" },
 ];
 
 const navBaseClass =
