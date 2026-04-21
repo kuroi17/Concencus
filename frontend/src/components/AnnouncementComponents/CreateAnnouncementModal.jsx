@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-const tags = ["General", "Academic", "Department", "Emergency"];
-const priorities = ["normal", "high", "urgent"];
+const tags = ["Academic", "Event", "Opportuniy", "Governance", "Maintenance",];
+const priorities = ["FYI/Notice", "Normal", "Important", "Urgent"];
 
 function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
   const [title, setTitle] = useState("");
