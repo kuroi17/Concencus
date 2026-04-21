@@ -113,8 +113,30 @@ Run these files in Supabase SQL Editor:
 8. `database/migrations/013_policies_dm_messages.sql`
 9. `database/migrations/014_policies_dm_read_receipts.sql`
 10. `database/migrations/020_enable_realtime_publication.sql`
+11. `database/migrations/030_create_user_follows.sql`
+12. `database/migrations/040_create_forum_tables.sql`
+13. `database/migrations/041_forum_rls_policies.sql`
+14. `database/migrations/050_create_announcements.sql`
+15. `database/migrations/051_announcements_rls_policies.sql`
+16. `database/migrations/052_user_profiles_admin_update_policy.sql`
 
 See `database/README.md` for details.
+
+## Admin Management
+
+- Admin users can access the in-app role management screen at `/admin`.
+- Announcement posting is visible and allowed for admin users only.
+- Non-admin users can still read announcements but cannot create/update/delete them.
+
+Bootstrap note:
+
+- If no admin exists yet, run a one-time SQL update in Supabase SQL Editor to promote your first admin account:
+
+```sql
+update public.user_profiles
+set campus_role = 'admin'
+where id = '<auth_user_id>';
+```
 
 ## Run The App
 

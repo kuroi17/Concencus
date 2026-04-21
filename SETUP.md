@@ -127,8 +127,35 @@ Open Supabase SQL Editor and run files in this exact order:
 8. `database/migrations/013_policies_dm_messages.sql`
 9. `database/migrations/014_policies_dm_read_receipts.sql`
 10. `database/migrations/020_enable_realtime_publication.sql`
+11. `database/migrations/030_create_user_follows.sql`
+12. `database/migrations/040_create_forum_tables.sql`
+13. `database/migrations/041_forum_rls_policies.sql`
+14. `database/migrations/050_create_announcements.sql`
+15. `database/migrations/051_announcements_rls_policies.sql`
+16. `database/migrations/052_user_profiles_admin_update_policy.sql`
 
 Reference: `database/README.md`
+
+### Admin role bootstrap (first admin only)
+
+If your project has no admin yet, promote one account manually once:
+
+```sql
+update public.user_profiles
+set campus_role = 'admin'
+where id = '<auth_user_id>';
+```
+
+After this bootstrap step:
+
+1. Sign in with that admin account.
+2. Open `/admin` in the app.
+3. Manage user roles in-app (student/faculty/admin) without manual SQL.
+
+Announcement permissions:
+
+- Admin only: create, update, delete announcements.
+- Everyone: read announcements.
 
 ## 6. Run Frontend + Backend (Socket.IO)
 
