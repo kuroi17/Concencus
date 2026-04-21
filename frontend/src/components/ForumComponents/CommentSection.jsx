@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import CommentItem from "./CommentItem";
 
@@ -9,7 +9,7 @@ function CommentSection({ postId }) {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     if (!postId) return;
     
     // We don't want to set loading to true on every realtime update to avoid flickering
@@ -23,10 +23,12 @@ function CommentSection({ postId }) {
       setComments(data);
     }
     setLoading(false);
-  };
+  }, [postId]);
 
   useEffect(() => {
-    fetchComments();
+    queueMicrotask(() => {
+      fetchComments();
+    });
 
     const subscription = supabase
       .channel(`forum_comments_${postId}`)
@@ -37,7 +39,7 @@ function CommentSection({ postId }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [postId]);
+  }, [postId, fetchComments]);
 
   const handleSubmitComment = async (parentId, content, isAnon) => {
     try {

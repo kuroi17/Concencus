@@ -4,11 +4,14 @@ import { supabase } from "../../lib/supabaseClient";
 import AnnouncementCard from "./AnnouncementCard";
 import CreateAnnouncementModal from "./CreateAnnouncementModal";
 import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
+import { uploadPublicImage } from "../../lib/storage";
+import AnnouncementDetailModal from "./AnnouncementDetailModal";
 
 function AnnouncementBoard({ channelId }) {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
   const [postError, setPostError] = useState("");
   const { user, isAdmin } = useCurrentUserProfile();
@@ -50,6 +53,15 @@ function AnnouncementBoard({ channelId }) {
     setPostError("");
 
     try {
+      let imageUrl = null;
+      if (announcementData?.imageFile) {
+        imageUrl = await uploadPublicImage({
+          bucket: "announcement-images",
+          pathPrefix: `${user.id}/${channelId}`,
+          file: announcementData.imageFile,
+        });
+      }
+
       const { error } = await supabase.from("announcements").insert([
         {
           channel_id: channelId,
@@ -59,6 +71,7 @@ function AnnouncementBoard({ channelId }) {
           tag: announcementData.tag,
           priority: announcementData.priority,
           unit: announcementData.unit || null,
+          image_url: imageUrl,
         },
       ]);
 
@@ -152,7 +165,12 @@ function AnnouncementBoard({ channelId }) {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:auto-rows-[108px] sm:grid-cols-8 xl:grid-cols-12">
           {announcements.map((item, i) => (
-            <AnnouncementCard key={item.id} item={item} delay={i * 50} />
+            <AnnouncementCard
+              key={item.id}
+              item={item}
+              delay={i * 50}
+              onOpen={() => setSelectedAnnouncement(item)}
+            />
           ))}
         </div>
       )}
@@ -161,6 +179,12 @@ function AnnouncementBoard({ channelId }) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateAnnouncement}
+      />
+
+      <AnnouncementDetailModal
+        isOpen={Boolean(selectedAnnouncement)}
+        item={selectedAnnouncement}
+        onClose={() => setSelectedAnnouncement(null)}
       />
     </section>
   );

@@ -6,6 +6,7 @@ import CreatePostModal from "../components/ForumComponents/CreatePostModal";
 import { useState } from "react";
 
 import { supabase } from "../lib/supabaseClient";
+import { uploadPublicImage } from "../lib/storage";
 
 function ForumPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,18 +27,39 @@ function ForumPage() {
         return;
       }
 
-      const { error } = await supabase.from("forum_posts").insert([
-        {
-          channel_id: channels[0].id,
-          author_id: userData.user.id,
-          title: postData.title,
-          excerpt: postData.excerpt,
-          tag: postData.tag,
-          is_anonymous: postData.isAnonymous,
-        },
-      ]);
+      const { data: insertedPost, error: insertError } = await supabase
+        .from("forum_posts")
+        .insert([
+          {
+            channel_id: channels[0].id,
+            author_id: userData.user.id,
+            title: postData.title,
+            excerpt: postData.excerpt,
+            tag: postData.tag,
+            is_anonymous: postData.isAnonymous,
+          },
+        ])
+        .select("id")
+        .single();
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      if (postData?.imageFile && insertedPost?.id) {
+        const imageUrl = await uploadPublicImage({
+          bucket: "forum-post-images",
+          pathPrefix: `${userData.user.id}/${channels[0].id}/${insertedPost.id}`,
+          file: postData.imageFile,
+        });
+
+        if (imageUrl) {
+          const { error: updateError } = await supabase
+            .from("forum_posts")
+            .update({ image_url: imageUrl })
+            .eq("id", insertedPost.id);
+
+          if (updateError) throw updateError;
+        }
+      }
       console.log("Post created successfully!");
     } catch (err) {
       console.error("Error creating post:", err);
