@@ -1,14 +1,24 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Megaphone } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import AnnouncementCard from "./AnnouncementCard";
+import CreateAnnouncementModal from "./CreateAnnouncementModal";
+import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
 
 function AnnouncementBoard({ channelId }) {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
+  const [postError, setPostError] = useState("");
+  const { user, isAdmin } = useCurrentUserProfile();
 
-  const fetchAnnouncements = async () => {
-    if (!channelId) return;
+  const fetchAnnouncements = useCallback(async () => {
+    if (!channelId) {
+      setAnnouncements([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     const { data, error } = await supabase
@@ -23,11 +33,55 @@ function AnnouncementBoard({ channelId }) {
       console.error("AnnouncementBoard fetch error:", error);
     }
     setLoading(false);
+  }, [channelId]);
+
+  const handleCreateAnnouncement = async (announcementData) => {
+    if (!channelId) {
+      setPostError("Please select a channel first.");
+      return false;
+    }
+
+    if (!user || !isAdmin) {
+      setPostError("Only admins can post announcements.");
+      return false;
+    }
+
+    setIsPosting(true);
+    setPostError("");
+
+    try {
+      const { error } = await supabase.from("announcements").insert([
+        {
+          channel_id: channelId,
+          author_id: user.id,
+          title: announcementData.title,
+          excerpt: announcementData.excerpt,
+          tag: announcementData.tag,
+          priority: announcementData.priority,
+          unit: announcementData.unit || null,
+        },
+      ]);
+
+      if (error) {
+        throw error;
+      }
+
+      setIsModalOpen(false);
+      await fetchAnnouncements();
+      return true;
+    } catch (error) {
+      setPostError(error.message || "Failed to post announcement.");
+      return false;
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   useEffect(() => {
-    setAnnouncements([]); // clear stale items on channel switch
-    fetchAnnouncements();
+    queueMicrotask(() => {
+      setAnnouncements([]); // clear stale items on channel switch
+      fetchAnnouncements();
+    });
 
     // Realtime: re-fetch if any announcement is inserted/updated/deleted
     const subscription = supabase
@@ -42,7 +96,7 @@ function AnnouncementBoard({ channelId }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [channelId]);
+  }, [channelId, fetchAnnouncements]);
 
   return (
     <section className="soft-enter pb-2" aria-label="Announcement board">
@@ -52,18 +106,25 @@ function AnnouncementBoard({ channelId }) {
           Announcement Board
         </h2>
 
-        {/* Post Announcement — static / admin-only for now */}
-        <button
-          type="button"
-          disabled
-          title="Only administrators can post announcements"
-          className="inline-flex cursor-not-allowed items-center gap-2 rounded-[12px] bg-[#7f1d1d] px-4 py-2 text-sm font-semibold text-white opacity-60 transition-opacity hover:opacity-70"
-          aria-label="Post Announcement (admin only)"
-        >
-          <Megaphone size={15} />
-          <span>Post Announcement</span>
-        </button>
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            disabled={isPosting}
+            className="inline-flex items-center gap-2 rounded-[12px] bg-[#7f1d1d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#991b1b] disabled:opacity-70"
+            aria-label="Post Announcement"
+          >
+            <Megaphone size={15} />
+            <span>{isPosting ? "Posting..." : "Post Announcement"}</span>
+          </button>
+        )}
       </div>
+
+      {postError && (
+        <p className="mb-3 rounded-[10px] border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+          {postError}
+        </p>
+      )}
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
       {loading ? (
@@ -80,8 +141,12 @@ function AnnouncementBoard({ channelId }) {
         <div className="flex min-h-[200px] items-center justify-center rounded-[14px] border border-dashed border-slate-300 bg-white/60 py-12 text-center">
           <div>
             <Megaphone size={28} className="mx-auto mb-3 text-slate-300" />
-            <p className="text-sm font-medium text-slate-500">No announcements yet for this channel.</p>
-            <p className="mt-1 text-xs text-slate-400">Check back later or contact your administrator.</p>
+            <p className="text-sm font-medium text-slate-500">
+              No announcements yet for this channel.
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Check back later or contact your administrator.
+            </p>
           </div>
         </div>
       ) : (
@@ -91,6 +156,12 @@ function AnnouncementBoard({ channelId }) {
           ))}
         </div>
       )}
+
+      <CreateAnnouncementModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateAnnouncement}
+      />
     </section>
   );
 }

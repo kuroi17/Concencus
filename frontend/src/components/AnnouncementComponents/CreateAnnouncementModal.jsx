@@ -1,0 +1,186 @@
+import { useState } from "react";
+import { X } from "lucide-react";
+
+const tags = ["General", "Academic", "Department", "Emergency"];
+const priorities = ["normal", "high", "urgent"];
+
+function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
+  const [title, setTitle] = useState("");
+  const [excerpt, setExcerpt] = useState("");
+  const [tag, setTag] = useState(tags[0]);
+  const [priority, setPriority] = useState(priorities[0]);
+  const [unit, setUnit] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!title.trim() || !excerpt.trim()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const wasSuccessful = await onSubmit({
+        title: title.trim(),
+        excerpt: excerpt.trim(),
+        tag,
+        priority,
+        unit: unit.trim(),
+      });
+
+      if (!wasSuccessful) {
+        return;
+      }
+
+      setTitle("");
+      setExcerpt("");
+      setTag(tags[0]);
+      setPriority(priorities[0]);
+      setUnit("");
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+      <div className="soft-enter w-full max-w-[540px] overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.1)]">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h2 className="text-lg font-bold text-slate-900">
+            Post Announcement
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 p-5">
+          <div>
+            <label
+              htmlFor="announcement-title"
+              className="mb-1.5 block text-sm font-semibold text-slate-700"
+            >
+              Title
+            </label>
+            <input
+              id="announcement-title"
+              type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Enter announcement title"
+              className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="announcement-excerpt"
+              className="mb-1.5 block text-sm font-semibold text-slate-700"
+            >
+              Message
+            </label>
+            <textarea
+              id="announcement-excerpt"
+              value={excerpt}
+              onChange={(event) => setExcerpt(event.target.value)}
+              placeholder="Write your announcement details"
+              rows={4}
+              className="w-full resize-none rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+              required
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="announcement-tag"
+                className="mb-1.5 block text-sm font-semibold text-slate-700"
+              >
+                Tag
+              </label>
+              <select
+                id="announcement-tag"
+                value={tag}
+                onChange={(event) => setTag(event.target.value)}
+                className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+              >
+                {tags.map((entry) => (
+                  <option key={entry} value={entry}>
+                    {entry}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="announcement-priority"
+                className="mb-1.5 block text-sm font-semibold text-slate-700"
+              >
+                Priority
+              </label>
+              <select
+                id="announcement-priority"
+                value={priority}
+                onChange={(event) => setPriority(event.target.value)}
+                className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+              >
+                {priorities.map((entry) => (
+                  <option key={entry} value={entry}>
+                    {entry}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="announcement-unit"
+              className="mb-1.5 block text-sm font-semibold text-slate-700"
+            >
+              Unit / Office (optional)
+            </label>
+            <input
+              id="announcement-unit"
+              type="text"
+              value={unit}
+              onChange={(event) => setUnit(event.target.value)}
+              placeholder="Example: CICS Student Affairs"
+              className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-[10px] bg-[#7f1d1d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#991b1b] disabled:opacity-70"
+            >
+              {isSubmitting ? "Posting..." : "Publish"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default CreateAnnouncementModal;

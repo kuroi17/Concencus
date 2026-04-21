@@ -13,6 +13,11 @@ Run these SQL files in Supabase SQL Editor in order:
 9. migrations/014_policies_dm_read_receipts.sql
 10. migrations/020_enable_realtime_publication.sql
 11. migrations/030_create_user_follows.sql
+12. migrations/040_create_forum_tables.sql
+13. migrations/041_forum_rls_policies.sql
+14. migrations/050_create_announcements.sql
+15. migrations/051_announcements_rls_policies.sql
+16. migrations/052_user_profiles_admin_update_policy.sql
 
 ## Notes
 
@@ -20,6 +25,8 @@ Run these SQL files in Supabase SQL Editor in order:
 - `participant_one < participant_two` is used to enforce one unique conversation per user pair.
 - `client_message_id` helps prevent duplicate message inserts on reconnect/retry.
 - Realtime publication is enabled for conversation and message tables.
+- Announcements are readable by all users, but only admins can insert/update/delete.
+- Admin users can update other users' `campus_role` through policy-backed updates.
 
 ## Quick policy check
 

@@ -2,7 +2,7 @@ import { Megaphone, MessageSquare } from "lucide-react";
 
 const TABS = [
   { id: "announcement", label: "Announcement", icon: Megaphone },
-  { id: "forum",        label: "Forum",      icon: MessageSquare },
+  { id: "forum", label: "Forum", icon: MessageSquare },
 ];
 
 /**
@@ -17,23 +17,23 @@ function TabSwitcher({ view, onChangeView }) {
       role="tablist"
       aria-label="Content view switcher"
     >
-      {TABS.map(({ id, label, icon: Icon }) => {
-        const isActive = view === id;
+      {TABS.map((tab) => {
+        const isActive = view === tab.id;
         return (
           <button
-            key={id}
+            key={tab.id}
             type="button"
             role="tab"
             aria-selected={isActive}
-            onClick={() => onChangeView(id)}
+            onClick={() => onChangeView(tab.id)}
             className={`inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold transition-all duration-150 ${
               isActive
                 ? "bg-slate-900 text-white shadow-sm"
                 : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
             }`}
           >
-            <Icon size={15} />
-            {label}
+            <tab.icon size={15} />
+            {tab.label}
           </button>
         );
       })}
