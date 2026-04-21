@@ -52,6 +52,11 @@ SELECT
         WHEN p.is_anonymous THEN NULL 
         ELSE p.author_id 
     END as display_author_id,
+    CASE 
+        WHEN p.is_anonymous THEN NULL 
+        ELSE up.full_name 
+    END as author_name,
     (SELECT COALESCE(SUM(v.vote_value), 0) FROM public.forum_votes v WHERE v.post_id = p.id) as score,
     (SELECT COUNT(*) FROM public.forum_comments c WHERE c.post_id = p.id) as comment_count
-FROM public.forum_posts p;
+FROM public.forum_posts p
+LEFT JOIN public.user_profiles up ON p.author_id = up.id;
