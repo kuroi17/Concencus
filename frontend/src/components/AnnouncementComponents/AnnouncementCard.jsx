@@ -4,15 +4,7 @@ import {
   Flag,
   ShieldCheck,
   Tag,
-  UserRound,
 } from "lucide-react";
-
-const cardSpanMap = {
-  feature: "sm:col-span-8 xl:col-span-6 sm:row-span-3",
-  wide: "sm:col-span-8 xl:col-span-6 sm:row-span-2",
-  tall: "sm:col-span-4 xl:col-span-3 sm:row-span-3",
-  standard: "sm:col-span-4 xl:col-span-3 sm:row-span-2",
-};
 
 function AnnouncementCard({ item, delay = 0 }) {
   // The DB doesn't have a layout field — all cards use standard span.
@@ -21,9 +13,14 @@ function AnnouncementCard({ item, delay = 0 }) {
 
   // Format created_at timestamp to a readable date
   const dateObj = item.created_at ? new Date(item.created_at) : null;
-  const postedAt = dateObj && !isNaN(dateObj)
-    ? dateObj.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })
-    : "—";
+  const postedAt =
+    dateObj && !isNaN(dateObj)
+      ? dateObj.toLocaleDateString("en-PH", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "—";
 
   return (
     <article

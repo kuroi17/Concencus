@@ -1,11 +1,15 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { ChannelContext } from "./channelContextStore";
 
 // ─── Fallback while channels are loading from Supabase ───────────────────────
-const FALLBACK_CHANNEL = { id: null, slug: "cics", name: "CICS", description: "College of Information and Computer Sciences", category: "colleges" };
-
-// ─── Context ─────────────────────────────────────────────────────────────────
-const ChannelContext = createContext(null);
+const FALLBACK_CHANNEL = {
+  id: null,
+  slug: "cics",
+  name: "CICS",
+  description: "College of Information and Computer Sciences",
+  category: "colleges",
+};
 
 export function ChannelProvider({ children }) {
   const [categories, setCategories] = useState([]);
@@ -47,14 +51,10 @@ export function ChannelProvider({ children }) {
   }, []);
 
   return (
-    <ChannelContext.Provider value={{ categories, currentChannel, setCurrentChannel, loadingChannels }}>
+    <ChannelContext.Provider
+      value={{ categories, currentChannel, setCurrentChannel, loadingChannels }}
+    >
       {children}
     </ChannelContext.Provider>
   );
-}
-
-export function useChannel() {
-  const ctx = useContext(ChannelContext);
-  if (!ctx) throw new Error("useChannel must be used within a ChannelProvider");
-  return ctx;
 }

@@ -6,7 +6,7 @@ import AnnouncementBoard from "../components/AnnouncementComponents/Announcement
 import ForumBoard from "../components/ForumComponents/ForumBoard";
 import ForumInfoPanel from "../components/ForumComponents/ForumInfoPanel";
 import CreatePostModal from "../components/ForumComponents/CreatePostModal";
-import { useChannel } from "../context/ChannelContext";
+import { useChannel } from "../context/useChannel";
 import { supabase } from "../lib/supabaseClient";
 
 function HubPage() {

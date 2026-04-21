@@ -1,5 +1,5 @@
 import { Flame, Sparkles, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import ForumThread from "./ForumThread";
 
@@ -14,8 +14,12 @@ function ForumBoard({ channelId }) {
   const [activeFilter, setActiveFilter] = useState("hot");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchPosts = async () => {
-    if (!channelId) return;
+  const fetchPosts = useCallback(async () => {
+    if (!channelId) {
+      setPosts([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     let query = supabase
@@ -24,7 +28,9 @@ function ForumBoard({ channelId }) {
       .eq("channel_id", channelId); // ← filter by selected channel
 
     if (activeFilter === "hot") {
-      query = query.order("score", { ascending: false }).order("created_at", { ascending: false });
+      query = query
+        .order("score", { ascending: false })
+        .order("created_at", { ascending: false });
     } else {
       query = query.order("created_at", { ascending: false });
     }
@@ -37,23 +43,33 @@ function ForumBoard({ channelId }) {
       console.error("ForumBoard fetch error:", error);
     }
     setLoading(false);
-  };
+  }, [activeFilter, channelId]);
 
   // Re-fetch whenever channel or filter changes
   useEffect(() => {
-    setPosts([]); // clear stale posts instantly on channel switch
-    fetchPosts();
+    queueMicrotask(() => {
+      setPosts([]); // clear stale posts instantly on channel switch
+      fetchPosts();
+    });
 
     const subscription = supabase
       .channel(`forum_updates_${channelId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "forum_posts" }, fetchPosts)
-      .on("postgres_changes", { event: "*", schema: "public", table: "forum_votes" }, fetchPosts)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "forum_posts" },
+        fetchPosts,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "forum_votes" },
+        fetchPosts,
+      )
       .subscribe();
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [channelId, activeFilter]);
+  }, [activeFilter, channelId, fetchPosts]);
 
   const filteredPosts = posts.filter(
     (post) =>
@@ -103,7 +119,9 @@ function ForumBoard({ channelId }) {
 
       <div className="space-y-3">
         {loading ? (
-          <div className="py-8 text-center text-sm text-slate-500">Loading threads...</div>
+          <div className="py-8 text-center text-sm text-slate-500">
+            Loading threads...
+          </div>
         ) : posts.length === 0 ? (
           <div className="py-8 text-center text-sm text-slate-500">
             No discussions in this channel yet. Be the first to start one!

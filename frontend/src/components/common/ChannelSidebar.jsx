@@ -1,28 +1,38 @@
 import { useState } from "react";
-import { ChevronDown, GraduationCap, BookOpen, LayoutGrid, Users } from "lucide-react";
-import { useChannel } from "../../context/ChannelContext";
+import {
+  ChevronDown,
+  GraduationCap,
+  BookOpen,
+  LayoutGrid,
+  Users,
+} from "lucide-react";
+import { useChannel } from "../../context/useChannel";
 import SidebarLogoutAction from "../../common/SidebarLogoutAction";
 
 const categoryIcons = {
-  colleges:      GraduationCap,
-  programs:      BookOpen,
-  blocks:        LayoutGrid,
+  colleges: GraduationCap,
+  programs: BookOpen,
+  blocks: LayoutGrid,
   organizations: Users,
 };
 
 const categoryAccent = {
-  colleges:      "text-violet-600",
-  programs:      "text-sky-600",
-  blocks:        "text-emerald-600",
+  colleges: "text-violet-600",
+  programs: "text-sky-600",
+  blocks: "text-emerald-600",
   organizations: "text-amber-600",
 };
 
 function ChannelSidebar() {
-  const { categories, currentChannel, setCurrentChannel, loadingChannels } = useChannel();
+  const { categories, currentChannel, setCurrentChannel, loadingChannels } =
+    useChannel();
 
   const [openCategories, setOpenCategories] = useState(() =>
     Object.fromEntries(
-      ["colleges", "programs", "blocks", "organizations"].map((id) => [id, true]),
+      ["colleges", "programs", "blocks", "organizations"].map((id) => [
+        id,
+        true,
+      ]),
     ),
   );
 
@@ -53,7 +63,10 @@ function ChannelSidebar() {
               <div key={i} className="space-y-1.5">
                 <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
                 {[...Array(2)].map((__, j) => (
-                  <div key={j} className="h-7 w-full animate-pulse rounded-[10px] bg-slate-100" />
+                  <div
+                    key={j}
+                    className="h-7 w-full animate-pulse rounded-[10px] bg-slate-100"
+                  />
                 ))}
               </div>
             ))}
@@ -73,7 +86,9 @@ function ChannelSidebar() {
                   className="flex w-full items-center justify-between rounded-[10px] px-2 py-1.5 text-left transition-colors hover:bg-slate-100"
                   aria-expanded={isOpen}
                 >
-                  <span className={`flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] ${accentCls}`}>
+                  <span
+                    className={`flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] ${accentCls}`}
+                  >
                     <Icon size={13} />
                     {category.label}
                   </span>
@@ -101,7 +116,9 @@ function ChannelSidebar() {
                             aria-current={isActive ? "page" : undefined}
                             title={ch.description}
                           >
-                            <span className="truncate font-medium">{ch.name}</span>
+                            <span className="truncate font-medium">
+                              {ch.name}
+                            </span>
                             {isActive && (
                               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/80" />
                             )}
