@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import CommentItem from "./CommentItem";
 
@@ -26,8 +26,9 @@ function CommentSection({ postId }) {
   }, [postId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchComments();
+    queueMicrotask(() => {
+      fetchComments();
+    });
 
     const subscription = supabase
       .channel(`forum_comments_${postId}`)
@@ -84,45 +85,43 @@ function CommentSection({ postId }) {
   }
 
   return (
-    <section className="bg-slate-50 rounded-[14px] border border-slate-200/80 p-3 sm:p-4 mt-2">
-      <form onSubmit={handleRootSubmit} className="mb-6 bg-white p-3 rounded-[12px] border border-slate-200 shadow-sm">
+    <section className="bg-slate-50 rounded-[12px] border border-slate-200/80 p-4 mt-3">
+      <form onSubmit={handleRootSubmit} className="mb-5 bg-white p-3 rounded-[10px] border border-slate-200 shadow-sm">
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Add a comment</p>
         <textarea
           value={rootReplyText}
           onChange={(e) => setRootReplyText(e.target.value)}
-          placeholder="Add a comment to this discussion..."
+          placeholder="What are your thoughts?"
           rows={3}
-          className="w-full resize-none rounded-[8px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+          className="w-full resize-none rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d] focus:bg-white"
           required
         />
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+          <label className="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none">
             <input
-              id={`anon-root-${postId}`}
               type="checkbox"
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-[#7f1d1d] focus:ring-[#7f1d1d]"
+              className="h-3 w-3 rounded border-slate-300 text-[#7f1d1d]"
             />
-            <label htmlFor={`anon-root-${postId}`} className="text-sm text-slate-600 cursor-pointer">
-              Post Anonymously
-            </label>
-          </div>
+            Post anonymously
+          </label>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-[10px] bg-[#7f1d1d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#991b1b] disabled:opacity-70"
+            className="rounded-[8px] bg-[#7f1d1d] px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#991b1b] disabled:opacity-70"
           >
-            {isSubmitting ? "Posting..." : "Comment"}
+            {isSubmitting ? "Posting…" : "Comment"}
           </button>
         </div>
       </form>
 
       {rootComments.length === 0 ? (
-        <div className="py-4 text-center text-sm text-slate-500">
+        <div className="py-4 text-center text-sm text-slate-400">
           No comments yet. Be the first to share your thoughts!
         </div>
       ) : (
-        <div className="space-y-2">
+        <div>
           {rootComments.map((comment) => (
             <CommentItem
               key={comment.id}

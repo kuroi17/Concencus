@@ -2,6 +2,7 @@ import { Flame, Sparkles, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import ForumThread from "./ForumThread";
+import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
 
 const filters = [
   { id: "hot", label: "Hot", icon: Flame },
@@ -13,6 +14,7 @@ function ForumBoard({ channelId }) {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("hot");
   const [searchQuery, setSearchQuery] = useState("");
+  const { isAdmin } = useCurrentUserProfile();
 
   const fetchPosts = useCallback(async () => {
     if (!channelId) {
@@ -127,7 +129,9 @@ function ForumBoard({ channelId }) {
             No discussions in this channel yet. Be the first to start one!
           </div>
         ) : filteredPosts.length > 0 ? (
-          filteredPosts.map((item) => <ForumThread key={item.id} item={item} />)
+          filteredPosts.map((item) => (
+            <ForumThread key={item.id} item={item} isAdmin={isAdmin} />
+          ))
         ) : (
           <div className="py-8 text-center text-sm text-slate-500">
             No discussions match your search.

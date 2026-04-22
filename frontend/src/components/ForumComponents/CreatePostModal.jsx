@@ -1,5 +1,7 @@
 import { X } from "lucide-react";
 import { useState } from "react";
+import ImageDropzone from "../common/ImageDropzone";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 const tags = ["General", "Announcement", "Curriculum", "Feedback"];
 
@@ -8,7 +10,20 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
   const [excerpt, setExcerpt] = useState("");
   const [tag, setTag] = useState(tags[0]);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const closeModal = () => {
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImageFile(null);
+    setImagePreviewUrl("");
+    onClose();
+  };
+
+  useEscapeKey(isOpen, closeModal);
 
   if (!isOpen) return null;
 
@@ -17,7 +32,7 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
     if (!title.trim() || !excerpt.trim()) return;
 
     setIsSubmitting(true);
-    await onSubmit({ title, excerpt, tag, isAnonymous });
+    await onSubmit({ title, excerpt, tag, isAnonymous, imageFile });
     setIsSubmitting(false);
 
     // Reset form
@@ -25,17 +40,30 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
     setExcerpt("");
     setTag(tags[0]);
     setIsAnonymous(false);
-    onClose();
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImageFile(null);
+    setImagePreviewUrl("");
+    closeModal();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Start discussion"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) closeModal();
+      }}
+    >
       <div className="soft-enter w-full max-w-[500px] overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.1)]">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <h2 className="text-lg font-bold text-slate-900">Start Discussion</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeModal}
             className="rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 p-1"
           >
             <X size={20} />
@@ -92,6 +120,24 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
               </select>
             </div>
 
+            <ImageDropzone
+              label="Photo (optional)"
+              description="Drag & drop an image here, or click to browse."
+              file={imageFile}
+              previewUrl={imagePreviewUrl}
+              disabled={isSubmitting}
+              onChangeFile={(file) => {
+                setImageFile(file);
+                if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+                setImagePreviewUrl(file ? URL.createObjectURL(file) : "");
+              }}
+              onClear={() => {
+                if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+                setImageFile(null);
+                setImagePreviewUrl("");
+              }}
+            />
+
             <div className="flex items-center gap-2">
               <input
                 id="anonymous"
@@ -109,7 +155,7 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
           <div className="mt-6 flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={closeModal}
               className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
             >
               Cancel

@@ -8,6 +8,7 @@ import ForumInfoPanel from "../components/ForumComponents/ForumInfoPanel";
 import CreatePostModal from "../components/ForumComponents/CreatePostModal";
 import { useChannel } from "../context/useChannel";
 import { supabase } from "../lib/supabaseClient";
+import { uploadPublicImage } from "../lib/storage";
 
 function HubPage() {
   const { currentChannel } = useChannel();
@@ -23,18 +24,40 @@ function HubPage() {
         return;
       }
 
-      const { error } = await supabase.from("forum_posts").insert([
-        {
-          channel_id: currentChannel.id, // UUID from the channels table
-          author_id: userData.user.id,
-          title: postData.title,
-          excerpt: postData.excerpt,
-          tag: postData.tag,
-          is_anonymous: postData.isAnonymous,
-        },
-      ]);
+      const { data: insertedPost, error: insertError } = await supabase
+        .from("forum_posts")
+        .insert([
+          {
+            channel_id: currentChannel.id, // UUID from the channels table
+            author_id: userData.user.id,
+            title: postData.title,
+            excerpt: postData.excerpt,
+            tag: postData.tag,
+            is_anonymous: postData.isAnonymous,
+          },
+        ])
+        .select("id")
+        .single();
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      if (postData?.imageFile && insertedPost?.id) {
+        const imageUrl = await uploadPublicImage({
+          bucket: "forum-post-images",
+          pathPrefix: `${userData.user.id}/${currentChannel.id}/${insertedPost.id}`,
+          file: postData.imageFile,
+        });
+
+        if (imageUrl) {
+          const { error: updateError } = await supabase
+            .from("forum_posts")
+            .update({ image_url: imageUrl })
+            .eq("id", insertedPost.id);
+
+          if (updateError) throw updateError;
+        }
+      }
+
       console.log("Post created successfully!");
       setIsModalOpen(false);
     } catch (err) {

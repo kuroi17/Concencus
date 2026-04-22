@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import ImageDropzone from "../common/ImageDropzone";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 const tags = ["General", "Academic", "Department", "Emergency"];
 const priorities = ["normal", "high", "urgent"];
@@ -10,7 +12,20 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
   const [tag, setTag] = useState(tags[0]);
   const [priority, setPriority] = useState(priorities[0]);
   const [unit, setUnit] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const closeModal = () => {
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImageFile(null);
+    setImagePreviewUrl("");
+    onClose();
+  };
+
+  useEscapeKey(isOpen, closeModal);
 
   if (!isOpen) return null;
 
@@ -30,6 +45,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
         tag,
         priority,
         unit: unit.trim(),
+        imageFile,
       });
 
       if (!wasSuccessful) {
@@ -41,22 +57,32 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
       setTag(tags[0]);
       setPriority(priorities[0]);
       setUnit("");
-      onClose();
+      setImageFile(null);
+      setImagePreviewUrl("");
+      closeModal();
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="soft-enter w-full max-w-[540px] overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.1)]">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Post announcement"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) closeModal();
+      }}
+    >
+      <div className="soft-enter w-full max-w-[500px] overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.1)]">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <h2 className="text-lg font-bold text-slate-900">
             Post Announcement
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeModal}
             className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
             <X size={20} />
@@ -161,10 +187,29 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
 
+          <ImageDropzone
+            label="Photo (optional)"
+            description="Drag & drop an image here, or click to browse."
+            file={imageFile}
+            previewUrl={imagePreviewUrl}
+            heightClassName="h-40"
+            disabled={isSubmitting}
+            onChangeFile={(file) => {
+              setImageFile(file);
+              if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+              setImagePreviewUrl(file ? URL.createObjectURL(file) : "");
+            }}
+            onClear={() => {
+              if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+              setImageFile(null);
+              setImagePreviewUrl("");
+            }}
+          />
+
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={closeModal}
               className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
             >
               Cancel
