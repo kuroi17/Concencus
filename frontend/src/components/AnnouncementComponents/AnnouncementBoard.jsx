@@ -4,6 +4,7 @@ import { supabase } from "../../lib/supabaseClient";
 import AnnouncementCard from "./AnnouncementCard";
 import CreateAnnouncementModal from "./CreateAnnouncementModal";
 import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
+import ViewAnnouncementModal from "./ViewAnnouncementModal";
 
 function AnnouncementBoard({ channelId }) {
   const [announcements, setAnnouncements] = useState([]);
@@ -12,6 +13,7 @@ function AnnouncementBoard({ channelId }) {
   const [isPosting, setIsPosting] = useState(false);
   const [postError, setPostError] = useState("");
   const { user, isAdmin } = useCurrentUserProfile();
+  const [selectedNotice, setSelectedNotice] = useState(null); // <- Idagdag ito
 
   const fetchAnnouncements = useCallback(async () => {
     if (!channelId) {
@@ -155,7 +157,12 @@ function AnnouncementBoard({ channelId }) {
           gap-5 px-4">
         
           {announcements.map((item, i) => (
-          <AnnouncementCard key={item.id} item={item} delay={i * 50} onOpen={() => console.log("Open")} />
+          <AnnouncementCard 
+              key={item.id} 
+              item={item} 
+              delay={i * 50} 
+              onOpen={() => setSelectedNotice(item)} 
+            />
         ))}
         </div>
       )}
@@ -164,6 +171,12 @@ function AnnouncementBoard({ channelId }) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateAnnouncement}
+      />
+
+      <ViewAnnouncementModal
+        isOpen={!!selectedNotice} 
+        onClose={() => setSelectedNotice(null)}
+        notice={selectedNotice}
       />
     </section>
   );

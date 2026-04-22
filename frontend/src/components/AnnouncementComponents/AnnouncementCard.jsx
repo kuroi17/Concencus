@@ -7,11 +7,10 @@ import {
   UserRound 
 } from "lucide-react";
 
-// Mga Priority Colors para mas maganda tingnan (Optional pero astig 'to)
+// Mga Priority Colors para mas maganda tingnan (To feel the urgency)
 const getPriorityStyle = (priorityText) => {
   if (!priorityText) return "bg-slate-100 text-slate-600 border-slate-200"; // Default
 
-  // Tinatanggal ang spaces sa gilid at ginagawang small letters lahat
   const p = priorityText.trim().toLowerCase();
 
   if (p.includes("urgent")) return "bg-red-100 text-red-700 border-red-200";
@@ -37,13 +36,11 @@ function AnnouncementCard({ item, delay = 0, onOpen }) {
     <button
       type="button"
       onClick={onOpen}
-      // 🚀 MAGIC 1: break-inside-avoid mb-4. Tinanggal ang spanClass at h-full para dynamic ang height!
       className="break-inside-avoid mb-4 soft-rise group flex flex-col relative w-full overflow-hidden rounded-[14px] border border-slate-200/80 bg-white text-left shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all hover:-translate-y-[1px] hover:border-slate-300 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7f1d1d]/50"
       style={{ animationDelay: `${delay}ms` }}
       aria-label={`Open announcement: ${item.title}`}
     >
       
-      {/* ── Ligtas na Image Section (Hindi nagalaw, perfect pa rin) ── */}
       {item.image_url && (
         <div className="relative h-[120px] w-full shrink-0 bg-slate-100">
           <img
@@ -60,7 +57,6 @@ function AnnouncementCard({ item, delay = 0, onOpen }) {
       <div className="p-4 flex flex-col w-full">
         
         <header className="flex flex-col gap-2.5">
-          {/* 🚀 MAGIC 2: Single-line Tag & Priority (flex-nowrap) */}
           <div className="flex flex-nowrap items-center gap-2 overflow-hidden">
             
             {/* TAG: Nilagyan ng shrink at truncate. Kung masikip, siya ang mapuputol nang may ellipsis (...) */}
