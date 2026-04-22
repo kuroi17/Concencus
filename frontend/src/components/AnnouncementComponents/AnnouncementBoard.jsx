@@ -15,7 +15,6 @@ function AnnouncementBoard({ channelId }) {
   const [isPosting, setIsPosting] = useState(false);
   const [postError, setPostError] = useState("");
   const { user, isAdmin } = useCurrentUserProfile();
-  const [selectedNotice, setSelectedNotice] = useState(null);
 
   const fetchAnnouncements = useCallback(async () => {
     if (!channelId) {
@@ -205,15 +204,15 @@ function AnnouncementBoard({ channelId }) {
           </div>
         </div>
       ) : (
-        <div className="mx-auto w-full max-w-4xl columns-1 sm:columns-2 lg:columns-3 gap-5 px-4">
+        <div className="mx-auto w-full max-w-4xl columns-1 gap-5 px-4 sm:columns-2 lg:columns-3">
           {announcements.map((item, i) => (
-          <AnnouncementCard 
-              key={item.id} 
-              item={item} 
-              delay={i * 50} 
-              onOpen={() => setSelectedNotice(item)} 
+            <AnnouncementCard
+              key={item.id}
+              item={item}
+              delay={i * 50}
+              onOpen={() => setSelectedAnnouncement(item)}
             />
-        ))}
+          ))}
         </div>
       )}
 

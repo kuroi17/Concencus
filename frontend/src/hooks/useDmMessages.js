@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 function sortByCreatedAt(items) {
@@ -45,6 +45,14 @@ export function useDmMessages(conversationId, socket) {
   const [messages, setMessages] = useState([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [messagesError, setMessagesError] = useState("");
+  const [reactions, setReactions] = useState([]);
+
+  const messageIds = useMemo(() => {
+    return messages
+      .map((m) => m.id)
+      .filter(Boolean)
+      .map(String);
+  }, [messages]);
 
   const loadMessages = useCallback(async () => {
     if (!conversationId) {
@@ -60,10 +68,9 @@ export function useDmMessages(conversationId, socket) {
       const { data, error } = await supabase
         .from("dm_messages")
         .select(
-          "id, conversation_id, sender_id, recipient_id, body, client_message_id, created_at",
+          "id, conversation_id, sender_id, recipient_id, body, client_message_id, created_at, deleted_at",
         )
         .eq("conversation_id", conversationId)
-        .is("deleted_at", null)
         .order("created_at", { ascending: true })
         .limit(150);
 
@@ -79,11 +86,52 @@ export function useDmMessages(conversationId, socket) {
     }
   }, [conversationId]);
 
+  const loadReactions = useCallback(async () => {
+    if (!messageIds.length) {
+      setReactions([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("dm_message_reactions")
+      .select("id, message_id, user_id, emoji, created_at")
+      .in("message_id", messageIds);
+
+    if (!error) {
+      setReactions(data || []);
+    }
+  }, [messageIds]);
+
   useEffect(() => {
     queueMicrotask(() => {
       loadMessages();
     });
   }, [loadMessages]);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      loadReactions();
+    });
+  }, [loadReactions]);
+
+  useEffect(() => {
+    if (!conversationId) return undefined;
+
+    const channel = supabase
+      .channel(`dm-reactions-${conversationId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "dm_message_reactions" },
+        () => {
+          loadReactions();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, loadReactions]);
 
   useEffect(() => {
     if (!conversationId || !socket) return undefined;
@@ -128,6 +176,81 @@ export function useDmMessages(conversationId, socket) {
     );
   }, []);
 
+  const deleteMessage = useCallback(async (messageId) => {
+    if (!messageId) return;
+    const { error } = await supabase
+      .from("dm_messages")
+      .update({
+        deleted_at: new Date().toISOString(),
+        body: "[deleted]",
+      })
+      .eq("id", messageId);
+
+    if (error) throw error;
+
+    setMessages((previous) =>
+      previous.map((item) =>
+        item.id === messageId
+          ? { ...item, deleted_at: new Date().toISOString(), body: "[deleted]" }
+          : item,
+      ),
+    );
+    setReactions((previous) =>
+      previous.filter((reaction) => reaction.message_id !== messageId),
+    );
+  }, []);
+
+  const toggleReaction = useCallback(async ({ messageId, emoji, currentUserId }) => {
+    if (!messageId || !emoji || !currentUserId) return;
+
+    const existing = reactions.find(
+      (r) => r.message_id === messageId && r.user_id === currentUserId,
+    );
+
+    if (existing?.emoji === emoji) {
+      const { error } = await supabase
+        .from("dm_message_reactions")
+        .delete()
+        .eq("message_id", messageId)
+        .eq("user_id", currentUserId);
+      if (error) throw error;
+      setReactions((prev) =>
+        prev.filter((r) => !(r.message_id === messageId && r.user_id === currentUserId)),
+      );
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("dm_message_reactions")
+      .upsert(
+        { message_id: messageId, user_id: currentUserId, emoji },
+        { onConflict: "message_id,user_id" },
+      )
+      .select("id, message_id, user_id, emoji, created_at")
+      .single();
+
+    if (error) throw error;
+
+    setReactions((prev) => {
+      const filtered = prev.filter(
+        (r) => !(r.message_id === messageId && r.user_id === currentUserId),
+      );
+      return data ? [...filtered, data] : filtered;
+    });
+  }, [reactions]);
+
+  const reactionsByMessage = useMemo(() => {
+    const map = new Map();
+    reactions.forEach((reaction) => {
+      const messageId = String(reaction.message_id);
+      if (!map.has(messageId)) {
+        map.set(messageId, []);
+      }
+      map.get(messageId).push(reaction);
+    });
+    return map;
+  }, [reactions]);
+
   return {
     messages,
     isLoadingMessages,
@@ -137,5 +260,8 @@ export function useDmMessages(conversationId, socket) {
     replaceOptimisticMessage,
     removeOptimisticMessage,
     hasMessages: messages.length > 0,
+    reactionsByMessage,
+    toggleReaction,
+    deleteMessage,
   };
 }

@@ -1,4 +1,4 @@
-import { ChevronUp, LogOut, UserRound, Users } from "lucide-react";
+import { ChevronUp, LogOut, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
@@ -16,7 +16,7 @@ function getInitials(fullName) {
     .join("");
 }
 
-function ChatSidebar({ currentUser }) {
+function ChatSidebar({ currentUser, children }) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -60,7 +60,7 @@ function ChatSidebar({ currentUser }) {
 
   return (
     <aside
-      className="flex flex-col border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:min-h-[calc(100vh-3rem)] lg:border-b-0 lg:border-r"
+      className="flex h-full flex-col border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:min-h-[calc(100vh-3rem)] lg:border-b-0"
       aria-label="Chat sidebar"
     >
       <div className="border-b border-slate-200 pb-4">
@@ -72,23 +72,8 @@ function ChatSidebar({ currentUser }) {
         </p>
       </div>
 
-      <section className="mt-5 min-h-0 flex-1" aria-label="Followed profiles">
-        <div className="mb-2 flex items-center gap-2">
-          <Users size={14} className="text-slate-500" />
-          <h3 className="m-0 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
-            Profiles
-          </h3>
-        </div>
-
-        <div className="space-y-2 rounded-[12px] border border-dashed border-slate-300 bg-white p-3">
-          <p className="m-0 text-xs text-slate-500">
-            Follow feature is not yet enabled.
-          </p>
-          <p className="m-0 text-xs text-slate-500">
-            Followed profiles will appear here once implemented.
-          </p>
-        </div>
-      </section>
+      {/* Search + conversation list (injected) */}
+      <div className="min-h-0 flex-1 overflow-hidden pt-4">{children}</div>
 
       <div
         ref={menuRef}
