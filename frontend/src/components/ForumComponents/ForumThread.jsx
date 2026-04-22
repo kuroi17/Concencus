@@ -206,17 +206,24 @@ function GalleryLightbox({ images, startIndex, onClose }) {
 
 // ── Forum Thread ────────────────────────────────────────────────────────────
 function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand }) {
-  const [searchParams] = useSearchParams();
-  const isTargetPost = searchParams.get("post") === item.id;
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Capture on mount so highlight persists even after clearing the URL
+  const [isTargetPost] = useState(() => searchParams.get("post") === item.id);
   const threadRef = useRef(null);
 
   useEffect(() => {
     if (isTargetPost && threadRef.current) {
       setTimeout(() => {
         threadRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Clear URL param so it doesn't keep scrolling if user leaves and returns
+        setSearchParams((prev) => {
+          const params = new URLSearchParams(prev);
+          params.delete("post");
+          return params;
+        }, { replace: true });
       }, 500); // Wait for potential rendering
     }
-  }, [isTargetPost]);
+  }, [isTargetPost, setSearchParams]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(-1); // -1 = closed
   const [isSaved, setIsSaved] = useState(false);
