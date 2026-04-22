@@ -1,13 +1,4 @@
-import {
-  Bookmark,
-  ChevronLeft,
-  ChevronRight,
-  Flag,
-  MessageSquare,
-  MoreVertical,
-  Share2,
-  Trash2,
-} from "lucide-react";
+import { Bookmark, Check, ChevronLeft, ChevronRight, Flag, MessageSquare, MoreVertical, Share2, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import VoteWidget from "./VoteWidget";
@@ -218,6 +209,7 @@ function ForumThread({ item, isAdmin = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(-1); // -1 = closed
   const [isSaved, setIsSaved] = useState(false);
+  const [showCopied, setShowCopied] = useState(false);
 
   // Check if user has saved this post
   useEffect(() => {
@@ -314,13 +306,35 @@ function ForumThread({ item, isAdmin = false }) {
               <MessageSquare size={14} />
               <span>{comments} Comments</span>
             </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors hover:bg-slate-100"
-            >
-              <Share2 size={14} />
-              <span>Share</span>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={async () => {
+                  const url = `${window.location.origin}/hub?post=${item.id}`;
+                  try {
+                    await navigator.clipboard.writeText(url);
+                  } catch {
+                    // fallback for older browsers
+                    const ta = document.createElement("textarea");
+                    ta.value = url;
+                    ta.style.position = "fixed";
+                    ta.style.opacity = "0";
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                  }
+                  setShowCopied(true);
+                  setTimeout(() => setShowCopied(false), 2000);
+                }}
+                className={`inline-flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors ${
+                  showCopied ? "bg-green-50 text-green-700" : "hover:bg-slate-100"
+                }`}
+              >
+                {showCopied ? <Check size={14} /> : <Share2 size={14} />}
+                <span>{showCopied ? "Copied!" : "Share"}</span>
+              </button>
+            </div>
             <button
               type="button"
               onClick={toggleSave}
