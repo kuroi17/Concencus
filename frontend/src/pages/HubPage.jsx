@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Header from "../common/Header";
 import ChannelSidebar from "../components/common/ChannelSidebar";
 import TabSwitcher from "../components/common/TabSwitcher";
@@ -11,9 +12,11 @@ import { supabase } from "../lib/supabaseClient";
 import { uploadPublicImage } from "../lib/storage";
 
 function HubPage() {
+  const [searchParams] = useSearchParams();
   const { currentChannel } = useChannel();
-  const [view, setView] = useState("announcement");
+  const [view, setView] = useState(searchParams.has("post") ? "forum" : "announcement");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // ── Create Post ─────────────────────────────────────────────────────────
   const handleCreatePost = async (postData) => {
@@ -41,17 +44,26 @@ function HubPage() {
 
       if (insertError) throw insertError;
 
-      if (postData?.imageFile && insertedPost?.id) {
-        const imageUrl = await uploadPublicImage({
-          bucket: "forum-post-images",
-          pathPrefix: `${userData.user.id}/${currentChannel.id}/${insertedPost.id}`,
-          file: postData.imageFile,
-        });
+      // Upload multiple images (up to 5)
+      const files = postData?.imageFiles || [];
+      if (files.length > 0 && insertedPost?.id) {
+        const uploadedUrls = [];
+        for (const file of files) {
+          const url = await uploadPublicImage({
+            bucket: "forum-post-images",
+            pathPrefix: `${userData.user.id}/${currentChannel.id}/${insertedPost.id}`,
+            file,
+          });
+          if (url) uploadedUrls.push(url);
+        }
 
-        if (imageUrl) {
+        if (uploadedUrls.length > 0) {
           const { error: updateError } = await supabase
             .from("forum_posts")
-            .update({ image_url: imageUrl })
+            .update({
+              image_url: uploadedUrls[0],
+              image_urls: uploadedUrls,
+            })
             .eq("id", insertedPost.id);
 
           if (updateError) throw updateError;
@@ -59,6 +71,7 @@ function HubPage() {
       }
 
       console.log("Post created successfully!");
+      setRefreshKey((k) => k + 1); // trigger ForumBoard re-fetch
       setIsModalOpen(false);
     } catch (err) {
       console.error("Error creating post:", err);
@@ -103,7 +116,7 @@ function HubPage() {
                 </div>
               ) : (
                 <div className="soft-enter grid gap-4 xl:grid-cols-[minmax(0,1fr)_290px]">
-                  <ForumBoard channelId={currentChannel.id} />
+                  <ForumBoard channelId={currentChannel.id} refreshKey={refreshKey} />
                   <ForumInfoPanel onOpenModal={() => setIsModalOpen(true)} />
                 </div>
               )}

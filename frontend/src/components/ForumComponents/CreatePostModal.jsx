@@ -1,8 +1,8 @@
-import { X } from "lucide-react";
-import { useState } from "react";
-import ImageDropzone from "../common/ImageDropzone";
+import { ImageUp, X } from "lucide-react";
+import { useId, useRef, useState } from "react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 
+const MAX_IMAGES = 5;
 const tags = ["General", "Announcement", "Curriculum", "Feedback"];
 
 function CreatePostModal({ isOpen, onClose, onSubmit }) {
@@ -10,16 +10,21 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
   const [excerpt, setExcerpt] = useState("");
   const [tag, setTag] = useState(tags[0]);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+  const [imageFiles, setImageFiles] = useState([]); // File[]
+  const [imagePreviews, setImagePreviews] = useState([]); // string[]
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const fileInputId = useId();
+  const fileInputRef = useRef(null);
+
+  const revokeAllPreviews = () => {
+    imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+  };
+
   const closeModal = () => {
-    if (imagePreviewUrl) {
-      URL.revokeObjectURL(imagePreviewUrl);
-    }
-    setImageFile(null);
-    setImagePreviewUrl("");
+    revokeAllPreviews();
+    setImageFiles([]);
+    setImagePreviews([]);
     onClose();
   };
 
@@ -27,12 +32,28 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
 
   if (!isOpen) return null;
 
+  const addFiles = (files) => {
+    const incoming = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    const remaining = MAX_IMAGES - imageFiles.length;
+    const toAdd = incoming.slice(0, remaining);
+    if (toAdd.length === 0) return;
+
+    setImageFiles((prev) => [...prev, ...toAdd]);
+    setImagePreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
+  };
+
+  const removeImage = (index) => {
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim() || !excerpt.trim()) return;
 
     setIsSubmitting(true);
-    await onSubmit({ title, excerpt, tag, isAnonymous, imageFile });
+    await onSubmit({ title, excerpt, tag, isAnonymous, imageFiles });
     setIsSubmitting(false);
 
     // Reset form
@@ -40,11 +61,9 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
     setExcerpt("");
     setTag(tags[0]);
     setIsAnonymous(false);
-    if (imagePreviewUrl) {
-      URL.revokeObjectURL(imagePreviewUrl);
-    }
-    setImageFile(null);
-    setImagePreviewUrl("");
+    revokeAllPreviews();
+    setImageFiles([]);
+    setImagePreviews([]);
     closeModal();
   };
 
@@ -120,23 +139,95 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
               </select>
             </div>
 
-            <ImageDropzone
-              label="Photo (optional)"
-              description="Drag & drop an image here, or click to browse."
-              file={imageFile}
-              previewUrl={imagePreviewUrl}
-              disabled={isSubmitting}
-              onChangeFile={(file) => {
-                setImageFile(file);
-                if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-                setImagePreviewUrl(file ? URL.createObjectURL(file) : "");
-              }}
-              onClear={() => {
-                if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-                setImageFile(null);
-                setImagePreviewUrl("");
-              }}
-            />
+            {/* ── Multi-Image Upload ─────────────────────────────────── */}
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                Photos ({imageFiles.length}/{MAX_IMAGES})
+              </label>
+
+              <div
+                className={`rounded-[12px] border bg-white transition-colors ${
+                  isSubmitting ? "cursor-not-allowed opacity-70" : ""
+                } border-slate-300`}
+              >
+                {/* Preview grid */}
+                {imagePreviews.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto p-3">
+                    {imagePreviews.map((url, idx) => (
+                      <div
+                        key={url}
+                        className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[10px] border border-slate-200 bg-slate-100"
+                      >
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                        {!isSubmitting && (
+                          <button
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute right-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-sm backdrop-blur transition-colors hover:bg-white hover:text-rose-600"
+                            aria-label={`Remove image ${idx + 1}`}
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add button / dropzone */}
+                {imageFiles.length < MAX_IMAGES && (
+                  <div
+                    className={`flex cursor-pointer items-center justify-center gap-2 px-4 py-3 text-center transition-colors hover:bg-slate-50 ${
+                      imagePreviews.length > 0 ? "border-t border-slate-200" : ""
+                    }`}
+                    onClick={() => {
+                      if (!isSubmitting) fileInputRef.current?.click();
+                    }}
+                    onDragOver={(e) => {
+                      if (isSubmitting) return;
+                      e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      if (isSubmitting) return;
+                      e.preventDefault();
+                      addFiles(e.dataTransfer.files);
+                    }}
+                    role="button"
+                    tabIndex={isSubmitting ? -1 : 0}
+                    onKeyDown={(e) => {
+                      if (isSubmitting) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                  >
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                      <ImageUp size={16} />
+                    </span>
+                    <span className="text-sm text-slate-600">
+                      {imagePreviews.length === 0
+                        ? "Add photos (up to 5)"
+                        : `Add more (${MAX_IMAGES - imageFiles.length} remaining)`}
+                    </span>
+                  </div>
+                )}
+
+                <input
+                  id={fileInputId}
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  disabled={isSubmitting}
+                  className="hidden"
+                  onChange={(e) => {
+                    addFiles(e.target.files);
+                    e.target.value = ""; // allow re-selecting same file
+                  }}
+                />
+              </div>
+            </div>
 
             <div className="flex items-center gap-2">
               <input

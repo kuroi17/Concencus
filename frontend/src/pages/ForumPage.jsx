@@ -44,17 +44,26 @@ function ForumPage() {
 
       if (insertError) throw insertError;
 
-      if (postData?.imageFile && insertedPost?.id) {
-        const imageUrl = await uploadPublicImage({
-          bucket: "forum-post-images",
-          pathPrefix: `${userData.user.id}/${channels[0].id}/${insertedPost.id}`,
-          file: postData.imageFile,
-        });
+      // Upload multiple images (up to 5)
+      const files = postData?.imageFiles || [];
+      if (files.length > 0 && insertedPost?.id) {
+        const uploadedUrls = [];
+        for (const file of files) {
+          const url = await uploadPublicImage({
+            bucket: "forum-post-images",
+            pathPrefix: `${userData.user.id}/${channels[0].id}/${insertedPost.id}`,
+            file,
+          });
+          if (url) uploadedUrls.push(url);
+        }
 
-        if (imageUrl) {
+        if (uploadedUrls.length > 0) {
           const { error: updateError } = await supabase
             .from("forum_posts")
-            .update({ image_url: imageUrl })
+            .update({
+              image_url: uploadedUrls[0],
+              image_urls: uploadedUrls,
+            })
             .eq("id", insertedPost.id);
 
           if (updateError) throw updateError;

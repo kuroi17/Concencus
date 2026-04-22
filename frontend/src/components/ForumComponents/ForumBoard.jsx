@@ -1,5 +1,6 @@
 import { Flame, Sparkles, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import ForumThread from "./ForumThread";
 import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
@@ -9,11 +10,13 @@ const filters = [
   { id: "new", label: "New", icon: Sparkles },
 ];
 
-function ForumBoard({ channelId }) {
+function ForumBoard({ channelId, refreshKey = 0 }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("hot");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const [expandedPostId, setExpandedPostId] = useState(searchParams.get("post") || null);
   const { isAdmin } = useCurrentUserProfile();
 
   const fetchPosts = useCallback(async () => {
@@ -71,7 +74,7 @@ function ForumBoard({ channelId }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [activeFilter, channelId, fetchPosts]);
+  }, [activeFilter, channelId, refreshKey, fetchPosts]);
 
   const filteredPosts = posts.filter(
     (post) =>
@@ -120,7 +123,7 @@ function ForumBoard({ channelId }) {
       </div>
 
       <div className="space-y-3">
-        {loading ? (
+        {loading && posts.length === 0 ? (
           <div className="py-8 text-center text-sm text-slate-500">
             Loading threads...
           </div>
@@ -130,7 +133,13 @@ function ForumBoard({ channelId }) {
           </div>
         ) : filteredPosts.length > 0 ? (
           filteredPosts.map((item) => (
-            <ForumThread key={item.id} item={item} isAdmin={isAdmin} />
+            <ForumThread
+              key={item.id}
+              item={item}
+              isAdmin={isAdmin}
+              isExpanded={expandedPostId === item.id}
+              onToggleExpand={() => setExpandedPostId(expandedPostId === item.id ? null : item.id)}
+            />
           ))
         ) : (
           <div className="py-8 text-center text-sm text-slate-500">

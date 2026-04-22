@@ -16,8 +16,6 @@ function VoteWidget({
   // Fetch the current user's vote from the database on mount / itemId change
   useEffect(() => {
     let isMounted = true;
-    setVote(0);
-    setVoteLoaded(false);
 
     const fetchVote = async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -109,7 +107,7 @@ function VoteWidget({
       <button
         type="button"
         onClick={() => handleVote(1)}
-        disabled={isVoting || !voteLoaded}
+        disabled={!voteLoaded}
         className={`rounded p-0.5 transition-colors disabled:opacity-40 ${
           vote === 1
             ? "text-[#7f1d1d]"
@@ -129,7 +127,7 @@ function VoteWidget({
       <button
         type="button"
         onClick={() => handleVote(-1)}
-        disabled={isVoting || !voteLoaded}
+        disabled={!voteLoaded}
         className={`rounded p-0.5 transition-colors disabled:opacity-40 ${
           vote === -1
             ? "text-slate-600"
