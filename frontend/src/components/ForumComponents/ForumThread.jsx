@@ -217,6 +217,45 @@ function ForumThread({ item, isAdmin = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(-1); // -1 = closed
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Check if user has saved this post
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData?.user || cancelled) return;
+      const { data } = await supabase
+        .from("saved_posts")
+        .select("post_id")
+        .eq("user_id", authData.user.id)
+        .eq("post_id", item.id)
+        .maybeSingle();
+      if (!cancelled) setIsSaved(Boolean(data));
+    })();
+    return () => { cancelled = true; };
+  }, [item.id]);
+
+  const toggleSave = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData?.user) {
+      alert("You must be logged in to save posts.");
+      return;
+    }
+    if (isSaved) {
+      await supabase
+        .from("saved_posts")
+        .delete()
+        .eq("user_id", authData.user.id)
+        .eq("post_id", item.id);
+      setIsSaved(false);
+    } else {
+      await supabase
+        .from("saved_posts")
+        .insert([{ user_id: authData.user.id, post_id: item.id }]);
+      setIsSaved(true);
+    }
+  };
 
   const authorName = item.is_anonymous ? "Anonymous" : (item.author_name || "User");
   const timeAgo = timeAgoStr(item.created_at);
@@ -284,10 +323,13 @@ function ForumThread({ item, isAdmin = false }) {
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors hover:bg-slate-100"
+              onClick={toggleSave}
+              className={`inline-flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors ${
+                isSaved ? "bg-amber-50 text-amber-700" : "hover:bg-slate-100"
+              }`}
             >
-              <Bookmark size={14} />
-              <span>Save</span>
+              <Bookmark size={14} fill={isSaved ? "currentColor" : "none"} />
+              <span>{isSaved ? "Saved" : "Save"}</span>
             </button>
           </div>
         </div>

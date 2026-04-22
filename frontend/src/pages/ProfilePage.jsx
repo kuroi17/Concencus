@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AtSign, GraduationCap, Hash, UserRound, Users } from "lucide-react";
+import { AtSign, Bookmark, GraduationCap, Hash, UserRound, Users } from "lucide-react";
 import Header from "../common/Header";
 import { supabase } from "../lib/supabaseClient";
 import EditProfileModal from "../components/ProfileComponents/EditProfileModal";
@@ -22,6 +22,8 @@ function ProfilePage() {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [savedPosts, setSavedPosts] = useState([]);
+  const [savedLoading, setSavedLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -100,6 +102,61 @@ function ProfilePage() {
       isMounted = false;
     };
   }, []);
+
+  // ── Fetch saved posts ───────────────────────────────────────────────────
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSavedPosts = async () => {
+      setSavedLoading(true);
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData?.user) {
+        if (isMounted) setSavedLoading(false);
+        return;
+      }
+
+      const { data: saves } = await supabase
+        .from("saved_posts")
+        .select("post_id, created_at")
+        .eq("user_id", authData.user.id)
+        .order("created_at", { ascending: false });
+
+      if (!saves || saves.length === 0) {
+        if (isMounted) {
+          setSavedPosts([]);
+          setSavedLoading(false);
+        }
+        return;
+      }
+
+      const postIds = saves.map((s) => s.post_id);
+      const { data: posts } = await supabase
+        .from("forum_posts_view")
+        .select("id, title, tag, score, comment_count, created_at")
+        .in("id", postIds);
+
+      if (isMounted) {
+        // Preserve saved order
+        const postMap = new Map((posts || []).map((p) => [p.id, p]));
+        setSavedPosts(postIds.map((id) => postMap.get(id)).filter(Boolean));
+        setSavedLoading(false);
+      }
+    };
+
+    loadSavedPosts();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleUnsave = async (postId) => {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData?.user) return;
+    await supabase
+      .from("saved_posts")
+      .delete()
+      .eq("user_id", authData.user.id)
+      .eq("post_id", postId);
+    setSavedPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
 
   const initials = useMemo(() => {
     const source = profile?.full_name || "U";
@@ -226,6 +283,56 @@ function ProfilePage() {
                   </article>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* ── Saved Posts ─────────────────────────────────────────── */}
+          <section className="mt-4 overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]">
+            <div className="flex items-center gap-2 border-b border-slate-200 px-6 py-4">
+              <Bookmark size={18} className="text-slate-600" />
+              <h3 className="m-0 text-lg font-semibold text-slate-900">Saved Posts</h3>
+            </div>
+
+            <div className="p-4">
+              {savedLoading ? (
+                <p className="m-0 py-4 text-center text-sm text-slate-400">Loading saved posts...</p>
+              ) : savedPosts.length === 0 ? (
+                <p className="m-0 py-4 text-center text-sm text-slate-400">
+                  No saved posts yet. Bookmark discussions from the forum to find them here.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {savedPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="flex items-center gap-3 rounded-[12px] border border-slate-200 bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="m-0 text-sm font-semibold text-slate-900 truncate">
+                          {post.title}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                          <span className="inline-flex rounded bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 font-medium">
+                            {post.tag || "General"}
+                          </span>
+                          <span>{parseInt(post.score, 10) || 0} votes</span>
+                          <span>•</span>
+                          <span>{parseInt(post.comment_count, 10) || 0} comments</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleUnsave(post.id)}
+                        className="shrink-0 inline-flex items-center gap-1 rounded-[8px] px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 transition-colors hover:bg-amber-100"
+                        title="Remove from saved"
+                      >
+                        <Bookmark size={12} fill="currentColor" />
+                        Unsave
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         </main>
