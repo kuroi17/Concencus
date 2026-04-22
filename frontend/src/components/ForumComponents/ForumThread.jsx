@@ -1,12 +1,14 @@
 import {
   Bookmark,
+  ChevronLeft,
+  ChevronRight,
   Flag,
   MessageSquare,
   MoreVertical,
   Share2,
   Trash2,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import VoteWidget from "./VoteWidget";
 import CommentSection from "./CommentSection";
@@ -24,10 +26,197 @@ function timeAgoStr(dateStr) {
   return date.toLocaleDateString();
 }
 
+/** Resolve image list — prefer image_urls array, fall back to legacy image_url. */
+function getImageUrls(item) {
+  if (Array.isArray(item.image_urls) && item.image_urls.length > 0) {
+    return item.image_urls;
+  }
+  if (item.image_url) return [item.image_url];
+  return [];
+}
+
+// ── Horizontal scroll carousel ──────────────────────────────────────────────
+function ImageCarousel({ images, onOpenLightbox }) {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  };
+
+  useEffect(() => {
+    updateScrollState();
+    const el = scrollRef.current;
+    if (el) el.addEventListener("scroll", updateScrollState, { passive: true });
+    return () => el?.removeEventListener("scroll", updateScrollState);
+  }, [images]);
+
+  const scroll = (dir) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: "smooth" });
+  };
+
+  if (images.length === 1) {
+    return (
+      <div
+        className="mt-3 overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50 cursor-zoom-in"
+        onClick={() => onOpenLightbox(0)}
+        title="Click to view full image"
+      >
+        <img
+          src={images[0]}
+          alt=""
+          className="max-h-[340px] w-full object-cover hover:opacity-95 transition-opacity"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative mt-3">
+      {/* Scroll container */}
+      <div
+        ref={scrollRef}
+        className="flex gap-2 overflow-x-auto scroll-smooth rounded-[12px] pb-1"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {images.map((url, idx) => (
+          <div
+            key={url}
+            className="relative h-[200px] w-[260px] shrink-0 cursor-zoom-in overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50"
+            onClick={() => onOpenLightbox(idx)}
+            title="Click to view full image"
+          >
+            <img
+              src={url}
+              alt=""
+              className="h-full w-full object-cover hover:opacity-95 transition-opacity"
+              loading="lazy"
+            />
+            {/* Image counter badge */}
+            <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
+              {idx + 1}/{images.length}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Scroll arrows */}
+      {canScrollLeft && (
+        <button
+          type="button"
+          onClick={() => scroll(-1)}
+          className="absolute left-1 top-1/2 z-10 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur transition-colors hover:bg-white"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft size={18} className="text-slate-700" />
+        </button>
+      )}
+      {canScrollRight && (
+        <button
+          type="button"
+          onClick={() => scroll(1)}
+          className="absolute right-1 top-1/2 z-10 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur transition-colors hover:bg-white"
+          aria-label="Scroll right"
+        >
+          <ChevronRight size={18} className="text-slate-700" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Gallery Lightbox ────────────────────────────────────────────────────────
+function GalleryLightbox({ images, startIndex, onClose }) {
+  const [currentIdx, setCurrentIdx] = useState(startIndex);
+
+  useEscapeKey(true, onClose);
+
+  // Lock body scroll
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "ArrowLeft") setCurrentIdx((i) => Math.max(0, i - 1));
+      if (e.key === "ArrowRight") setCurrentIdx((i) => Math.min(images.length - 1, i + 1));
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [images.length]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      {/* Close button */}
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute top-4 right-4 z-10 flex items-center justify-center w-9 h-9 rounded-full bg-white/10 text-white text-lg hover:bg-white/25 transition-colors"
+        aria-label="Close"
+      >
+        ✕
+      </button>
+
+      {/* Counter */}
+      {images.length > 1 && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-white backdrop-blur-sm">
+          {currentIdx + 1} / {images.length}
+        </div>
+      )}
+
+      {/* Prev arrow */}
+      {currentIdx > 0 && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setCurrentIdx((i) => i - 1); }}
+          className="absolute left-3 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25"
+          aria-label="Previous image"
+        >
+          <ChevronLeft size={22} />
+        </button>
+      )}
+
+      {/* Next arrow */}
+      {currentIdx < images.length - 1 && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setCurrentIdx((i) => i + 1); }}
+          className="absolute right-3 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25"
+          aria-label="Next image"
+        >
+          <ChevronRight size={22} />
+        </button>
+      )}
+
+      {/* Image */}
+      <img
+        src={images[currentIdx]}
+        alt=""
+        className="w-[88vw] h-[88vh] rounded-[10px] object-contain shadow-2xl transition-opacity"
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>,
+    document.body
+  );
+}
+
+// ── Forum Thread ────────────────────────────────────────────────────────────
 function ForumThread({ item, isAdmin = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(-1); // -1 = closed
 
   const authorName = item.is_anonymous ? "Anonymous" : (item.author_name || "User");
   const timeAgo = timeAgoStr(item.created_at);
@@ -35,19 +224,9 @@ function ForumThread({ item, isAdmin = false }) {
   // Convert score from big query safely
   const score = item.score ? parseInt(item.score, 10) : 0;
   const comments = item.comment_count ? parseInt(item.comment_count, 10) : 0;
+  const images = getImageUrls(item);
 
   useEscapeKey(isMenuOpen, () => setIsMenuOpen(false));
-  useEscapeKey(lightboxOpen, () => setLightboxOpen(false));
-
-  // Lock body scroll while lightbox is open
-  useEffect(() => {
-    if (lightboxOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [lightboxOpen]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -73,19 +252,12 @@ function ForumThread({ item, isAdmin = false }) {
             {item.title}
           </h3>
 
-          {item.image_url && (
-            <div
-              className="mt-3 overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50 cursor-zoom-in"
-              onClick={() => setLightboxOpen(true)}
-              title="Click to view full image"
-            >
-              <img
-                src={item.image_url}
-                alt=""
-                className="max-h-[340px] w-full object-cover hover:opacity-95 transition-opacity"
-                loading="lazy"
-              />
-            </div>
+          {/* ── Image Carousel ─────────────────────────────────────── */}
+          {images.length > 0 && (
+            <ImageCarousel
+              images={images}
+              onOpenLightbox={(idx) => setLightboxIndex(idx)}
+            />
           )}
 
           <p className="m-0 mt-2 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
@@ -223,29 +395,13 @@ function ForumThread({ item, isAdmin = false }) {
         </div>
       )}
 
-      {/* Lightbox — rendered in a portal so it always covers the full viewport */}
-      {lightboxOpen && item.image_url && createPortal(
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm"
-          onClick={() => setLightboxOpen(false)}
-        >
-          <button
-            type="button"
-            onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 z-10 flex items-center justify-center w-9 h-9 rounded-full bg-white/10 text-white text-lg hover:bg-white/25 transition-colors"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-
-          <img
-            src={item.image_url}
-            alt=""
-            className="w-[88vw] h-[88vh] rounded-[10px] object-contain shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>,
-        document.body
+      {/* Gallery Lightbox */}
+      {lightboxIndex >= 0 && images.length > 0 && (
+        <GalleryLightbox
+          images={images}
+          startIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(-1)}
+        />
       )}
     </div>
   );
