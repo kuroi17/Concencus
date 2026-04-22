@@ -99,7 +99,7 @@ function AnnouncementBoard({ channelId }) {
   }, [channelId, fetchAnnouncements]);
 
   return (
-    <section className="soft-enter pb-2" aria-label="Announcement board">
+    <section className="soft-enter pb-2 w-full overflow-x-hidden box-border" aria-label="Announcement board">
       {/* ── Board header ──────────────────────────────────────────────────── */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="m-0 text-base font-semibold text-slate-900 sm:text-lg">
@@ -150,10 +150,13 @@ function AnnouncementBoard({ channelId }) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:auto-rows-[108px] sm:grid-cols-8 xl:grid-cols-12">
+        <div className="mx-auto w-full max-w-4xl 
+          columns-1 sm:columns-2 lg:columns-3 
+          gap-5 px-4">
+        
           {announcements.map((item, i) => (
-            <AnnouncementCard key={item.id} item={item} delay={i * 50} />
-          ))}
+          <AnnouncementCard key={item.id} item={item} delay={i * 50} onOpen={() => console.log("Open")} />
+        ))}
         </div>
       )}
 
