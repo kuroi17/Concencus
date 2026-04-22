@@ -6,6 +6,7 @@ import CreatePostModal from "../components/ForumComponents/CreatePostModal";
 import { useState } from "react";
 
 import { supabase } from "../lib/supabaseClient";
+import { uploadPublicImage } from "../lib/storage";
 
 function ForumPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,18 +27,48 @@ function ForumPage() {
         return;
       }
 
-      const { error } = await supabase.from("forum_posts").insert([
-        {
-          channel_id: channels[0].id,
-          author_id: userData.user.id,
-          title: postData.title,
-          excerpt: postData.excerpt,
-          tag: postData.tag,
-          is_anonymous: postData.isAnonymous,
-        },
-      ]);
+      const { data: insertedPost, error: insertError } = await supabase
+        .from("forum_posts")
+        .insert([
+          {
+            channel_id: channels[0].id,
+            author_id: userData.user.id,
+            title: postData.title,
+            excerpt: postData.excerpt,
+            tag: postData.tag,
+            is_anonymous: postData.isAnonymous,
+          },
+        ])
+        .select("id")
+        .single();
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      // Upload multiple images (up to 5)
+      const files = postData?.imageFiles || [];
+      if (files.length > 0 && insertedPost?.id) {
+        const uploadedUrls = [];
+        for (const file of files) {
+          const url = await uploadPublicImage({
+            bucket: "forum-post-images",
+            pathPrefix: `${userData.user.id}/${channels[0].id}/${insertedPost.id}`,
+            file,
+          });
+          if (url) uploadedUrls.push(url);
+        }
+
+        if (uploadedUrls.length > 0) {
+          const { error: updateError } = await supabase
+            .from("forum_posts")
+            .update({
+              image_url: uploadedUrls[0],
+              image_urls: uploadedUrls,
+            })
+            .eq("id", insertedPost.id);
+
+          if (updateError) throw updateError;
+        }
+      }
       console.log("Post created successfully!");
     } catch (err) {
       console.error("Error creating post:", err);

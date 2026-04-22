@@ -11,7 +11,7 @@ const FALLBACK_CHANNEL = {
   category: "colleges",
 };
 
-export default function ChannelProvider({ children }) {
+export function ChannelProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [currentChannel, setCurrentChannel] = useState(FALLBACK_CHANNEL);
   const [loadingChannels, setLoadingChannels] = useState(true);
