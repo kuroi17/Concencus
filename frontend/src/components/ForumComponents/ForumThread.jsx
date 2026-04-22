@@ -6,25 +6,48 @@ import {
   Share2,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import VoteWidget from "./VoteWidget";
 import CommentSection from "./CommentSection";
 import { supabase } from "../../lib/supabaseClient";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 
+function timeAgoStr(dateStr) {
+  const date = new Date(dateStr);
+  if (isNaN(date)) return "just now";
+  const diff = (Date.now() - date.getTime()) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return date.toLocaleDateString();
+}
+
 function ForumThread({ item, isAdmin = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const authorName = item.is_anonymous ? "Anonymous" : (item.author_name || "User");
-  const dateObj = new Date(item.created_at);
-  const timeAgo = !isNaN(dateObj) ? dateObj.toLocaleDateString() : "Just now";
+  const timeAgo = timeAgoStr(item.created_at);
 
   // Convert score from big query safely
   const score = item.score ? parseInt(item.score, 10) : 0;
   const comments = item.comment_count ? parseInt(item.comment_count, 10) : 0;
 
   useEscapeKey(isMenuOpen, () => setIsMenuOpen(false));
+  useEscapeKey(lightboxOpen, () => setLightboxOpen(false));
+
+  // Lock body scroll while lightbox is open
+  useEffect(() => {
+    if (lightboxOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [lightboxOpen]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -51,11 +74,15 @@ function ForumThread({ item, isAdmin = false }) {
           </h3>
 
           {item.image_url && (
-            <div className="mt-3 overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
+            <div
+              className="mt-3 overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50 cursor-zoom-in"
+              onClick={() => setLightboxOpen(true)}
+              title="Click to view full image"
+            >
               <img
                 src={item.image_url}
                 alt=""
-                className="max-h-[340px] w-full object-cover"
+                className="max-h-[340px] w-full object-cover hover:opacity-95 transition-opacity"
                 loading="lazy"
               />
             </div>
@@ -194,6 +221,31 @@ function ForumThread({ item, isAdmin = false }) {
         <div className="ml-0 sm:ml-12 soft-enter">
           <CommentSection postId={item.id} />
         </div>
+      )}
+
+      {/* Lightbox — rendered in a portal so it always covers the full viewport */}
+      {lightboxOpen && item.image_url && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 z-10 flex items-center justify-center w-9 h-9 rounded-full bg-white/10 text-white text-lg hover:bg-white/25 transition-colors"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+
+          <img
+            src={item.image_url}
+            alt=""
+            className="w-[88vw] h-[88vh] rounded-[10px] object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>,
+        document.body
       )}
     </div>
   );
