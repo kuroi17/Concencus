@@ -4,8 +4,9 @@ import { supabase } from "../../lib/supabaseClient";
 import AnnouncementCard from "./AnnouncementCard";
 import CreateAnnouncementModal from "./CreateAnnouncementModal";
 import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
-import { uploadPublicImage } from "../../lib/storage";
 import AnnouncementDetailModal from "./AnnouncementDetailModal";
+// 🚀 IN-IMPORT NATIN ANG UPLOADER FUNCTION
+import { uploadPublicImage } from "../../lib/storage";
 
 function AnnouncementBoard({ channelId }) {
   const [announcements, setAnnouncements] = useState([]);
@@ -15,6 +16,7 @@ function AnnouncementBoard({ channelId }) {
   const [isPosting, setIsPosting] = useState(false);
   const [postError, setPostError] = useState("");
   const { user, isAdmin } = useCurrentUserProfile();
+  const [selectedNotice, setSelectedNotice] = useState(null);
 
   const fetchAnnouncements = useCallback(async () => {
     if (!channelId) {
@@ -27,7 +29,7 @@ function AnnouncementBoard({ channelId }) {
     const { data, error } = await supabase
       .from("announcements")
       .select("*")
-      .eq("channel_id", channelId) // ← filter by selected channel
+      .eq("channel_id", channelId)
       .order("created_at", { ascending: false });
 
     if (!error && data) {
@@ -53,15 +55,23 @@ function AnnouncementBoard({ channelId }) {
     setPostError("");
 
     try {
-      let imageUrl = null;
-      if (announcementData?.imageFile) {
-        imageUrl = await uploadPublicImage({
-          bucket: "announcement-images",
-          pathPrefix: `${user.id}/${channelId}`,
-          file: announcementData.imageFile,
-        });
+      let finalImageUrl = null;
+
+      // 🚀 1. UPLOAD IMAGE SA SUPABASE BUCKET
+      if (announcementData.imageFile) {
+        try {
+          finalImageUrl = await uploadPublicImage(
+            announcementData.imageFile,
+            'announcement-images'
+          );
+        } catch (uploadErr) {
+          // Ipakita ang TUNAY na error, hindi generic
+          console.error('Upload error details:', uploadErr);
+          throw new Error(`Image upload failed: ${uploadErr.message}`);
+        }
       }
 
+      // 🚀 2. I-SAVE SA DATABASE KASAMA YUNG LINK NG PICTURE
       const { error } = await supabase.from("announcements").insert([
         {
           channel_id: channelId,
@@ -71,7 +81,7 @@ function AnnouncementBoard({ channelId }) {
           tag: announcementData.tag,
           priority: announcementData.priority,
           unit: announcementData.unit || null,
-          image_url: imageUrl,
+          image_url: finalImageUrl // Mapupuno ito kung may picture
         },
       ]);
 
@@ -91,10 +101,11 @@ function AnnouncementBoard({ channelId }) {
   };
 
   useEffect(() => {
-    queueMicrotask(() => {
-      setAnnouncements([]); // clear stale items on channel switch
+    // 🚀 FIX: GINAMIT NATIN ANG setTimeout PARA WALANG ERROR 🚀
+    setTimeout(() => {
+      setAnnouncements([]); 
       fetchAnnouncements();
-    });
+    }, 0);
 
     // Realtime: re-fetch if any announcement is inserted/updated/deleted
     const subscription = supabase
@@ -112,7 +123,7 @@ function AnnouncementBoard({ channelId }) {
   }, [channelId, fetchAnnouncements]);
 
   return (
-    <section className="soft-enter pb-2" aria-label="Announcement board">
+    <section className="soft-enter pb-2 w-full overflow-x-hidden box-border" aria-label="Announcement board">
       {/* ── Board header ──────────────────────────────────────────────────── */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="m-0 text-base font-semibold text-slate-900 sm:text-lg">
@@ -163,15 +174,15 @@ function AnnouncementBoard({ channelId }) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:auto-rows-[108px] sm:grid-cols-8 xl:grid-cols-12">
+        <div className="mx-auto w-full max-w-4xl columns-1 sm:columns-2 lg:columns-3 gap-5 px-4">
           {announcements.map((item, i) => (
-            <AnnouncementCard
-              key={item.id}
-              item={item}
-              delay={i * 50}
-              onOpen={() => setSelectedAnnouncement(item)}
+          <AnnouncementCard 
+              key={item.id} 
+              item={item} 
+              delay={i * 50} 
+              onOpen={() => setSelectedNotice(item)} 
             />
-          ))}
+        ))}
         </div>
       )}
 
@@ -182,9 +193,9 @@ function AnnouncementBoard({ channelId }) {
       />
 
       <AnnouncementDetailModal
-        isOpen={Boolean(selectedAnnouncement)}
-        item={selectedAnnouncement}
-        onClose={() => setSelectedAnnouncement(null)}
+        isOpen={!!selectedNotice} 
+        onClose={() => setSelectedNotice(null)}
+        notice={selectedNotice}
       />
     </section>
   );

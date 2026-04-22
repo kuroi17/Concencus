@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import ImageDropzone from "../common/ImageDropzone";
+import ImageDropzone from "../../common/ImageDropzone";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 
-const tags = ["General", "Academic", "Department", "Emergency"];
-const priorities = ["normal", "high", "urgent"];
+const tags = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
+const priorities = ["FYI", "Normal", "Important", "Urgent"];
 
 function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
   const [title, setTitle] = useState("");
@@ -25,16 +25,13 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
     onClose();
   };
 
-  useEscapeKey(isOpen, closeModal);
+  useEscapeKey(Boolean(isOpen), onClose);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (!title.trim() || !excerpt.trim()) {
-      return;
-    }
+    if (!title.trim() || !excerpt.trim()) return;
 
     setIsSubmitting(true);
 
@@ -48,9 +45,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
         imageFile,
       });
 
-      if (!wasSuccessful) {
-        return;
-      }
+      if (!wasSuccessful) return;
 
       setTitle("");
       setExcerpt("");
@@ -77,9 +72,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
     >
       <div className="soft-enter w-full max-w-[500px] overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.1)]">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-bold text-slate-900">
-            Post Announcement
-          </h2>
+          <h2 className="text-lg font-bold text-slate-900">Post Announcement</h2>
           <button
             type="button"
             onClick={closeModal}
@@ -188,7 +181,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
           </div>
 
           <ImageDropzone
-            label="Photo (optional)"
+            label="Cover Image (optional)"
             description="Drag & drop an image here, or click to browse."
             file={imageFile}
             previewUrl={imagePreviewUrl}

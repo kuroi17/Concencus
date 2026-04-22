@@ -1,33 +1,35 @@
-import { supabase } from "./supabaseClient";
+import { supabase } from './supabaseClient';
 
-function getFileExtension(file) {
-  const name = file?.name || "";
-  const parts = name.split(".");
-  const ext = parts.length > 1 ? parts[parts.length - 1] : "";
-  return ext.toLowerCase();
-}
-
-export function isImageFile(file) {
-  return Boolean(file && typeof file.type === "string" && file.type.startsWith("image/"));
-}
-
-export async function uploadPublicImage({ bucket, pathPrefix, file, upsert = false }) {
+export async function uploadPublicImage(file, bucketName = 'announcement-images') {
   if (!file) return null;
-  if (!isImageFile(file)) {
-    throw new Error("Please upload an image file (png, jpg, webp).");
+
+  // More unique filename — timestamp + random para sure walang conflict
+  const fileExt = file.name.split('.').pop().toLowerCase();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+  const filePath = `announcements/${fileName}`;
+
+  // 1. Upload
+  const { error: uploadError } = await supabase.storage
+    .from(bucketName)
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,         // Ayaw natin mag-overwrite
+      contentType: file.type // Explicit para hindi mag-guess si Supabase
+    });
+
+  if (uploadError) {
+    console.error('Supabase upload error:', uploadError);
+    throw new Error(`Upload failed: ${uploadError.message}`);
   }
 
-  const ext = getFileExtension(file) || "png";
-  const filename = `${crypto.randomUUID()}.${ext}`;
-  const path = `${pathPrefix}/${filename}`.replaceAll("//", "/");
+  // 2. Get public URL
+  const { data } = supabase.storage
+    .from(bucketName)
+    .getPublicUrl(filePath);
 
-  const { error: uploadError } = await supabase.storage
-    .from(bucket)
-    .upload(path, file, { upsert, contentType: file.type });
+  if (!data?.publicUrl) {
+    throw new Error('Could not retrieve public URL after upload.');
+  }
 
-  if (uploadError) throw uploadError;
-
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data?.publicUrl || null;
+  return data.publicUrl;
 }
-
