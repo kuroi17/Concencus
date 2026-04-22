@@ -292,26 +292,30 @@ function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand }) {
   return (
     <div className="flex flex-col gap-2" ref={threadRef}>
       <article
-        className={`soft-enter group relative flex gap-2.5 rounded-[14px] border bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-colors sm:gap-3 sm:px-4 sm:py-4 ${
-          isTargetPost ? "border-[#7f1d1d] ring-1 ring-[#7f1d1d]/30" : "border-slate-200/80 hover:border-slate-300"
+        className={`soft-enter group relative flex gap-3.5 rounded-[24px] border bg-white px-4 py-5 shadow-[0_15px_45px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:gap-5 sm:px-6 sm:py-6 ${
+          isTargetPost ? "border-[#800000] ring-1 ring-[#800000]/20" : "border-slate-200/60 hover:border-slate-300"
         }`}
         onMouseLeave={() => setIsMenuOpen(false)}
       >
-        <VoteWidget itemId={item.id} baseScore={score} />
+        <div className="shrink-0">
+          <VoteWidget itemId={item.id} baseScore={score} />
+        </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-slate-500">
-            <span className={item.is_anonymous ? "font-semibold text-slate-600 bg-slate-100 px-1 rounded" : ""}>
-              {item.is_anonymous ? "🙈 " : ""}Posted by {authorName}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+            <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 transition-colors ${
+              item.is_anonymous ? "bg-slate-100 text-slate-500" : "bg-red-50 text-[#800000]"
+            }`}>
+              {item.is_anonymous ? "🙈 Anonymous" : `👤 ${authorName}`}
             </span>
-            <span className="text-slate-400">•</span>
-            <span>{timeAgo}</span>
-            <span className="inline-flex rounded bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 text-[11px] font-medium">
+            <span className="text-slate-200">/</span>
+            <span className="text-slate-400">{timeAgo}</span>
+            <span className="inline-flex rounded-md bg-slate-50 px-2 py-1 text-[10px] font-black shadow-sm ring-1 ring-slate-200 text-slate-400">
               {item.tag || "General"}
             </span>
           </div>
 
-          <h3 className="m-0 mt-2 text-[1.07rem] font-semibold leading-snug text-slate-900 sm:text-[1.25rem]">
+          <h3 className="m-0 mt-3.5 text-[1.15rem] font-black leading-tight text-slate-900 sm:text-[1.45rem] tracking-tight group-hover:text-[#800000] transition-colors">
             {item.title}
           </h3>
 
@@ -323,59 +327,58 @@ function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand }) {
             />
           )}
 
-          <p className="m-0 mt-2 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+          <p className="m-0 mt-3 text-sm leading-relaxed font-medium text-slate-600 whitespace-pre-wrap line-clamp-3 group-hover:line-clamp-none transition-all duration-500">
             {item.excerpt}
           </p>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px] font-medium text-slate-600">
+          <div className="mt-5 flex flex-wrap items-center gap-3 text-[12px] font-bold text-slate-500">
             <button
               type="button"
               onClick={onToggleExpand}
-              className={`inline-flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors ${
-                isExpanded ? "bg-slate-200 text-slate-900" : "hover:bg-slate-100"
+              className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 transition-all ${
+                isExpanded ? "bg-slate-900 text-white" : "bg-slate-50 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
-              <MessageSquare size={14} />
+              <MessageSquare size={14} className={isExpanded ? "text-amber-400" : ""} />
               <span>{comments} Comments</span>
             </button>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={async () => {
-                  const url = `${window.location.origin}/hub?post=${item.id}`;
-                  try {
-                    await navigator.clipboard.writeText(url);
-                  } catch {
-                    // fallback for older browsers
-                    const ta = document.createElement("textarea");
-                    ta.value = url;
-                    ta.style.position = "fixed";
-                    ta.style.opacity = "0";
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand("copy");
-                    document.body.removeChild(ta);
-                  }
-                  setShowCopied(true);
-                  setTimeout(() => setShowCopied(false), 2000);
-                }}
-                className={`inline-flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors ${
-                  showCopied ? "bg-green-50 text-green-700" : "hover:bg-slate-100"
-                }`}
-              >
-                {showCopied ? <Check size={14} /> : <Share2 size={14} />}
-                <span>{showCopied ? "Copied!" : "Share"}</span>
-              </button>
-            </div>
+            
+            <button
+              type="button"
+              onClick={async () => {
+                const url = `${window.location.origin}/hub?post=${item.id}`;
+                try {
+                  await navigator.clipboard.writeText(url);
+                } catch {
+                  const ta = document.createElement("textarea");
+                  ta.value = url;
+                  ta.style.position = "fixed";
+                  ta.style.opacity = "0";
+                  document.body.appendChild(ta);
+                  ta.select();
+                  document.execCommand("copy");
+                  document.body.removeChild(ta);
+                }
+                setShowCopied(true);
+                setTimeout(() => setShowCopied(false), 2000);
+              }}
+              className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 transition-all ${
+                showCopied ? "bg-emerald-500 text-white" : "bg-slate-50 hover:bg-slate-100 hover:text-slate-900"
+              }`}
+            >
+              {showCopied ? <Check size={14} /> : <Share2 size={14} />}
+              <span>{showCopied ? "Copied!" : "Share Link"}</span>
+            </button>
+
             <button
               type="button"
               onClick={toggleSave}
-              className={`inline-flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors ${
-                isSaved ? "bg-amber-50 text-amber-700" : "hover:bg-slate-100"
+              className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 transition-all ${
+                isSaved ? "bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200" : "bg-slate-50 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
               <Bookmark size={14} fill={isSaved ? "currentColor" : "none"} />
-              <span>{isSaved ? "Saved" : "Save"}</span>
+              <span>{isSaved ? "Saved" : "Save Post"}</span>
             </button>
           </div>
         </div>

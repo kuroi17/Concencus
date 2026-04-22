@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { MessageSquare } from "lucide-react";
 import Header from "../common/Header";
-import ChatSidebar from "../components/ChatComponents/ChatSidebar";
 import ChatThread from "../components/ChatComponents/ChatThread";
 import ConversationListPanel from "../components/ChatComponents/ConversationListPanel";
 import { useDmConversations } from "../hooks/useDmConversations";
@@ -8,18 +8,11 @@ import { useDmMessages } from "../hooks/useDmMessages";
 import { useUnreadCounts } from "../hooks/useUnreadCounts";
 import { createSocketClient } from "../lib/socketClient";
 import { supabase } from "../lib/supabaseClient";
+import MainLayout from "../components/layouts/MainLayout";
 
-function buildFallbackProfile(user) {
-  return {
-    full_name:
-      user?.user_metadata?.full_name || user?.email || "Authenticated User",
-    sr_code: user?.user_metadata?.sr_code || "No SR Code",
-  };
-}
 
 function ChatPage() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -32,7 +25,6 @@ function ChatPage() {
     conversations,
     conversationMap,
     isLoadingConversations,
-    conversationsError,
     refreshConversations,
     createOrGetConversation,
   } = useDmConversations(currentUser?.id);
@@ -69,28 +61,6 @@ function ChatPage() {
     load();
     return () => { isMounted = false; };
   }, []);
-
-  // ── Load current user profile ─────────────────────────────────
-  useEffect(() => {
-    if (!currentUser?.id) {
-      queueMicrotask(() => {
-        setCurrentUserProfile(null);
-      });
-      return;
-    }
-    let isMounted = true;
-    const load = async () => {
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("id, full_name, sr_code, campus_role, block")
-        .eq("id", currentUser.id)
-        .maybeSingle();
-      if (!isMounted) return;
-      setCurrentUserProfile(error || !data ? buildFallbackProfile(currentUser) : data);
-    };
-    load();
-    return () => { isMounted = false; };
-  }, [currentUser]);
 
   // ── Socket connection ─────────────────────────────────────────
   useEffect(() => {
@@ -246,56 +216,40 @@ function ChatPage() {
     });
   };
 
-  const currentUserDisplay =
-    currentUserProfile || buildFallbackProfile(currentUser);
 
   // ── Layout ────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f8f9fb]">
-      {/* ── Left sidebar (search + conversations) ─────────────── */}
-      <div
-        className={`flex w-full shrink-0 flex-col border-r border-slate-200 bg-white lg:w-[320px] ${
-          activeConversationId ? "hidden lg:flex" : "flex"
-        }`}
-      >
-        <ChatSidebar currentUser={currentUserDisplay}>
-          <ConversationListPanel
-            conversations={conversations}
-            isLoadingConversations={isLoadingConversations}
-            onOpenConversation={handleOpenConversation}
-            activeConversationId={activeConversationId}
-            unreadCounts={unreadCounts}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            searchResults={searchResults}
-            isSearchingProfiles={isSearchingProfiles}
-            isOpeningConversation={isOpeningConversation}
-            onSelectSearchResult={handleSelectSearchResult}
-          />
-        </ChatSidebar>
-      </div>
-
-      {/* ── Right area ────────────────────────────────────────── */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Top nav */}
-        <Header title="Direct Messages" />
-
-        {/* Error banner */}
-        {conversationsError && (
-          <p className="m-0 shrink-0 border-b border-rose-200 bg-rose-50 px-4 py-2 text-xs font-medium text-rose-700">
-            {conversationsError}
-          </p>
-        )}
-
-        {/* Thread panel
-            Mobile: visible only when a conversation is active
-            Desktop: always visible, fills remaining width      */}
+    <MainLayout title="Communications">
+      <div className="flex h-[calc(100vh-140px)] gap-6 overflow-hidden">
+        {/* ── Left sidebar (conversations) ─────────────── */}
         <div
-          className={`flex min-h-0 flex-1 overflow-hidden ${
-            activeConversationId ? "flex" : "hidden lg:flex"
+          className={`flex w-full shrink-0 flex-col rounded-[32px] border border-slate-200/60 bg-white shadow-sm lg:w-[380px] ${
+            activeConversationId ? "hidden lg:flex" : "flex"
           }`}
         >
-          <div className="flex h-full w-full flex-col">
+          <div className="p-6">
+            <h2 className="text-xl font-black text-slate-900 mb-6">Messages</h2>
+            <ConversationListPanel
+              conversations={conversations}
+              isLoadingConversations={isLoadingConversations}
+              onOpenConversation={handleOpenConversation}
+              activeConversationId={activeConversationId}
+              unreadCounts={unreadCounts}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchResults={searchResults}
+              isSearchingProfiles={isSearchingProfiles}
+              isOpeningConversation={isOpeningConversation}
+              onSelectSearchResult={handleSelectSearchResult}
+            />
+          </div>
+        </div>
+
+        {/* ── Right area (thread) ────────────────────────────────────────── */}
+        <div className={`flex min-w-0 flex-1 flex-col rounded-[32px] border border-slate-200/60 bg-white shadow-sm overflow-hidden ${
+          activeConversationId ? "flex" : "hidden lg:flex"
+        }`}>
+          {activeConversationId ? (
             <ChatThread
               conversation={activeConversation}
               messages={messages}
@@ -316,10 +270,20 @@ function ChatPage() {
               }
               onDeleteMessage={deleteMessage}
             />
-          </div>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center text-center p-12">
+              <div className="h-20 w-20 rounded-[32px] bg-slate-50 flex items-center justify-center text-slate-300 mb-6">
+                <MessageSquare size={40} />
+              </div>
+              <h3 className="text-xl font-black text-slate-900">Your Inbox</h3>
+              <p className="mt-2 max-w-xs text-sm font-medium text-slate-400">
+                Select a student from the list or search to start a new discussion.
+              </p>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }
 

@@ -84,8 +84,8 @@ function ForumBoard({ channelId, refreshKey = 0 }) {
 
   return (
     <section className="space-y-3" aria-label="Forum board">
-      <div className="soft-enter flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div className="soft-enter flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-1 rounded-xl bg-slate-100/50 p-1 ring-1 ring-slate-200/50">
           {filters.map((filter) => {
             const Icon = filter.icon;
             const isActive = activeFilter === filter.id;
@@ -94,30 +94,30 @@ function ForumBoard({ channelId, refreshKey = 0 }) {
                 key={filter.id}
                 type="button"
                 onClick={() => setActiveFilter(filter.id)}
-                className={`inline-flex items-center gap-1 rounded-[10px] px-2.5 py-1.5 text-sm transition-colors ${
+                className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-bold transition-all ${
                   isActive
-                    ? "bg-slate-200 text-slate-900"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    ? "bg-white text-slate-900 shadow-sm shadow-slate-200"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                <Icon size={14} />
+                <Icon size={14} className={isActive ? "text-[#800000]" : ""} />
                 <span>{filter.label}</span>
               </button>
             );
           })}
         </div>
 
-        <label className="relative block w-full sm:max-w-[260px]">
+        <label className="relative block w-full sm:max-w-[280px]">
           <Search
-            size={15}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            size={16}
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
           />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search within channel..."
-            className="w-full rounded-[12px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+            placeholder="Search discussions..."
+            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-700 outline-none transition-all focus:border-[#800000] focus:ring-4 focus:ring-red-500/5"
           />
         </label>
       </div>

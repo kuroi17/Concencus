@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import Header from "../common/Header";
-import ChannelSidebar from "../components/common/ChannelSidebar";
+import MainLayout from "../components/layouts/MainLayout";
 import TabSwitcher from "../components/common/TabSwitcher";
 import AnnouncementBoard from "../components/AnnouncementComponents/AnnouncementBoard";
 import ForumBoard from "../components/ForumComponents/ForumBoard";
@@ -17,7 +16,6 @@ function HubPage() {
   const [view, setView] = useState(searchParams.has("post") ? "forum" : "announcement");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // ── Create Post ─────────────────────────────────────────────────────────
   const handleCreatePost = async (postData) => {
@@ -32,7 +30,7 @@ function HubPage() {
         .from("forum_posts")
         .insert([
           {
-            channel_id: currentChannel.id, // UUID from the channels table
+            channel_id: currentChannel.id,
             author_id: userData.user.id,
             title: postData.title,
             excerpt: postData.excerpt,
@@ -45,7 +43,6 @@ function HubPage() {
 
       if (insertError) throw insertError;
 
-      // Upload multiple images (up to 5)
       const files = postData?.imageFiles || [];
       if (files.length > 0 && insertedPost?.id) {
         const uploadedUrls = [];
@@ -71,68 +68,64 @@ function HubPage() {
         }
       }
 
-      console.log("Post created successfully!");
-      setRefreshKey((k) => k + 1); // trigger ForumBoard re-fetch
+      setRefreshKey((k) => k + 1);
       setIsModalOpen(false);
     } catch (err) {
       console.error("Error creating post:", err);
-      alert("Failed to create post. Check console.");
+      alert("Failed to create post.");
     }
   };
 
+  if (!currentChannel) return null;
+
   return (
-    <>
-      {/* ── Shell ──────────────────────────────────────────────────────────── */}
-      <div className={`grid min-h-screen grid-cols-1 gap-0 bg-gradient-to-b from-[#f8f9fb] to-[#f2f4f7] transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "lg:grid-cols-[60px_1fr]" : "lg:grid-cols-[240px_1fr]"}`}>
-        {/* Sidebar */}
-        <ChannelSidebar collapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
+    <MainLayout>
+      <section className="mb-6 space-y-6 pt-4 sm:pt-6">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 rounded-full bg-red-600 animate-pulse" />
+              <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                Active Governance Channel
+              </p>
+            </div>
+            <h2 className="m-0 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+              {currentChannel.name}
+            </h2>
+            <p className="max-w-2xl text-sm font-medium text-slate-500 leading-relaxed">
+              {currentChannel.description}
+            </p>
+          </div>
 
-        {/* Main column */}
-        <div className="flex flex-col gap-4 p-3 sm:p-4 lg:p-6">
-          <Header />
+          <div className="shrink-0 self-start sm:self-center">
+            <TabSwitcher view={view} onChangeView={setView} />
+          </div>
+        </header>
 
-          <main className="soft-enter flex-1 py-2" role="main">
-            {/* Channel heading */}
-            <section className="space-y-4 border-t border-slate-200 pt-4 sm:pt-5">
-              <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="m-0 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
-                    {currentChannel.description}
-                  </p>
-                  <h2 className="m-0 mt-1 text-[1.9rem] font-semibold leading-tight text-slate-900 sm:text-[2.25rem] lg:text-[2.55rem]">
-                    {currentChannel.name}
-                  </h2>
-                </div>
+        <div className="h-px w-full bg-gradient-to-r from-slate-200 via-slate-200 to-transparent" />
 
-                {/* Tab switcher aligned to the right on larger screens */}
-                <div className="shrink-0">
-                  <TabSwitcher view={view} onChangeView={setView} />
-                </div>
-              </header>
+        {view === "announcement" ? (
+          <div className="soft-rise">
+            <AnnouncementBoard channelId={currentChannel.id} />
+          </div>
+        ) : (
+          <div className="soft-rise grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-4">
+              <ForumBoard channelId={currentChannel.id} refreshKey={refreshKey} />
+            </div>
+            <aside className="hidden xl:block">
+              <ForumInfoPanel onOpenModal={() => setIsModalOpen(true)} />
+            </aside>
+          </div>
+        )}
+      </section>
 
-              {/* ── Content area ────────────────────────────────────────── */}
-              {view === "announcement" ? (
-                <div className="soft-enter">
-                  <AnnouncementBoard channelId={currentChannel.id} />
-                </div>
-              ) : (
-                <div className="soft-enter grid gap-4 xl:grid-cols-[minmax(0,1fr)_290px]">
-                  <ForumBoard channelId={currentChannel.id} refreshKey={refreshKey} />
-                  <ForumInfoPanel onOpenModal={() => setIsModalOpen(true)} />
-                </div>
-              )}
-            </section>
-          </main>
-        </div>
-      </div>
-
-      {/* Modal */}
       <CreatePostModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreatePost}
       />
-    </>
+    </MainLayout>
   );
 }
 
