@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useRef } from "react";
+import { X, Image as ImageIcon } from "lucide-react";
 
 const tags = ["Academic", "Event", "Opportunity", "Governance", "Maintenance",];
 const priorities = ["FYI", "Normal", "Important", "Urgent"];
@@ -10,37 +10,58 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
   const [tag, setTag] = useState(tags[0]);
   const [priority, setPriority] = useState(priorities[0]);
   const [unit, setUnit] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // Hanggang 5MB lang para di mabigat
+        alert("File is too large. Please select an image under 5MB.");
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file)); // Gagawa ng temporary preview
+    }
+  };
+
+  // Function para tanggalin ang picture kung nagkamali
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (!title.trim() || !excerpt.trim()) {
-      return;
-    }
+    if (!title.trim() || !excerpt.trim()) return;
 
     setIsSubmitting(true);
 
     try {
+      // 🚀 Ipapasa na rito yung imageFile pabalik sa Board para ma-upload
       const wasSuccessful = await onSubmit({
         title: title.trim(),
         excerpt: excerpt.trim(),
         tag,
         priority,
         unit: unit.trim(),
+        imageFile: imageFile 
       });
 
-      if (!wasSuccessful) {
-        return;
-      }
+      if (!wasSuccessful) return;
 
+      // Reset lahat ng forms kapag successful
       setTitle("");
       setExcerpt("");
       setTag(tags[0]);
       setPriority(priorities[0]);
       setUnit("");
+      clearImage();
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -64,6 +85,28 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-5">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Cover Image (Optional)</label>
+            {imagePreview ? (
+              <div className="relative h-[160px] w-full overflow-hidden rounded-[10px] border border-slate-300">
+                <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
+                <button type="button" onClick={clearImage} className="absolute right-2 top-2 rounded-full bg-slate-900/60 p-1 text-white transition-colors hover:bg-red-600">
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex w-full flex-col items-center justify-center gap-2 rounded-[10px] border-2 border-dashed border-slate-300 bg-slate-50 py-6 text-sm text-slate-500 transition-colors hover:border-slate-400 hover:bg-slate-100"
+              >
+                <ImageIcon size={24} className="text-slate-400" />
+                <span>Click to upload an image</span>
+              </button>
+            )}
+            <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/png, image/jpeg, image/webp" className="hidden" />
+          </div>
+
           <div>
             <label
               htmlFor="announcement-title"

@@ -5,6 +5,8 @@ import AnnouncementCard from "./AnnouncementCard";
 import CreateAnnouncementModal from "./CreateAnnouncementModal";
 import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
 import ViewAnnouncementModal from "./ViewAnnouncementModal";
+// 🚀 IN-IMPORT NATIN ANG UPLOADER FUNCTION
+import { uploadPublicImage } from "../../lib/storage";
 
 function AnnouncementBoard({ channelId }) {
   const [announcements, setAnnouncements] = useState([]);
@@ -13,7 +15,7 @@ function AnnouncementBoard({ channelId }) {
   const [isPosting, setIsPosting] = useState(false);
   const [postError, setPostError] = useState("");
   const { user, isAdmin } = useCurrentUserProfile();
-  const [selectedNotice, setSelectedNotice] = useState(null); // <- Idagdag ito
+  const [selectedNotice, setSelectedNotice] = useState(null);
 
   const fetchAnnouncements = useCallback(async () => {
     if (!channelId) {
@@ -26,7 +28,7 @@ function AnnouncementBoard({ channelId }) {
     const { data, error } = await supabase
       .from("announcements")
       .select("*")
-      .eq("channel_id", channelId) // ← filter by selected channel
+      .eq("channel_id", channelId)
       .order("created_at", { ascending: false });
 
     if (!error && data) {
@@ -52,6 +54,23 @@ function AnnouncementBoard({ channelId }) {
     setPostError("");
 
     try {
+      let finalImageUrl = null;
+
+      // 🚀 1. UPLOAD IMAGE SA SUPABASE BUCKET
+      if (announcementData.imageFile) {
+        try {
+          finalImageUrl = await uploadPublicImage(
+            announcementData.imageFile,
+            'announcement-images'
+          );
+        } catch (uploadErr) {
+          // Ipakita ang TUNAY na error, hindi generic
+          console.error('Upload error details:', uploadErr);
+          throw new Error(`Image upload failed: ${uploadErr.message}`);
+        }
+      }
+
+      // 🚀 2. I-SAVE SA DATABASE KASAMA YUNG LINK NG PICTURE
       const { error } = await supabase.from("announcements").insert([
         {
           channel_id: channelId,
@@ -61,6 +80,7 @@ function AnnouncementBoard({ channelId }) {
           tag: announcementData.tag,
           priority: announcementData.priority,
           unit: announcementData.unit || null,
+          image_url: finalImageUrl // Mapupuno ito kung may picture
         },
       ]);
 
@@ -80,10 +100,11 @@ function AnnouncementBoard({ channelId }) {
   };
 
   useEffect(() => {
-    queueMicrotask(() => {
-      setAnnouncements([]); // clear stale items on channel switch
+    // 🚀 FIX: GINAMIT NATIN ANG setTimeout PARA WALANG ERROR 🚀
+    setTimeout(() => {
+      setAnnouncements([]); 
       fetchAnnouncements();
-    });
+    }, 0);
 
     // Realtime: re-fetch if any announcement is inserted/updated/deleted
     const subscription = supabase
@@ -152,10 +173,7 @@ function AnnouncementBoard({ channelId }) {
           </div>
         </div>
       ) : (
-        <div className="mx-auto w-full max-w-4xl 
-          columns-1 sm:columns-2 lg:columns-3 
-          gap-5 px-4">
-        
+        <div className="mx-auto w-full max-w-4xl columns-1 sm:columns-2 lg:columns-3 gap-5 px-4">
           {announcements.map((item, i) => (
           <AnnouncementCard 
               key={item.id} 
