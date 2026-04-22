@@ -33,3 +33,37 @@ export async function uploadPublicImage(file, bucketName = 'announcement-images'
 
   return data.publicUrl;
 }
+
+/**
+ * Deletes an image from the Supabase storage bucket using its public URL.
+ * Extracts the file path from the URL, then calls storage.remove().
+ *
+ * @param {string} publicUrl  - The full public URL saved in the database (image_url column)
+ * @param {string} bucketName - The bucket where the image is stored
+ * @returns {Promise<void>}
+ */
+export async function deletePublicImage(publicUrl, bucketName = 'announcement-images') {
+  if (!publicUrl) return;
+
+  // I-extract yung filePath mula sa public URL
+  // Format: .../storage/v1/object/public/[bucketName]/[filePath]
+  // Kailangan natin yung part pagkatapos ng bucketName
+  const marker = `/object/public/${bucketName}/`;
+  const markerIndex = publicUrl.indexOf(marker);
+
+  if (markerIndex === -1) {
+    console.warn('deletePublicImage: Hindi ma-parse ang URL, skip delete sa bucket.', publicUrl);
+    return;
+  }
+
+  const filePath = publicUrl.slice(markerIndex + marker.length);
+
+  const { error } = await supabase.storage
+    .from(bucketName)
+    .remove([filePath]);
+
+  if (error) {
+    console.error('Storage delete error:', error);
+    throw new Error(`Storage delete failed: ${error.message}`);
+  }
+}
