@@ -193,7 +193,7 @@ function AnnouncementBoard({ channelId }) {
       <AnnouncementDetailModal
         isOpen={Boolean(selectedAnnouncement)}
         onClose={() => setSelectedAnnouncement(null)}
-        item={selectedAnnouncement}
+        notice={selectedAnnouncement}
       />
     </section>
   );
