@@ -13,7 +13,7 @@ const TABS = [
 function TabSwitcher({ view, onChangeView }) {
   return (
     <div
-      className="inline-flex items-center rounded-[14px] border border-slate-200 bg-white p-1 shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
+      className="inline-flex items-center gap-1 rounded-2xl border border-slate-200/60 bg-white/50 p-1.5 shadow-sm backdrop-blur-md ring-1 ring-slate-200/20"
       role="tablist"
       aria-label="Content view switcher"
     >
@@ -26,13 +26,13 @@ function TabSwitcher({ view, onChangeView }) {
             role="tab"
             aria-selected={isActive}
             onClick={() => onChangeView(tab.id)}
-            className={`inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold transition-all duration-150 ${
+            className={`relative inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-300 ${
               isActive
-                ? "bg-slate-900 text-white shadow-sm"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
             }`}
           >
-            <tab.icon size={15} />
+            <tab.icon size={16} className={isActive ? "text-amber-400" : "text-slate-400"} />
             {tab.label}
           </button>
         );

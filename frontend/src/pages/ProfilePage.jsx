@@ -5,6 +5,7 @@ import Header from "../common/Header";
 import { supabase } from "../lib/supabaseClient";
 import EditProfileModal from "../components/ProfileComponents/EditProfileModal";
 import { uploadPublicImage } from "../lib/storage";
+import MainLayout from "../components/layouts/MainLayout";
 
 function buildFallbackProfile(user) {
   return {
@@ -172,175 +173,187 @@ function ProfilePage() {
   }, [profile?.full_name]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f8f9fb] to-[#f2f4f7] p-3 sm:p-4 lg:p-6">
-      <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-4">
-        <Header />
+    <MainLayout title="My Profile">
+      <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-6 py-6">
+        <main className="soft-enter space-y-6 pt-2" role="main">
+          {/* ── Profile Hero Section ────────────────────────────────────────── */}
+          <section className="relative overflow-hidden rounded-[24px] border border-slate-200/60 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
+            {/* Banner */}
+            <div className="relative h-48 w-full overflow-hidden sm:h-64">
+              <img
+                src="/assets/images/campus_banner.png"
+                alt="Campus Banner"
+                className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
+            </div>
 
-        <main className="border-t border-slate-200 pt-5" role="main">
-          <section className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]">
-            <div className="bg-slate-900 px-6 py-8 text-white">
-              <p className="m-0 text-xs uppercase tracking-[0.12em] text-slate-300">
-                User Profile
-              </p>
-              <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <h2 className="m-0 text-[1.9rem] font-semibold">
-                    {isLoading ? "Loading profile..." : profile?.full_name}
-                  </h2>
-                  <p className="m-0 mt-1 text-sm text-slate-300">
-                    Account center for your governance identity.
-                  </p>
+            <div className="relative px-6 pb-8">
+              {/* Overlapping Avatar */}
+              <div className="relative -mt-16 mb-4 flex items-end justify-between sm:-mt-20">
+                <div className="group relative h-32 w-32 shrink-0 overflow-hidden rounded-full border-[6px] border-white bg-white shadow-xl sm:h-40 sm:w-40">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="Profile avatar"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-[#800000] text-3xl font-bold text-white">
+                      {initials || "U"}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/5" />
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setIsEditOpen(true)}
-                  className="inline-flex shrink-0 items-center justify-center rounded-[12px] bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/15"
+                  className="mb-2 inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0"
                 >
-                  Edit profile
+                  Edit Profile
                 </button>
               </div>
-            </div>
 
-            <div className="grid gap-4 p-6 md:grid-cols-[220px_1fr]">
-              <div className="flex flex-col items-center rounded-[14px] border border-slate-200 bg-slate-50 p-4 text-center">
-                <div className="h-24 w-24 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm">
-                  {profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt="Profile avatar"
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div className="min-w-0">
+                  <h2 className="m-0 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                    {isLoading ? "Loading profile..." : profile?.full_name}
+                  </h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-lg bg-red-50 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[#800000] ring-1 ring-inset ring-red-100">
+                      {isLoading ? "..." : profile?.campus_role || "student"}
+                    </span>
+                    <span className="text-sm text-slate-500">•</span>
+                    <p className="m-0 text-sm font-medium text-slate-500">
+                      Digital Governance ID for BatStateU
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-6 rounded-2xl bg-slate-50/80 p-4 backdrop-blur-sm ring-1 ring-slate-200/50">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-slate-900">{followersCount}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Followers</p>
+                  </div>
+                  <div className="h-8 w-px bg-slate-200" />
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-slate-900">{followingCount}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Following</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* ── Left Column: Identity Info ────────────────────────────────── */}
+            <section className="lg:col-span-1 space-y-4">
+              <div className="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm">
+                <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-400">Governance Identity</h3>
+                <div className="space-y-4">
+                  <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 p-4 transition-all hover:bg-slate-50">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">SR Code</p>
+                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900">
+                      <Hash size={16} className="text-slate-400" />
+                      {isLoading ? "..." : profile?.sr_code || "No SR Code"}
+                    </p>
+                  </article>
+
+                  <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 p-4 transition-all hover:bg-slate-50">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Block / Section</p>
+                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900">
+                      <GraduationCap size={16} className="text-slate-400" />
+                      {isLoading ? "..." : profile?.block || "Unassigned"}
+                    </p>
+                  </article>
+
+                  <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 p-4 transition-all hover:bg-slate-50">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Official Email</p>
+                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900">
+                      <AtSign size={16} className="text-slate-400" />
+                      {isLoading ? "..." : profile?.email || "No email"}
+                    </p>
+                  </article>
+                </div>
+              </div>
+            </section>
+
+            {/* ── Right Column: Saved Content ────────────────────────────────── */}
+            <section className="lg:col-span-2">
+              <div className="overflow-hidden rounded-[24px] border border-slate-200/60 bg-white shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                      <Bookmark size={20} fill="currentColor" className="opacity-80" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900">Bookmarked Discussions</h3>
+                  </div>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-500">
+                    {savedPosts.length} Items
+                  </span>
+                </div>
+
+                <div className="p-6">
+                  {savedLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-[#800000]" />
+                      <p className="mt-4 text-sm font-medium text-slate-400">Syncing bookmarks...</p>
+                    </div>
+                  ) : savedPosts.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="mb-4 rounded-full bg-slate-50 p-4">
+                        <Bookmark size={32} className="text-slate-200" />
+                      </div>
+                      <p className="max-w-[240px] text-sm font-medium text-slate-400">
+                        No saved posts yet. Bookmark discussions from the forum to find them here.
+                      </p>
+                    </div>
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[#7f1d1d] text-2xl font-semibold text-white">
-                      {initials || "U"}
+                    <div className="grid gap-3">
+                      {savedPosts.map((post) => (
+                        <div
+                          key={post.id}
+                          onClick={() => navigate(`/hub?post=${post.id}`)}
+                          className="group flex cursor-pointer items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 transition-all hover:border-red-100 hover:bg-red-50/30 hover:shadow-md hover:shadow-red-900/5"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <h4 className="m-0 text-[15px] font-bold text-slate-900 group-hover:text-[#800000] transition-colors line-clamp-1">
+                              {post.title}
+                            </h4>
+                            <div className="mt-2 flex items-center gap-3">
+                              <span className="inline-flex rounded-md bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 shadow-sm ring-1 ring-slate-200">
+                                {post.tag || "General"}
+                              </span>
+                              <div className="flex items-center gap-3 text-[11px] font-medium text-slate-400">
+                                <span className="flex items-center gap-1">
+                                  {parseInt(post.score, 10) || 0} votes
+                                </span>
+                                <span>•</span>
+                                <span>{parseInt(post.comment_count, 10) || 0} comments</span>
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUnsave(post.id);
+                            }}
+                            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl text-slate-300 transition-all hover:bg-red-100 hover:text-red-600"
+                            title="Remove bookmark"
+                          >
+                            <Bookmark size={18} fill="currentColor" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
-                <p className="m-0 mt-3 text-sm font-semibold text-slate-900">
-                  {isLoading ? "..." : profile?.full_name}
-                </p>
-                <p className="m-0 mt-1 text-xs text-slate-500">
-                  {isLoading ? "..." : profile?.campus_role || "student"}
-                </p>
               </div>
-
-              <div className="space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <article className="rounded-[12px] border border-slate-200 bg-white p-3">
-                    <p className="m-0 text-xs uppercase tracking-[0.08em] text-slate-500">
-                      SR Code
-                    </p>
-                    <p className="m-0 mt-1 flex items-center gap-1 text-sm font-semibold text-slate-900">
-                      <Hash size={14} />
-                      {isLoading
-                        ? "Loading..."
-                        : profile?.sr_code || "No SR Code"}
-                    </p>
-                  </article>
-
-                  <article className="rounded-[12px] border border-slate-200 bg-white p-3">
-                    <p className="m-0 text-xs uppercase tracking-[0.08em] text-slate-500">
-                      Block
-                    </p>
-                    <p className="m-0 mt-1 flex items-center gap-1 text-sm font-semibold text-slate-900">
-                      <GraduationCap size={14} />
-                      {isLoading
-                        ? "Loading..."
-                        : profile?.block || "Unassigned"}
-                    </p>
-                  </article>
-
-                  <article className="rounded-[12px] border border-slate-200 bg-white p-3 sm:col-span-2">
-                    <p className="m-0 text-xs uppercase tracking-[0.08em] text-slate-500">
-                      Email
-                    </p>
-                    <p className="m-0 mt-1 flex items-center gap-1 text-sm font-semibold text-slate-900">
-                      <AtSign size={14} />
-                      {isLoading ? "Loading..." : profile?.email || "No email"}
-                    </p>
-                  </article>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <article className="rounded-[12px] border border-slate-200 bg-white p-3">
-                    <p className="m-0 text-xs uppercase tracking-[0.08em] text-slate-500">
-                      Followers
-                    </p>
-                    <p className="m-0 mt-1 flex items-center gap-1 text-sm font-semibold text-slate-900">
-                      <Users size={14} />
-                      {followersCount}
-                    </p>
-                  </article>
-
-                  <article className="rounded-[12px] border border-slate-200 bg-white p-3">
-                    <p className="m-0 text-xs uppercase tracking-[0.08em] text-slate-500">
-                      Following
-                    </p>
-                    <p className="m-0 mt-1 flex items-center gap-1 text-sm font-semibold text-slate-900">
-                      <UserRound size={14} />
-                      {followingCount}
-                    </p>
-                  </article>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ── Saved Posts ─────────────────────────────────────────── */}
-          <section className="mt-4 overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]">
-            <div className="flex items-center gap-2 border-b border-slate-200 px-6 py-4">
-              <Bookmark size={18} className="text-slate-600" />
-              <h3 className="m-0 text-lg font-semibold text-slate-900">Saved Posts</h3>
-            </div>
-
-            <div className="p-4">
-              {savedLoading ? (
-                <p className="m-0 py-4 text-center text-sm text-slate-400">Loading saved posts...</p>
-              ) : savedPosts.length === 0 ? (
-                <p className="m-0 py-4 text-center text-sm text-slate-400">
-                  No saved posts yet. Bookmark discussions from the forum to find them here.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {savedPosts.map((post) => (
-                    <div
-                      key={post.id}
-                      onClick={() => navigate(`/hub?post=${post.id}`)}
-                      className="flex cursor-pointer items-center gap-3 rounded-[12px] border border-slate-200 bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="m-0 text-sm font-semibold text-slate-900 truncate">
-                          {post.title}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                          <span className="inline-flex rounded bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 font-medium">
-                            {post.tag || "General"}
-                          </span>
-                          <span>{parseInt(post.score, 10) || 0} votes</span>
-                          <span>•</span>
-                          <span>{parseInt(post.comment_count, 10) || 0} comments</span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleUnsave(post.id);
-                        }}
-                        className="shrink-0 inline-flex items-center gap-1 rounded-[8px] px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 transition-colors hover:bg-amber-100"
-                        title="Remove from saved"
-                      >
-                        <Bookmark size={12} fill="currentColor" />
-                        Unsave
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
+            </section>
+          </div>
         </main>
       </div>
 
@@ -402,7 +415,7 @@ function ProfilePage() {
           return true;
         }}
       />
-    </div>
+    </MainLayout>
   );
 }
 

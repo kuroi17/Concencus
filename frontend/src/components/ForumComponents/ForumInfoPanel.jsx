@@ -67,53 +67,59 @@ function ForumInfoPanel({ onOpenModal }) {
   }, []);
 
   return (
-    <aside className="space-y-3" aria-label="Forum details">
-      <section className="rounded-[14px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+    <aside className="space-y-4" aria-label="Forum details">
+      <section className="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm">
         <button
           type="button"
           onClick={onOpenModal}
-          className="w-full rounded-[12px] bg-[#7f1d1d] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#991b1b]"
+          className="w-full rounded-xl bg-[#800000] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-[#a00000] active:translate-y-0"
         >
           Start Discussion
         </button>
 
-        <h3 className="m-0 mt-4 border-b border-slate-200 pb-2 text-lg font-semibold text-slate-900">
-          About Channel
-        </h3>
-        <p className="m-0 mt-2 text-sm leading-relaxed text-slate-600">
-          Community for curriculum concerns, governance feedback, and technical
-          concerns for BS Computer Science.
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-700">
-          <span className="inline-flex items-center gap-1.5">
-            <Users size={14} /> {memberCount.toLocaleString()} Members
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <CircleDot size={14} className="text-green-500" /> {onlineCount.toLocaleString()} Online
-          </span>
+        <div className="mt-6 space-y-4">
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">About Channel</h3>
+            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">
+              Official community for BS Computer Science curriculum concerns, student governance, and academic collaboration.
+            </p>
+          </div>
+          
+          <div className="flex flex-col gap-2 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+            <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
+              <Users size={16} className="text-slate-400" />
+              {memberCount.toLocaleString()} Verified Members
+            </span>
+            <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
+              <CircleDot size={16} className="text-emerald-500 animate-pulse" />
+              {onlineCount.toLocaleString()} Active Now
+            </span>
+          </div>
         </div>
       </section>
 
-      <section className="rounded-[14px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-        <h3 className="m-0 border-b border-slate-200 pb-2 text-lg font-semibold text-slate-900">
-          Academic Posting Rules
-        </h3>
-        <ol className="m-0 mt-3 list-decimal space-y-1 pl-4 text-sm leading-relaxed text-slate-600">
-          {rules.map((rule) => (
-            <li key={rule}>{rule}</li>
+      <section className="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm">
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Institutional Rules</h3>
+        <ol className="mt-4 space-y-3">
+          {rules.map((rule, idx) => (
+            <li key={rule} className="flex gap-3 text-sm font-medium text-slate-600">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-400">
+                {idx + 1}
+              </span>
+              {rule}
+            </li>
           ))}
         </ol>
       </section>
 
-      <section className="rounded-[14px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-        <h3 className="m-0 border-b border-slate-200 pb-2 text-lg font-semibold text-slate-900">
-          Anonymous Mode
-        </h3>
-        <p className="m-0 mt-2 inline-flex items-start gap-2 text-sm leading-relaxed text-slate-600">
-          <EyeOff size={20} className="mt-0.5 shrink-0 text-slate-500" />
-          You can post anonymously for feedback-oriented topics while moderators
-          retain protected logs.
-        </p>
+      <section className="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm">
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Safe Engagement</h3>
+        <div className="mt-4 flex gap-3 rounded-2xl bg-amber-50/50 p-4 ring-1 ring-amber-100/50">
+          <EyeOff size={20} className="shrink-0 text-amber-600" />
+          <p className="text-xs font-semibold leading-relaxed text-amber-800">
+            Anonymous posting is supported for sensitive governance feedback. Moderators maintain encrypted logs for safety.
+          </p>
+        </div>
       </section>
     </aside>
   );

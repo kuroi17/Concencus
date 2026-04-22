@@ -36,85 +36,63 @@ function AnnouncementCard({ item, delay = 0, onOpen }) {
     <button
       type="button"
       onClick={onOpen}
-      className="break-inside-avoid mb-4 soft-rise group flex flex-col relative w-full overflow-hidden rounded-[14px] border border-slate-200/80 bg-white text-left shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all hover:-translate-y-[1px] hover:border-slate-300 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7f1d1d]/50"
+      className="break-inside-avoid mb-5 soft-rise group flex flex-col relative w-full overflow-hidden rounded-[24px] border border-slate-200/60 bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-500/10"
       style={{ animationDelay: `${delay}ms` }}
       aria-label={`Open announcement: ${item.title}`}
     >
-      
       {item.image_url && (
-        <div className="relative h-[120px] w-full shrink-0 bg-slate-100">
+        <div className="relative h-[160px] w-full shrink-0 bg-slate-50">
           <img
             src={item.image_url}
             alt=""
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/30 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
       )}
 
-      {/* ── Content Container ── */}
-      <div className="p-4 flex flex-col w-full">
-        
-        <header className="flex flex-col gap-2.5">
-          <div className="flex flex-nowrap items-center gap-2 overflow-hidden">
-            
-            {/* TAG: Nilagyan ng shrink at truncate. Kung masikip, siya ang mapuputol nang may ellipsis (...) */}
-            <span className="m-0 inline-flex min-w-0 shrink items-center gap-1 rounded-[8px] bg-slate-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
-              <Tag size={12} className="shrink-0" />
-              <span className="truncate">{item.tag}</span>
+      <div className="p-6 flex flex-col w-full">
+        <header className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500 ring-1 ring-slate-200/50">
+              {item.tag}
             </span>
-
-            {/* PRIORITY: Nilagyan ng shrink-0 para bawal paliitin. Laging buo ang basa! */}
-            <span className={`m-0 inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] ${getPriorityStyle(item.priority)}`}>
-              <Flag size={12} />
+            <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-widest ${getPriorityStyle(item.priority)} ring-1 ring-inset`}>
+              <Flag size={10} />
               {item.priority}
             </span>
           </div>
 
-          <h3 className="m-0 mt-1 line-clamp-2 text-[1.05rem] font-semibold leading-snug text-slate-900">
+          <h3 className="m-0 text-lg font-black leading-tight text-slate-900 group-hover:text-[#800000] transition-colors">
             {item.title}
           </h3>
         </header>
 
-        {/* 🚀 MAGIC 3: Bulletproof 3-line limit. Kapag maikli, aakyat ang ilalim. Kapag mahaba, cut sa 3! */}
-        <p 
-          className="m-0 mt-3 text-sm leading-relaxed text-slate-700"
-          style={{
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}
-        >
+        <p className="m-0 mt-3 text-sm font-medium leading-relaxed text-slate-500 line-clamp-3">
           {item.excerpt}
         </p>
 
-        {/* ── Footer ── */}
-        <footer className="mt-4 pt-4 border-t border-slate-50 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] font-medium text-slate-500">
-          {item.unit && (
+        <footer className="mt-6 space-y-4">
+          <div className="h-px w-full bg-slate-100" />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            {item.unit && (
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck size={12} className="text-[#800000]" />
+                {item.unit}
+              </span>
+            )}
             <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck size={13} />
-              <span className="truncate">{item.unit}</span>
+              <CalendarDays size={12} />
+              {postedAt}
             </span>
-          )}
-          {item.author && (
-            <span className="inline-flex items-center gap-1.5">
-              <UserRound size={13} />
-              <span className="truncate">{item.author}</span>
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1.5">
-            <CalendarDays size={13} />
-            {postedAt}
-          </span>
+          </div>
+          
+          <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.15em] text-[#800000]">
+            Full Notice
+            <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </div>
         </footer>
-
-        <div className="mt-4 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#7f1d1d] transition-colors group-hover:text-[#991b1b]">
-          Open Notice
-          <ArrowUpRight size={13} />
-        </div>
       </div>
     </button>
   );

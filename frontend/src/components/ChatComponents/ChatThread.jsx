@@ -157,6 +157,18 @@ function ChatThread({
         </p>
       )}
 
+      {/* ── Disconnection banner ──────────────────────────────── */}
+      {socketStatus !== "connected" && (
+        <div className="shrink-0 flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2.5">
+          <WifiOff size={14} className="shrink-0 text-amber-600" />
+          <p className="m-0 text-xs font-medium text-amber-700">
+            {socketStatus === "connecting"
+              ? "Connecting to chat server… Please wait."
+              : "Chat server is offline. Make sure the backend is running (npm run backend:dev) and refresh the page."}
+          </p>
+        </div>
+      )}
+
       {/* ── Message list ───────────────────────────────────────── */}
       <div
         ref={listRef}
