@@ -9,7 +9,7 @@ const getPriorityStyle = (priorityText) => {
   return "bg-slate-100 text-slate-600 border-slate-200";
 };
 
-function ViewAnnouncementModal({ isOpen, onClose, notice }) {
+function AnnouncementDetailModal({ isOpen, onClose, notice }) {
   if (!isOpen || !notice) return null;
 
   const dateObj = notice.created_at ? new Date(notice.created_at) : null;
@@ -92,4 +92,4 @@ function ViewAnnouncementModal({ isOpen, onClose, notice }) {
   );
 }
 
-export default ViewAnnouncementModal;
+export default AnnouncementDetailModal;

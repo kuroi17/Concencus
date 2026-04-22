@@ -4,7 +4,7 @@ import { supabase } from "../../lib/supabaseClient";
 import AnnouncementCard from "./AnnouncementCard";
 import CreateAnnouncementModal from "./CreateAnnouncementModal";
 import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
-import ViewAnnouncementModal from "./ViewAnnouncementModal";
+import AnnouncementDetailModal from "./AnnouncementDetailModal";
 // 🚀 IN-IMPORT NATIN ANG UPLOADER FUNCTION
 import { uploadPublicImage } from "../../lib/storage";
 
@@ -191,7 +191,7 @@ function AnnouncementBoard({ channelId }) {
         onSubmit={handleCreateAnnouncement}
       />
 
-      <ViewAnnouncementModal
+      <AnnouncementDetailModal
         isOpen={!!selectedNotice} 
         onClose={() => setSelectedNotice(null)}
         notice={selectedNotice}
