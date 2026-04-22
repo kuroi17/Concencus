@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 
 const GUEST_MODE_KEY = "concencus_guest_mode";
 
-function SidebarLogoutAction() {
+function SidebarLogoutAction({ compact = false }) {
   const navigate = useNavigate();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -22,6 +22,20 @@ function SidebarLogoutAction() {
       navigate("/auth", { replace: true });
     }
   };
+
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+        aria-label="Log out"
+        title={isSigningOut ? "Logging out..." : "Log Out"}
+      >
+        <LogOut size={15} />
+      </button>
+    );
+  }
 
   return (
     <button

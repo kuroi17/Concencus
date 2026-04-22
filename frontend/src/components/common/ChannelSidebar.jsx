@@ -1,6 +1,8 @@
 import { useState } from "react";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   GraduationCap,
   BookOpen,
   LayoutGrid,
@@ -23,7 +25,7 @@ const categoryAccent = {
   organizations: "text-amber-600",
 };
 
-function ChannelSidebar() {
+function ChannelSidebar({ collapsed = false, onCollapseChange }) {
   const { categories, currentChannel, setCurrentChannel, loadingChannels } =
     useChannel();
 
@@ -39,16 +41,108 @@ function ChannelSidebar() {
   const toggleCategory = (id) =>
     setOpenCategories((prev) => ({ ...prev, [id]: !prev[id] }));
 
+  const toggleCollapse = () => {
+    if (onCollapseChange) onCollapseChange(!collapsed);
+  };
+
+  // ── Collapsed view (desktop only — mobile always shows full) ──
+  if (collapsed) {
+    return (
+      <aside
+        className="hidden lg:flex flex-col items-center border-r border-slate-200 bg-white/70 py-4 backdrop-blur-sm lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:overflow-y-auto"
+        aria-label="Channel sidebar (collapsed)"
+      >
+        {/* Expand button */}
+        <button
+          type="button"
+          onClick={toggleCollapse}
+          className="mb-4 flex h-8 w-8 items-center justify-center rounded-[8px] text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          aria-label="Expand sidebar"
+          title="Expand sidebar"
+        >
+          <ChevronRight size={16} />
+        </button>
+
+        {/* Category icon buttons */}
+        <nav className="flex flex-1 flex-col items-center gap-1" aria-label="Channel categories">
+          {loadingChannels ? (
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-8 w-8 animate-pulse rounded-[8px] bg-slate-200" />
+              ))}
+            </div>
+          ) : (
+            categories.map((category) => {
+              const Icon = categoryIcons[category.id] ?? Users;
+              const accentCls = categoryAccent[category.id] ?? "text-slate-500";
+              const hasActiveChild = category.channels.some(
+                (ch) => currentChannel?.id === ch.id,
+              );
+
+              return (
+                <div key={category.id} className="relative group">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // When collapsed, clicking a category icon selects its first channel
+                      if (category.channels.length > 0) {
+                        setCurrentChannel(category.channels[0]);
+                      }
+                    }}
+                    className={`flex h-9 w-9 items-center justify-center rounded-[10px] transition-all ${
+                      hasActiveChild
+                        ? "bg-slate-900 text-white shadow-sm"
+                        : `${accentCls} hover:bg-slate-100`
+                    }`}
+                    title={category.label}
+                    aria-label={category.label}
+                  >
+                    <Icon size={16} />
+                  </button>
+
+                  {/* Tooltip */}
+                  <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-[8px] bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                    {category.label}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </nav>
+
+        {/* Logout (compact) */}
+        <div className="mt-auto border-t border-slate-200 pt-3">
+          <SidebarLogoutAction compact />
+        </div>
+      </aside>
+    );
+  }
+
+  // ── Expanded view (full sidebar) ──
   return (
     <aside
       className="flex flex-col border-b border-slate-200 bg-white/70 px-3 py-4 backdrop-blur-sm sm:px-4 lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:overflow-y-auto lg:border-b-0 lg:border-r"
       aria-label="Channel sidebar"
     >
-      {/* Brand */}
+      {/* Brand + collapse toggle */}
       <div className="mb-5 border-b border-slate-200 pb-4">
-        <h2 className="m-0 text-[1.55rem] font-extrabold leading-tight tracking-tight text-slate-900">
-          Channels
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="m-0 text-[1.55rem] font-extrabold leading-tight tracking-tight text-slate-900">
+            Channels
+          </h2>
+          {/* Collapse button — hidden on mobile */}
+          {onCollapseChange && (
+            <button
+              type="button"
+              onClick={toggleCollapse}
+              className="hidden lg:flex h-7 w-7 items-center justify-center rounded-[8px] text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              aria-label="Collapse sidebar"
+              title="Collapse sidebar"
+            >
+              <ChevronLeft size={16} />
+            </button>
+          )}
+        </div>
         <p className="m-0 mt-0.5 text-xs uppercase tracking-[0.09em] text-slate-400">
           Select a channel to filter
         </p>

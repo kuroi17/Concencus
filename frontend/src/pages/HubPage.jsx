@@ -17,6 +17,7 @@ function HubPage() {
   const [view, setView] = useState(searchParams.has("post") ? "forum" : "announcement");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // ── Create Post ─────────────────────────────────────────────────────────
   const handleCreatePost = async (postData) => {
@@ -82,9 +83,9 @@ function HubPage() {
   return (
     <>
       {/* ── Shell ──────────────────────────────────────────────────────────── */}
-      <div className="grid min-h-screen grid-cols-1 gap-0 bg-gradient-to-b from-[#f8f9fb] to-[#f2f4f7] lg:grid-cols-[240px_1fr]">
+      <div className={`grid min-h-screen grid-cols-1 gap-0 bg-gradient-to-b from-[#f8f9fb] to-[#f2f4f7] transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "lg:grid-cols-[60px_1fr]" : "lg:grid-cols-[240px_1fr]"}`}>
         {/* Sidebar */}
-        <ChannelSidebar />
+        <ChannelSidebar collapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
 
         {/* Main column */}
         <div className="flex flex-col gap-4 p-3 sm:p-4 lg:p-6">

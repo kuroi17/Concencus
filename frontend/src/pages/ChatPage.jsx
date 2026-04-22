@@ -109,14 +109,24 @@ function ChatPage() {
       if (!token || isDisposed) { setSocketStatus("disconnected"); return; }
       client = createSocketClient(token);
       client.on("connect", () => { if (!isDisposed) setSocketStatus("connected"); });
-      client.on("disconnect", () => { if (!isDisposed) setSocketStatus("disconnected"); });
-      client.on("connect_error", () => { if (!isDisposed) setSocketStatus("disconnected"); });
+      client.on("disconnect", (reason) => {
+        if (isDisposed) return;
+        // If socket.io will auto-reconnect, show connecting status
+        if (reason === "io server disconnect") {
+          setSocketStatus("disconnected");
+        } else {
+          setSocketStatus("connecting");
+        }
+      });
+      client.on("connect_error", () => { if (!isDisposed) setSocketStatus("connecting"); });
+      client.io.on("reconnect", () => { if (!isDisposed) setSocketStatus("connected"); });
+      client.io.on("reconnect_failed", () => { if (!isDisposed) setSocketStatus("disconnected"); });
       if (!isDisposed) setSocket(client);
     };
     connect();
     return () => {
       isDisposed = true;
-      if (client) { client.removeAllListeners(); client.disconnect(); }
+      if (client) { client.removeAllListeners(); client.io.removeAllListeners(); client.disconnect(); }
       setSocket(null);
     };
   }, [currentUser?.id]);
