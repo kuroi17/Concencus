@@ -44,6 +44,9 @@ function ChatPage() {
     appendOptimisticMessage,
     replaceOptimisticMessage,
     removeOptimisticMessage,
+    reactionsByMessage,
+    toggleReaction,
+    deleteMessage,
   } = useDmMessages(activeConversationId, socket);
 
   const { unreadCounts, markAsRead, refreshUnreadCounts } = useUnreadCounts(
@@ -70,7 +73,9 @@ function ChatPage() {
   // ── Load current user profile ─────────────────────────────────
   useEffect(() => {
     if (!currentUser?.id) {
-      setCurrentUserProfile(null);
+      queueMicrotask(() => {
+        setCurrentUserProfile(null);
+      });
       return;
     }
     let isMounted = true;
@@ -90,7 +95,9 @@ function ChatPage() {
   // ── Socket connection ─────────────────────────────────────────
   useEffect(() => {
     if (!currentUser?.id) {
-      setSocketStatus("disconnected");
+      queueMicrotask(() => {
+        setSocketStatus("disconnected");
+      });
       return undefined;
     }
     let isDisposed = false;
@@ -121,15 +128,28 @@ function ChatPage() {
       conversations.length > 0 &&
       !conversations.some((c) => c.id === activeConversationId)
     ) {
-      setActiveConversationId(null);
+      queueMicrotask(() => {
+        setActiveConversationId(null);
+      });
     }
   }, [activeConversationId, conversations]);
 
   // ── Search users ──────────────────────────────────────────────
   useEffect(() => {
-    if (!currentUser?.id) { setSearchResults([]); return; }
+    if (!currentUser?.id) {
+      queueMicrotask(() => {
+        setSearchResults([]);
+      });
+      return;
+    }
     const term = searchQuery.trim();
-    if (term.length < 2) { setSearchResults([]); setIsSearchingProfiles(false); return; }
+    if (term.length < 2) {
+      queueMicrotask(() => {
+        setSearchResults([]);
+        setIsSearchingProfiles(false);
+      });
+      return;
+    }
 
     let isCancelled = false;
     const id = setTimeout(async () => {
@@ -222,9 +242,27 @@ function ChatPage() {
   // ── Layout ────────────────────────────────────────────────────
   return (
     <div className="flex h-screen overflow-hidden bg-[#f8f9fb]">
-      {/* ── Far-left sidebar (desktop only) ──────────────────── */}
-      <div className="hidden w-[220px] shrink-0 lg:block">
-        <ChatSidebar currentUser={currentUserDisplay} />
+      {/* ── Left sidebar (search + conversations) ─────────────── */}
+      <div
+        className={`flex w-full shrink-0 flex-col border-r border-slate-200 bg-white lg:w-[320px] ${
+          activeConversationId ? "hidden lg:flex" : "flex"
+        }`}
+      >
+        <ChatSidebar currentUser={currentUserDisplay}>
+          <ConversationListPanel
+            conversations={conversations}
+            isLoadingConversations={isLoadingConversations}
+            onOpenConversation={handleOpenConversation}
+            activeConversationId={activeConversationId}
+            unreadCounts={unreadCounts}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchResults={searchResults}
+            isSearchingProfiles={isSearchingProfiles}
+            isOpeningConversation={isOpeningConversation}
+            onSelectSearchResult={handleSelectSearchResult}
+          />
+        </ChatSidebar>
       </div>
 
       {/* ── Right area ────────────────────────────────────────── */}
@@ -239,52 +277,35 @@ function ChatPage() {
           </p>
         )}
 
-        {/* ── Split pane ──────────────────────────────────────── */}
-        <div className="flex min-h-0 flex-1 overflow-hidden">
-          {/* Conversation list panel
-              Mobile: visible only when no active conversation
-              Desktop: always visible, fixed 300 px width         */}
-          <div
-            className={`flex flex-col border-r border-slate-200 bg-white lg:w-[300px] lg:shrink-0 ${
-              activeConversationId ? "hidden lg:flex" : "flex w-full"
-            }`}
-          >
-            <ConversationListPanel
-              conversations={conversations}
-              isLoadingConversations={isLoadingConversations}
-              onOpenConversation={handleOpenConversation}
-              activeConversationId={activeConversationId}
-              unreadCounts={unreadCounts}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              searchResults={searchResults}
-              isSearchingProfiles={isSearchingProfiles}
+        {/* Thread panel
+            Mobile: visible only when a conversation is active
+            Desktop: always visible, fills remaining width      */}
+        <div
+          className={`flex min-h-0 flex-1 overflow-hidden ${
+            activeConversationId ? "flex" : "hidden lg:flex"
+          }`}
+        >
+          <div className="flex h-full w-full flex-col">
+            <ChatThread
+              conversation={activeConversation}
+              messages={messages}
+              currentUserId={currentUser?.id}
+              isLoadingMessages={isLoadingMessages}
+              messagesError={messagesError}
+              socketStatus={socketStatus}
+              onSendMessage={handleSendMessage}
               isOpeningConversation={isOpeningConversation}
-              onSelectSearchResult={handleSelectSearchResult}
+              onBack={() => setActiveConversationId(null)}
+              reactionsByMessage={reactionsByMessage}
+              onToggleReaction={(messageId, emoji) =>
+                toggleReaction({
+                  messageId,
+                  emoji,
+                  currentUserId: currentUser?.id,
+                })
+              }
+              onDeleteMessage={deleteMessage}
             />
-          </div>
-
-          {/* Thread panel
-              Mobile: visible only when a conversation is active
-              Desktop: always visible, fills remaining width      */}
-          <div
-            className={`flex-1 overflow-hidden lg:flex ${
-              activeConversationId ? "flex" : "hidden"
-            }`}
-          >
-            <div className="flex h-full w-full flex-col">
-              <ChatThread
-                conversation={activeConversation}
-                messages={messages}
-                currentUserId={currentUser?.id}
-                isLoadingMessages={isLoadingMessages}
-                messagesError={messagesError}
-                socketStatus={socketStatus}
-                onSendMessage={handleSendMessage}
-                isOpeningConversation={isOpeningConversation}
-                onBack={() => setActiveConversationId(null)}
-              />
-            </div>
           </div>
         </div>
       </div>

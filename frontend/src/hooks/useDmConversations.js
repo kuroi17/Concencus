@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-function normalizeConversationPair(userA, userB) {
-  return userA.localeCompare(userB) <= 0 ? [userA, userB] : [userB, userA];
-}
-
 export function useDmConversations(currentUserId) {
   const [conversations, setConversations] = useState([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
@@ -125,60 +121,31 @@ export function useDmConversations(currentUserId) {
 
   const createOrGetConversation = useCallback(
     async (targetUserId) => {
-      if (!currentUserId) {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const authUserId = authError ? null : authData?.user?.id || null;
+      if (!authUserId) {
         throw new Error("Missing authenticated user");
       }
 
-      if (!targetUserId || targetUserId === currentUserId) {
+      if (!targetUserId || targetUserId === authUserId) {
         throw new Error("Invalid conversation target");
       }
 
-      const [participantOne, participantTwo] = normalizeConversationPair(
-        currentUserId,
-        targetUserId,
+      const { data, error } = await supabase.rpc(
+        "create_or_get_dm_conversation",
+        {
+          p_target_user_id: targetUserId,
+        },
       );
 
-      const { data, error } = await supabase
-        .from("dm_conversations")
-        .insert({
-          participant_one: participantOne,
-          participant_two: participantTwo,
-          created_by: currentUserId,
-        })
-        .select(
-          "id, participant_one, participant_two, latest_message_at, created_at",
-        )
-        .single();
-
-      if (!error && data) {
-        await loadConversations();
-        return data;
-      }
-
-      if (error?.code !== "23505") {
-        throw new Error(error.message || "Failed to create conversation");
-      }
-
-      const { data: existingConversation, error: existingError } =
-        await supabase
-          .from("dm_conversations")
-          .select(
-            "id, participant_one, participant_two, latest_message_at, created_at",
-          )
-          .eq("participant_one", participantOne)
-          .eq("participant_two", participantTwo)
-          .single();
-
-      if (existingError || !existingConversation) {
-        throw new Error(
-          existingError?.message || "Failed to load existing conversation",
-        );
+      if (error || !data?.id) {
+        throw new Error(error?.message || "Failed to create conversation");
       }
 
       await loadConversations();
-      return existingConversation;
+      return data;
     },
-    [currentUserId, loadConversations],
+    [loadConversations],
   );
 
   useEffect(() => {

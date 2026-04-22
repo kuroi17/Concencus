@@ -16,7 +16,7 @@ function getInitials(fullName) {
     .join("");
 }
 
-function ChatSidebar({ currentUser }) {
+function ChatSidebar({ currentUser, children }) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -60,7 +60,7 @@ function ChatSidebar({ currentUser }) {
 
   return (
     <aside
-      className="flex flex-col border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:min-h-[calc(100vh-3rem)] lg:border-b-0 lg:border-r"
+      className="flex h-full flex-col border-b border-slate-200 px-[14px] py-4 sm:px-[18px] lg:min-h-[calc(100vh-3rem)] lg:border-b-0"
       aria-label="Chat sidebar"
     >
       <div className="border-b border-slate-200 pb-4">
@@ -72,8 +72,8 @@ function ChatSidebar({ currentUser }) {
         </p>
       </div>
 
-      {/* spacer — search + conversation list now lives in the center panel */}
-      <div className="flex-1" />
+      {/* Search + conversation list (injected) */}
+      <div className="min-h-0 flex-1 overflow-hidden pt-4">{children}</div>
 
       <div
         ref={menuRef}

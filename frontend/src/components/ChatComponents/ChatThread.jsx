@@ -93,6 +93,9 @@ function ChatThread({
   onSendMessage,
   isOpeningConversation,
   onBack,
+  reactionsByMessage,
+  onToggleReaction,
+  onDeleteMessage,
 }) {
   const listRef = useRef(null);
 
@@ -192,6 +195,9 @@ function ChatThread({
               message={message}
               currentUserId={currentUserId}
               otherUser={conversation.otherUser}
+              reactions={(message.id && reactionsByMessage?.get(String(message.id))) || []}
+              onToggleReaction={onToggleReaction}
+              onDeleteMessage={onDeleteMessage}
             />
           ))}
       </div>

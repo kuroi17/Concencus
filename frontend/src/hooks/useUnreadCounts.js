@@ -57,7 +57,9 @@ export function useUnreadCounts(currentUserId) {
 
   // Initial load
   useEffect(() => {
-    refresh();
+    queueMicrotask(() => {
+      refresh();
+    });
   }, [refresh]);
 
   // Subscribe to new messages so the badge updates in real-time
