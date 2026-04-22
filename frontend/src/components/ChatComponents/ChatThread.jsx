@@ -1,32 +1,85 @@
 import { useEffect, useRef } from "react";
-import { ArrowLeft, CircleOff, Wifi, WifiOff } from "lucide-react";
+import { ArrowLeft, CircleOff, MessageCircle, Wifi, WifiOff } from "lucide-react";
 import MessageBubble from "./MessageBubble";
 import MessageComposer from "./MessageComposer";
+
+function getInitials(name) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
 
 function ConnectionBadge({ socketStatus }) {
   if (socketStatus === "connected") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-[9px] border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
-        <Wifi size={12} />
+      <span className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+        <Wifi size={11} />
         Live
       </span>
     );
   }
-
   if (socketStatus === "connecting") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-[9px] border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-        <CircleOff size={12} />
+      <span className="inline-flex items-center gap-1 rounded-[8px] border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+        <CircleOff size={11} />
         Connecting
       </span>
     );
   }
-
   return (
-    <span className="inline-flex items-center gap-1 rounded-[9px] border border-slate-300 bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
-      <WifiOff size={12} />
+    <span className="inline-flex items-center gap-1 rounded-[8px] border border-slate-300 bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+      <WifiOff size={11} />
       Offline
     </span>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-5 p-8 text-center">
+      <div className="rounded-full bg-slate-100 p-6">
+        <MessageCircle size={38} className="text-slate-300" />
+      </div>
+      <div>
+        <h3 className="m-0 text-base font-semibold text-slate-600">
+          No conversation selected
+        </h3>
+        <p className="m-0 mt-2 max-w-[260px] text-sm leading-relaxed text-slate-400">
+          Search for someone or pick a conversation on the left to start
+          messaging.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ContactIntroCard({ otherUser }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 text-2xl font-bold text-white shadow-lg">
+        {getInitials(otherUser?.full_name)}
+      </div>
+      <div>
+        <h3 className="m-0 text-xl font-bold text-slate-900">
+          {otherUser?.full_name || "Unknown User"}
+        </h3>
+        {otherUser?.sr_code && (
+          <p className="m-0 mt-1 text-sm text-slate-500">{otherUser.sr_code}</p>
+        )}
+        {otherUser?.campus_role && (
+          <p className="m-0 mt-0.5 text-xs capitalize text-slate-400">
+            {otherUser.campus_role}
+          </p>
+        )}
+        <p className="m-0 mt-4 text-sm text-slate-400">
+          You started this conversation. Say hello! 👋
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -45,96 +98,112 @@ function ChatThread({
 
   useEffect(() => {
     if (!listRef.current) return;
-
     listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages, conversation?.id]);
 
+  // ── No conversation selected ────────────────────────────────
   if (!conversation) {
-    return (
-      <section className="space-y-4" aria-label="Chat thread">
-        <header className="soft-enter border-b border-slate-200 pb-3">
-          <h2 className="m-0 text-[1.7rem] font-semibold leading-tight text-slate-900 sm:text-[1.95rem] lg:text-[2.1rem]">
-            Direct Messages
-          </h2>
-          <p className="m-0 mt-1 text-sm text-slate-600">
-            Select an existing conversation or use the search bar to start one.
-          </p>
-        </header>
-
-        <div className="rounded-[12px] border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500">
-          No conversation selected.
-        </div>
-      </section>
-    );
+    return <EmptyState />;
   }
 
-  return (
-    <section className="space-y-4" aria-label="Chat thread">
-      <header className="soft-enter flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="mb-2 inline-flex items-center gap-1 rounded-[8px] border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
-            >
-              <ArrowLeft size={12} />
-              Back to conversations
-            </button>
-          )}
+  const showIntroCard =
+    !isLoadingMessages &&
+    !isOpeningConversation &&
+    messages.length === 0;
 
-          <h2 className="m-0 text-[1.7rem] font-semibold leading-tight text-slate-900 sm:text-[1.95rem] lg:text-[2.1rem]">
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* ── Thread header ──────────────────────────────────────── */}
+      <header className="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
+        {/* Mobile back button */}
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="mr-1 inline-flex items-center justify-center rounded-[8px] border border-slate-200 bg-white p-1.5 text-slate-600 transition hover:bg-slate-100 lg:hidden"
+            aria-label="Back to conversations"
+          >
+            <ArrowLeft size={16} />
+          </button>
+        )}
+
+        {/* Avatar */}
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-800 text-sm font-semibold text-white">
+          {getInitials(conversation.otherUser?.full_name)}
+        </div>
+
+        {/* Name + role */}
+        <div className="min-w-0 flex-1">
+          <p className="m-0 truncate text-sm font-bold text-slate-900">
             {conversation.otherUser?.full_name || "Conversation"}
-          </h2>
-          <p className="m-0 mt-1 text-sm text-slate-600">
+          </p>
+          <p className="m-0 truncate text-xs text-slate-500">
             {conversation.otherUser?.campus_role
-              ? `${conversation.otherUser.campus_role} • ${conversation.otherUser?.sr_code || "No SR Code"}`
-              : "Private direct message"}
+              ? `${conversation.otherUser.campus_role}${conversation.otherUser?.sr_code ? " · " + conversation.otherUser.sr_code : ""}`
+              : "Direct message"}
           </p>
         </div>
 
         <ConnectionBadge socketStatus={socketStatus} />
       </header>
 
+      {/* ── Error banner ───────────────────────────────────────── */}
       {messagesError && (
-        <p className="m-0 rounded-[10px] border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+        <p className="m-0 shrink-0 border-b border-rose-200 bg-rose-50 px-4 py-2 text-xs font-medium text-rose-700">
           {messagesError}
         </p>
       )}
 
+      {/* ── Message list ───────────────────────────────────────── */}
       <div
         ref={listRef}
-        className="max-h-[55vh] space-y-4 overflow-y-auto rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3"
+        className="min-h-0 flex-1 overflow-y-auto bg-[#f8f9fb] px-4 py-4"
       >
-        {isLoadingMessages || isOpeningConversation ? (
-          <p className="m-0 text-center text-sm text-slate-500">
-            Loading conversation...
-          </p>
-        ) : null}
+        {/* Contact intro card — shown when 0 messages */}
+        {showIntroCard && (
+          <ContactIntroCard otherUser={conversation.otherUser} />
+        )}
 
+        {/* Loading */}
+        {(isLoadingMessages || isOpeningConversation) && (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className={`flex items-end gap-2 ${i % 2 === 0 ? "justify-start" : "justify-end"}`}
+              >
+                {i % 2 === 0 && (
+                  <div className="h-8 w-8 shrink-0 animate-pulse rounded-lg bg-slate-200" />
+                )}
+                <div
+                  className={`h-10 animate-pulse rounded-[14px] bg-slate-200 ${i % 2 === 0 ? "w-48" : "w-36"}`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Messages */}
         {!isLoadingMessages &&
-        !isOpeningConversation &&
-        messages.length === 0 ? (
-          <p className="m-0 text-center text-sm text-slate-500">
-            No messages yet. Start the conversation below.
-          </p>
-        ) : null}
-
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id || message.client_message_id}
-            message={message}
-            currentUserId={currentUserId}
-            otherUser={conversation.otherUser}
-          />
-        ))}
+          !isOpeningConversation &&
+          messages.map((message) => (
+            <MessageBubble
+              key={message.id || message.client_message_id}
+              message={message}
+              currentUserId={currentUserId}
+              otherUser={conversation.otherUser}
+            />
+          ))}
       </div>
 
-      <MessageComposer
-        onSendMessage={onSendMessage}
-        disabled={socketStatus !== "connected" || isOpeningConversation}
-      />
-    </section>
+      {/* ── Composer ───────────────────────────────────────────── */}
+      <div className="shrink-0 border-t border-slate-200 bg-white p-3">
+        <MessageComposer
+          onSendMessage={onSendMessage}
+          disabled={socketStatus !== "connected" || isOpeningConversation}
+        />
+      </div>
+    </div>
   );
 }
 

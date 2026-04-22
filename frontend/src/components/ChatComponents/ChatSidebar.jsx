@@ -1,4 +1,4 @@
-import { ChevronUp, LogOut, UserRound, Users } from "lucide-react";
+import { ChevronUp, LogOut, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
@@ -72,23 +72,8 @@ function ChatSidebar({ currentUser }) {
         </p>
       </div>
 
-      <section className="mt-5 min-h-0 flex-1" aria-label="Followed profiles">
-        <div className="mb-2 flex items-center gap-2">
-          <Users size={14} className="text-slate-500" />
-          <h3 className="m-0 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
-            Profiles
-          </h3>
-        </div>
-
-        <div className="space-y-2 rounded-[12px] border border-dashed border-slate-300 bg-white p-3">
-          <p className="m-0 text-xs text-slate-500">
-            Follow feature is not yet enabled.
-          </p>
-          <p className="m-0 text-xs text-slate-500">
-            Followed profiles will appear here once implemented.
-          </p>
-        </div>
-      </section>
+      {/* spacer — search + conversation list now lives in the center panel */}
+      <div className="flex-1" />
 
       <div
         ref={menuRef}

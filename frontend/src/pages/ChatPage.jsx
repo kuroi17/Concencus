@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Header from "../common/Header";
 import ChatSidebar from "../components/ChatComponents/ChatSidebar";
 import ChatThread from "../components/ChatComponents/ChatThread";
 import ConversationListPanel from "../components/ChatComponents/ConversationListPanel";
 import { useDmConversations } from "../hooks/useDmConversations";
 import { useDmMessages } from "../hooks/useDmMessages";
+import { useUnreadCounts } from "../hooks/useUnreadCounts";
 import { createSocketClient } from "../lib/socketClient";
 import { supabase } from "../lib/supabaseClient";
 
@@ -46,192 +46,125 @@ function ChatPage() {
     removeOptimisticMessage,
   } = useDmMessages(activeConversationId, socket);
 
+  const { unreadCounts, markAsRead, refreshUnreadCounts } = useUnreadCounts(
+    currentUser?.id,
+  );
+
   const activeConversation = useMemo(() => {
     if (!activeConversationId) return null;
     return conversationMap.get(activeConversationId) || null;
   }, [conversationMap, activeConversationId]);
 
+  // ── Load current user ─────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
-
-    const loadCurrentUser = async () => {
+    const load = async () => {
       const { data, error } = await supabase.auth.getUser();
-      if (!isMounted) return;
-      if (error || !data.user) return;
-
+      if (!isMounted || error || !data.user) return;
       setCurrentUser(data.user);
     };
-
-    loadCurrentUser();
-
-    return () => {
-      isMounted = false;
-    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
+  // ── Load current user profile ─────────────────────────────────
   useEffect(() => {
     if (!currentUser?.id) {
-      queueMicrotask(() => {
-        setCurrentUserProfile(null);
-      });
+      setCurrentUserProfile(null);
       return;
     }
-
     let isMounted = true;
-
-    const loadProfile = async () => {
+    const load = async () => {
       const { data, error } = await supabase
         .from("user_profiles")
         .select("id, full_name, sr_code, campus_role, block")
         .eq("id", currentUser.id)
         .maybeSingle();
-
       if (!isMounted) return;
-
-      if (error || !data) {
-        setCurrentUserProfile(buildFallbackProfile(currentUser));
-        return;
-      }
-
-      setCurrentUserProfile(data);
+      setCurrentUserProfile(error || !data ? buildFallbackProfile(currentUser) : data);
     };
-
-    loadProfile();
-
-    return () => {
-      isMounted = false;
-    };
+    load();
+    return () => { isMounted = false; };
   }, [currentUser]);
 
+  // ── Socket connection ─────────────────────────────────────────
   useEffect(() => {
     if (!currentUser?.id) {
-      queueMicrotask(() => {
-        setSocketStatus("disconnected");
-      });
+      setSocketStatus("disconnected");
       return undefined;
     }
-
     let isDisposed = false;
     let client = null;
-
-    const connectSocket = async () => {
+    const connect = async () => {
       setSocketStatus("connecting");
-
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
-
-      if (!token || isDisposed) {
-        setSocketStatus("disconnected");
-        return;
-      }
-
+      if (!token || isDisposed) { setSocketStatus("disconnected"); return; }
       client = createSocketClient(token);
-
-      client.on("connect", () => {
-        if (isDisposed) return;
-        setSocketStatus("connected");
-      });
-
-      client.on("disconnect", () => {
-        if (isDisposed) return;
-        setSocketStatus("disconnected");
-      });
-
-      client.on("connect_error", () => {
-        if (isDisposed) return;
-        setSocketStatus("disconnected");
-      });
-
-      if (!isDisposed) {
-        setSocket(client);
-      }
+      client.on("connect", () => { if (!isDisposed) setSocketStatus("connected"); });
+      client.on("disconnect", () => { if (!isDisposed) setSocketStatus("disconnected"); });
+      client.on("connect_error", () => { if (!isDisposed) setSocketStatus("disconnected"); });
+      if (!isDisposed) setSocket(client);
     };
-
-    connectSocket();
-
+    connect();
     return () => {
       isDisposed = true;
-
-      if (client) {
-        client.removeAllListeners();
-        client.disconnect();
-      }
-
+      if (client) { client.removeAllListeners(); client.disconnect(); }
       setSocket(null);
     };
   }, [currentUser?.id]);
 
+  // ── Guard: active convo removed ───────────────────────────────
   useEffect(() => {
     if (
       activeConversationId &&
       conversations.length > 0 &&
-      !conversations.some((item) => item.id === activeConversationId)
+      !conversations.some((c) => c.id === activeConversationId)
     ) {
-      queueMicrotask(() => {
-        setActiveConversationId(null);
-      });
+      setActiveConversationId(null);
     }
   }, [activeConversationId, conversations]);
 
+  // ── Search users ──────────────────────────────────────────────
   useEffect(() => {
-    if (!currentUser?.id) {
-      queueMicrotask(() => {
-        setSearchResults([]);
-        setIsSearchingProfiles(false);
-      });
-      return;
-    }
-
+    if (!currentUser?.id) { setSearchResults([]); return; }
     const term = searchQuery.trim();
-
-    if (term.length < 2) {
-      queueMicrotask(() => {
-        setSearchResults([]);
-        setIsSearchingProfiles(false);
-      });
-      return;
-    }
+    if (term.length < 2) { setSearchResults([]); setIsSearchingProfiles(false); return; }
 
     let isCancelled = false;
-
-    const timeoutId = setTimeout(async () => {
+    const id = setTimeout(async () => {
       setIsSearchingProfiles(true);
-
-      const safeTerm = term.replace(/[,%]/g, "");
-
+      const safe = term.replace(/[,%]/g, "");
       const { data, error } = await supabase
         .from("user_profiles")
         .select("id, full_name, sr_code, campus_role, block")
-        .or(`full_name.ilike.%${safeTerm}%,sr_code.ilike.%${safeTerm}%`)
+        .or(`full_name.ilike.%${safe}%,sr_code.ilike.%${safe}%`)
         .neq("id", currentUser.id)
         .limit(8);
-
       if (isCancelled) return;
-
-      if (error) {
-        setSearchResults([]);
-      } else {
-        setSearchResults(data || []);
-      }
-
+      setSearchResults(error ? [] : (data || []));
       setIsSearchingProfiles(false);
     }, 250);
 
-    return () => {
-      isCancelled = true;
-      clearTimeout(timeoutId);
-    };
+    return () => { isCancelled = true; clearTimeout(id); };
   }, [searchQuery, currentUser?.id]);
+
+  // ── Handlers ──────────────────────────────────────────────────
+  const handleOpenConversation = useCallback(
+    (conversationId) => {
+      setActiveConversationId(conversationId);
+      if (conversationId) markAsRead(conversationId);
+    },
+    [markAsRead],
+  );
 
   const handleSelectSearchResult = async (profile) => {
     if (!profile?.id) return;
-
     setIsOpeningConversation(true);
-
     try {
       const conversation = await createOrGetConversation(profile.id);
-
       setActiveConversationId(conversation.id);
+      markAsRead(conversation.id);
       setSearchQuery("");
       setSearchResults([]);
     } finally {
@@ -241,18 +174,10 @@ function ChatPage() {
 
   const handleSendMessage = async (text) => {
     const content = text.trim();
-
-    if (!content) {
-      throw new Error("Message cannot be empty.");
-    }
-
-    if (!activeConversationId) {
-      throw new Error("Please select a conversation first.");
-    }
-
-    if (!socket || socketStatus !== "connected") {
+    if (!content) throw new Error("Message cannot be empty.");
+    if (!activeConversationId) throw new Error("Please select a conversation first.");
+    if (!socket || socketStatus !== "connected")
       throw new Error("Chat service is offline. Please try again.");
-    }
 
     const clientMessageId = `client-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -274,21 +199,16 @@ function ChatPage() {
 
       socket.emit(
         "message:send",
-        {
-          conversationId: activeConversationId,
-          body: content,
-          clientMessageId,
-        },
+        { conversationId: activeConversationId, body: content, clientMessageId },
         async (response) => {
           clearTimeout(timeoutId);
-
           if (response?.ok && response.message) {
             replaceOptimisticMessage(clientMessageId, response.message);
             await refreshConversations();
+            refreshUnreadCounts();
             resolve(response.message);
             return;
           }
-
           removeOptimisticMessage(clientMessageId);
           reject(new Error(response?.error || "Failed to send message."));
         },
@@ -296,90 +216,63 @@ function ChatPage() {
     });
   };
 
-  const hasSearchText = searchQuery.trim().length >= 2;
+  const currentUserDisplay =
+    currentUserProfile || buildFallbackProfile(currentUser);
 
-  const searchSlot = (
-    <div className="relative max-w-[760px]">
-      <Search
-        size={18}
-        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-      />
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(event) => setSearchQuery(event.target.value)}
-        placeholder="Search by name or SR code"
-        className="w-full rounded-[14px] border border-slate-200 bg-white py-3 pl-12 pr-4 text-sm text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.05)] outline-none transition-all focus:border-slate-400 focus:shadow-[0_10px_26px_rgba(15,23,42,0.09)]"
-      />
-
-      {hasSearchText && (
-        <div className="absolute left-0 top-[calc(100%+10px)] z-20 max-h-72 w-full overflow-y-auto rounded-[14px] border border-slate-200 bg-white p-1.5 shadow-[0_14px_32px_rgba(15,23,42,0.12)]">
-          {isSearchingProfiles && (
-            <p className="m-0 px-3 py-2 text-xs text-slate-500">Searching...</p>
-          )}
-
-          {!isSearchingProfiles &&
-            searchResults.map((profile) => (
-              <button
-                key={profile.id}
-                type="button"
-                onClick={() => handleSelectSearchResult(profile)}
-                className="flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left transition-colors hover:bg-slate-100"
-              >
-                <div className="h-9 w-9 rounded-full bg-slate-800 text-center text-xs font-semibold leading-9 text-white">
-                  {(profile.full_name || "?")
-                    .split(" ")
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .map((part) => part[0]?.toUpperCase())
-                    .join("")}
-                </div>
-
-                <div className="min-w-0">
-                  <p className="m-0 truncate text-sm font-semibold text-slate-800">
-                    {profile.full_name}
-                  </p>
-                  <p className="m-0 truncate text-xs text-slate-500">
-                    {profile.sr_code || "No SR Code"}
-                  </p>
-                </div>
-              </button>
-            ))}
-
-          {!isSearchingProfiles && searchResults.length === 0 && (
-            <p className="m-0 px-3 py-2 text-xs text-slate-500">
-              No matching profiles found.
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
+  // ── Layout ────────────────────────────────────────────────────
   return (
-    <div className="grid min-h-screen grid-cols-1 gap-4 bg-gradient-to-b from-[#f8f9fb] to-[#f2f4f7] p-3 sm:p-4 lg:grid-cols-[230px_1fr] lg:p-6">
-      <ChatSidebar
-        currentUser={currentUserProfile || buildFallbackProfile(currentUser)}
-      />
+    <div className="flex h-screen overflow-hidden bg-[#f8f9fb]">
+      {/* ── Far-left sidebar (desktop only) ──────────────────── */}
+      <div className="hidden w-[220px] shrink-0 lg:block">
+        <ChatSidebar currentUser={currentUserDisplay} />
+      </div>
 
-      <div className="flex flex-col gap-4">
-        <Header title="Direct Messages" searchSlot={searchSlot} />
+      {/* ── Right area ────────────────────────────────────────── */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Top nav */}
+        <Header title="Direct Messages" />
 
-        <main className="flex-1 py-2" role="main">
-          <section className="pt-2">
-            {conversationsError && (
-              <p className="mb-3 rounded-[10px] border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
-                {conversationsError}
-              </p>
-            )}
+        {/* Error banner */}
+        {conversationsError && (
+          <p className="m-0 shrink-0 border-b border-rose-200 bg-rose-50 px-4 py-2 text-xs font-medium text-rose-700">
+            {conversationsError}
+          </p>
+        )}
 
-            {!activeConversation ? (
-              <ConversationListPanel
-                conversations={conversations}
-                isLoadingConversations={isLoadingConversations}
-                onOpenConversation={setActiveConversationId}
-              />
-            ) : (
+        {/* ── Split pane ──────────────────────────────────────── */}
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          {/* Conversation list panel
+              Mobile: visible only when no active conversation
+              Desktop: always visible, fixed 300 px width         */}
+          <div
+            className={`flex flex-col border-r border-slate-200 bg-white lg:w-[300px] lg:shrink-0 ${
+              activeConversationId ? "hidden lg:flex" : "flex w-full"
+            }`}
+          >
+            <ConversationListPanel
+              conversations={conversations}
+              isLoadingConversations={isLoadingConversations}
+              onOpenConversation={handleOpenConversation}
+              activeConversationId={activeConversationId}
+              unreadCounts={unreadCounts}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchResults={searchResults}
+              isSearchingProfiles={isSearchingProfiles}
+              isOpeningConversation={isOpeningConversation}
+              onSelectSearchResult={handleSelectSearchResult}
+            />
+          </div>
+
+          {/* Thread panel
+              Mobile: visible only when a conversation is active
+              Desktop: always visible, fills remaining width      */}
+          <div
+            className={`flex-1 overflow-hidden lg:flex ${
+              activeConversationId ? "flex" : "hidden"
+            }`}
+          >
+            <div className="flex h-full w-full flex-col">
               <ChatThread
                 conversation={activeConversation}
                 messages={messages}
@@ -391,9 +284,9 @@ function ChatPage() {
                 isOpeningConversation={isOpeningConversation}
                 onBack={() => setActiveConversationId(null)}
               />
-            )}
-          </section>
-        </main>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
