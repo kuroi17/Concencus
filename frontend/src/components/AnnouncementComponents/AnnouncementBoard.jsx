@@ -5,13 +5,13 @@ import AnnouncementCard from "./AnnouncementCard";
 import CreateAnnouncementModal from "./CreateAnnouncementModal";
 import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
 import AnnouncementDetailModal from "./AnnouncementDetailModal";
-import { uploadPublicImage } from "../../lib/storage";
+// 🚀 IN-IMPORT NATIN ANG UPLOADER FUNCTION
+import { uploadPublicImage, deletePublicImage } from "../../lib/storage";
 
 function AnnouncementBoard({ channelId }) {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
   const [postError, setPostError] = useState("");
   const { user, isAdmin } = useCurrentUserProfile();
@@ -95,6 +95,38 @@ function AnnouncementBoard({ channelId }) {
       return false;
     } finally {
       setIsPosting(false);
+    }
+  };
+
+  const handleDeleteAnnouncement = async (announcementId, imageUrl) => {
+    if (!isAdmin) return false;
+
+    try {
+      // 1. I-delete sa database muna
+      const { error } = await supabase
+        .from("announcements")
+        .delete()
+        .eq("id", announcementId);
+
+      if (error) throw error;
+
+      // 2. Kapag successful sa DB, tanggalin na rin sa bucket (kung may image)
+      if (imageUrl) {
+        try {
+          await deletePublicImage(imageUrl, 'announcement-images');
+        } catch (storageErr) {
+          // Hindi natin i-block ang success kahit may storage error
+          // DB record na deleted na, yung image lang ang naiwan sa bucket
+          console.warn('Announcement deleted but image cleanup failed:', storageErr.message);
+        }
+      }
+
+      setSelectedNotice(null);
+      await fetchAnnouncements();
+      return true;
+    } catch (error) {
+      console.error("Delete error:", error);
+      return false;
     }
   };
 
@@ -191,9 +223,11 @@ function AnnouncementBoard({ channelId }) {
       />
 
       <AnnouncementDetailModal
-        isOpen={Boolean(selectedAnnouncement)}
-        onClose={() => setSelectedAnnouncement(null)}
-        notice={selectedAnnouncement}
+        isOpen={!!selectedNotice}
+        onClose={() => setSelectedNotice(null)}
+        notice={selectedNotice}
+        isAdmin={isAdmin}
+        onDelete={handleDeleteAnnouncement}
       />
     </section>
   );
