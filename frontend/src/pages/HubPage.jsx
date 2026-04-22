@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Header from "../common/Header";
 import ChannelSidebar from "../components/common/ChannelSidebar";
 import TabSwitcher from "../components/common/TabSwitcher";
@@ -11,8 +12,9 @@ import { supabase } from "../lib/supabaseClient";
 import { uploadPublicImage } from "../lib/storage";
 
 function HubPage() {
+  const [searchParams] = useSearchParams();
   const { currentChannel } = useChannel();
-  const [view, setView] = useState("announcement");
+  const [view, setView] = useState(searchParams.has("post") ? "forum" : "announcement");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 

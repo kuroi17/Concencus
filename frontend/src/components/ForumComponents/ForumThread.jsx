@@ -1,5 +1,6 @@
 import { Bookmark, Check, ChevronLeft, ChevronRight, Flag, MessageSquare, MoreVertical, Share2, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { createPortal } from "react-dom";
 import VoteWidget from "./VoteWidget";
 import CommentSection from "./CommentSection";
@@ -204,8 +205,18 @@ function GalleryLightbox({ images, startIndex, onClose }) {
 }
 
 // ── Forum Thread ────────────────────────────────────────────────────────────
-function ForumThread({ item, isAdmin = false }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand }) {
+  const [searchParams] = useSearchParams();
+  const isTargetPost = searchParams.get("post") === item.id;
+  const threadRef = useRef(null);
+
+  useEffect(() => {
+    if (isTargetPost && threadRef.current) {
+      setTimeout(() => {
+        threadRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 500); // Wait for potential rendering
+    }
+  }, [isTargetPost]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(-1); // -1 = closed
   const [isSaved, setIsSaved] = useState(false);
@@ -229,23 +240,35 @@ function ForumThread({ item, isAdmin = false }) {
   }, [item.id]);
 
   const toggleSave = async () => {
+    // Optimistic update
+    const previousState = isSaved;
+    setIsSaved(!previousState);
+
     const { data: authData } = await supabase.auth.getUser();
     if (!authData?.user) {
+      setIsSaved(previousState); // Revert
       alert("You must be logged in to save posts.");
       return;
     }
-    if (isSaved) {
-      await supabase
-        .from("saved_posts")
-        .delete()
-        .eq("user_id", authData.user.id)
-        .eq("post_id", item.id);
-      setIsSaved(false);
-    } else {
-      await supabase
-        .from("saved_posts")
-        .insert([{ user_id: authData.user.id, post_id: item.id }]);
-      setIsSaved(true);
+
+    try {
+      if (previousState) {
+        const { error } = await supabase
+          .from("saved_posts")
+          .delete()
+          .eq("user_id", authData.user.id)
+          .eq("post_id", item.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("saved_posts")
+          .insert([{ user_id: authData.user.id, post_id: item.id }]);
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error("Failed to toggle save:", error);
+      setIsSaved(previousState); // Revert on failure
+      alert("Failed to save post. Please try again.");
     }
   };
 
@@ -260,9 +283,11 @@ function ForumThread({ item, isAdmin = false }) {
   useEscapeKey(isMenuOpen, () => setIsMenuOpen(false));
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" ref={threadRef}>
       <article
-        className="soft-enter group relative flex gap-2.5 rounded-[14px] border border-slate-200/80 bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-colors hover:border-slate-300 sm:gap-3 sm:px-4 sm:py-4"
+        className={`soft-enter group relative flex gap-2.5 rounded-[14px] border bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-colors sm:gap-3 sm:px-4 sm:py-4 ${
+          isTargetPost ? "border-[#7f1d1d] ring-1 ring-[#7f1d1d]/30" : "border-slate-200/80 hover:border-slate-300"
+        }`}
         onMouseLeave={() => setIsMenuOpen(false)}
       >
         <VoteWidget itemId={item.id} baseScore={score} />
@@ -298,7 +323,7 @@ function ForumThread({ item, isAdmin = false }) {
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px] font-medium text-slate-600">
             <button
               type="button"
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={onToggleExpand}
               className={`inline-flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors ${
                 isExpanded ? "bg-slate-200 text-slate-900" : "hover:bg-slate-100"
               }`}

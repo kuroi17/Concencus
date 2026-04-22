@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AtSign, Bookmark, GraduationCap, Hash, UserRound, Users } from "lucide-react";
 import Header from "../common/Header";
 import { supabase } from "../lib/supabaseClient";
@@ -17,6 +18,7 @@ function buildFallbackProfile(user) {
 }
 
 function ProfilePage() {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [followersCount, setFollowersCount] = useState(0);
@@ -305,7 +307,8 @@ function ProfilePage() {
                   {savedPosts.map((post) => (
                     <div
                       key={post.id}
-                      className="flex items-center gap-3 rounded-[12px] border border-slate-200 bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100"
+                      onClick={() => navigate(`/hub?post=${post.id}`)}
+                      className="flex cursor-pointer items-center gap-3 rounded-[12px] border border-slate-200 bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="m-0 text-sm font-semibold text-slate-900 truncate">
@@ -322,7 +325,10 @@ function ProfilePage() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleUnsave(post.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUnsave(post.id);
+                        }}
                         className="shrink-0 inline-flex items-center gap-1 rounded-[8px] px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 transition-colors hover:bg-amber-100"
                         title="Remove from saved"
                       >
