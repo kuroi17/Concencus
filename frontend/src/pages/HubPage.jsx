@@ -14,6 +14,7 @@ function HubPage() {
   const { currentChannel } = useChannel();
   const [view, setView] = useState("announcement");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // ── Create Post ─────────────────────────────────────────────────────────
   const handleCreatePost = async (postData) => {
@@ -68,6 +69,7 @@ function HubPage() {
       }
 
       console.log("Post created successfully!");
+      setRefreshKey((k) => k + 1); // trigger ForumBoard re-fetch
       setIsModalOpen(false);
     } catch (err) {
       console.error("Error creating post:", err);
@@ -112,7 +114,7 @@ function HubPage() {
                 </div>
               ) : (
                 <div className="soft-enter grid gap-4 xl:grid-cols-[minmax(0,1fr)_290px]">
-                  <ForumBoard channelId={currentChannel.id} />
+                  <ForumBoard channelId={currentChannel.id} refreshKey={refreshKey} />
                   <ForumInfoPanel onOpenModal={() => setIsModalOpen(true)} />
                 </div>
               )}

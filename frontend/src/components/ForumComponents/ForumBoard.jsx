@@ -9,7 +9,7 @@ const filters = [
   { id: "new", label: "New", icon: Sparkles },
 ];
 
-function ForumBoard({ channelId }) {
+function ForumBoard({ channelId, refreshKey = 0 }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("hot");
@@ -71,7 +71,7 @@ function ForumBoard({ channelId }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [activeFilter, channelId, fetchPosts]);
+  }, [activeFilter, channelId, refreshKey, fetchPosts]);
 
   const filteredPosts = posts.filter(
     (post) =>
