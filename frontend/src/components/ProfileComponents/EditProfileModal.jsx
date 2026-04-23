@@ -8,28 +8,31 @@ function EditProfileModal({ isOpen, initialProfile, onClose, onSave }) {
   const [block, setBlock] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const initialAvatarUrl = useMemo(
-    () => initialProfile?.avatar_url || "",
-    [initialProfile?.avatar_url],
-  );
+  const initialAvatarUrl = useMemo(() => initialProfile?.avatar_url || "", [initialProfile?.avatar_url]);
+  const initialCoverUrl = useMemo(() => initialProfile?.cover_url || "", [initialProfile?.cover_url]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    queueMicrotask(() => {
+    if (isOpen) {
       setSrCode(initialProfile?.sr_code || "");
       setBlock(initialProfile?.block || "");
       setAvatarFile(null);
-      if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
       setAvatarPreviewUrl("");
-    });
-  }, [avatarPreviewUrl, initialProfile?.block, initialProfile?.sr_code, isOpen]);
+      setCoverFile(null);
+      setCoverPreviewUrl("");
+    }
+  }, [isOpen, initialProfile]);
 
   const closeModal = () => {
     if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+    if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
     setAvatarFile(null);
     setAvatarPreviewUrl("");
+    setCoverFile(null);
+    setCoverPreviewUrl("");
     onClose();
   };
 
@@ -70,6 +73,7 @@ function EditProfileModal({ isOpen, initialProfile, onClose, onSave }) {
                 sr_code: srCode.trim() || null,
                 block: block.trim() || null,
                 avatarFile,
+                coverFile,
               });
               if (ok) closeModal();
             } finally {
@@ -102,28 +106,47 @@ function EditProfileModal({ isOpen, initialProfile, onClose, onSave }) {
             </div>
           </div>
 
-          <div>
+          <div className="space-y-4">
             <ImageDropzone
-              label="Profile picture"
-              description="Drag & drop a new profile photo, or click to browse."
-              file={avatarFile}
-              previewUrl={avatarPreviewUrl || initialAvatarUrl}
+              label="Cover Photo"
+              description="A rectangular cover photo for your profile."
+              file={coverFile}
+              previewUrl={coverPreviewUrl || initialCoverUrl}
               disabled={isSubmitting}
-              heightClassName="h-44"
+              heightClassName="h-32"
+              shape="rectangle"
               onChangeFile={(file) => {
-                setAvatarFile(file);
-                if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
-                setAvatarPreviewUrl(file ? URL.createObjectURL(file) : "");
+                setCoverFile(file);
+                if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+                setCoverPreviewUrl(file ? URL.createObjectURL(file) : "");
               }}
               onClear={() => {
-                if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
-                setAvatarFile(null);
-                setAvatarPreviewUrl("");
+                if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+                setCoverFile(null);
+                setCoverPreviewUrl("");
               }}
             />
-            <p className="m-0 mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Tip: a square image works best.
-            </p>
+
+            <div className="flex flex-col items-center">
+              <ImageDropzone
+                label="Profile Picture"
+                description="Square image works best."
+                file={avatarFile}
+                previewUrl={avatarPreviewUrl || initialAvatarUrl}
+                disabled={isSubmitting}
+                shape="circle"
+                onChangeFile={(file) => {
+                  setAvatarFile(file);
+                  if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+                  setAvatarPreviewUrl(file ? URL.createObjectURL(file) : "");
+                }}
+                onClear={() => {
+                  if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+                  setAvatarFile(null);
+                  setAvatarPreviewUrl("");
+                }}
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">

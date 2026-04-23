@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { X, CalendarDays, ShieldCheck, Megaphone, Flag, UserRound } from "lucide-react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 

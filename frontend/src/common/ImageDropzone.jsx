@@ -10,6 +10,7 @@ function ImageDropzone({
   onClear,
   disabled = false,
   heightClassName = "h-36",
+  shape = "rectangle", // "rectangle" or "circle"
 }) {
   const inputId = useId();
   const inputRef = useRef(null);
@@ -19,19 +20,23 @@ function ImageDropzone({
     onChangeFile?.(nextFile);
   };
 
+  const isCircle = shape === "circle";
+
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-semibold text-slate-700" htmlFor={inputId}>
+      <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500" htmlFor={inputId}>
         {label}
       </label>
 
       <div
-        className={`relative overflow-hidden rounded-[12px] border bg-white transition-colors ${
-          disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+        className={`relative overflow-hidden transition-all duration-300 ${
+          isCircle ? "mx-auto h-32 w-32 rounded-full shadow-lg" : `w-full rounded-2xl ${heightClassName} shadow-sm`
+        } border-2 ${
+          disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
         } ${
           isDragging
-            ? "border-[#7f1d1d]/60 bg-rose-50"
-            : "border-slate-300 hover:border-slate-400"
+            ? "border-[#800000] bg-red-50 dark:bg-red-950/20"
+            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700"
         }`}
         onClick={() => {
           if (!disabled) inputRef.current?.click();
@@ -74,7 +79,7 @@ function ImageDropzone({
         />
 
         {previewUrl ? (
-          <div className={`relative ${heightClassName} w-full bg-slate-100`}>
+          <div className="relative h-full w-full">
             <img src={previewUrl} alt="" className="h-full w-full object-cover" />
             {!disabled && (
               <button
@@ -83,26 +88,30 @@ function ImageDropzone({
                   event.stopPropagation();
                   onClear?.();
                 }}
-                className="absolute right-2 top-2 inline-flex items-center justify-center rounded-[10px] bg-white/90 p-2 text-slate-600 shadow-sm backdrop-blur transition-colors hover:bg-white"
+                className={`absolute ${isCircle ? "bottom-0 right-0" : "right-2 top-2"} inline-flex items-center justify-center rounded-full bg-slate-900/80 p-2 text-white shadow-md backdrop-blur-md transition-all hover:bg-slate-900 hover:scale-110`}
                 aria-label="Remove image"
               >
-                <X size={16} />
+                <X size={14} />
               </button>
             )}
           </div>
         ) : (
-          <div className={`flex ${heightClassName} w-full flex-col items-center justify-center gap-2 px-4 text-center`}>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-              <ImageUp size={18} />
+          <div className={`flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center ${isCircle ? "p-4" : ""}`}>
+            <span className={`inline-flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ${isCircle ? "h-8 w-8" : "h-12 w-12"}`}>
+              <ImageUp size={isCircle ? 16 : 22} />
             </span>
-            <div>
-              <p className="m-0 text-sm font-semibold text-slate-800">
-                {isDragging ? "Drop to upload" : "Upload an image"}
-              </p>
-              <p className="m-0 mt-0.5 text-xs text-slate-500">{description}</p>
-            </div>
-            {file?.name && (
-              <p className="m-0 text-xs font-medium text-slate-600">{file.name}</p>
+            {!isCircle && (
+              <div>
+                <p className="m-0 text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight">
+                  {isDragging ? "Drop to upload" : "Upload Image"}
+                </p>
+                <p className="m-0 mt-1 text-[11px] font-medium text-slate-400 dark:text-slate-500 leading-tight">
+                  {description}
+                </p>
+              </div>
+            )}
+            {file?.name && !isCircle && (
+              <p className="m-0 text-[10px] font-bold text-[#800000]">{file.name}</p>
             )}
           </div>
         )}

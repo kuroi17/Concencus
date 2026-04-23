@@ -103,38 +103,6 @@ function AnnouncementBoard({ channelId }) {
     }
   };
 
-  const handleDeleteAnnouncement = async (announcementId, imageUrl) => {
-    if (!isAdmin) return false;
-
-    try {
-      // 1. I-delete sa database muna
-      const { error } = await supabase
-        .from("announcements")
-        .delete()
-        .eq("id", announcementId);
-
-      if (error) throw error;
-
-      // 2. Kapag successful sa DB, tanggalin na rin sa bucket (kung may image)
-      if (imageUrl) {
-        try {
-          await deletePublicImage(imageUrl, 'announcement-images');
-        } catch (storageErr) {
-          // Hindi natin i-block ang success kahit may storage error
-          // DB record na deleted na, yung image lang ang naiwan sa bucket
-          console.warn('Announcement deleted but image cleanup failed:', storageErr.message);
-        }
-      }
-
-      setSelectedAnnouncement(null);
-      await fetchAnnouncements();
-      return true;
-    } catch (error) {
-      console.error("Delete error:", error);
-      return false;
-    }
-  };
-
   useEffect(() => {
     let isMounted = true;
 

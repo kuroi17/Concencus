@@ -11,12 +11,13 @@ const defaultNavItems = [
 ];
 
 function Header({ title = "Concensus", searchSlot = null }) {
-  const { isAdmin } = useCurrentUserProfile();
+  const { profile } = useCurrentUserProfile();
   const { theme, toggleTheme } = useTheme();
-  
-  const navItems = isAdmin
-    ? [...defaultNavItems, { to: "/admin", label: "Admin" }]
-    : defaultNavItems;
+
+  const navItems =
+    profile?.campus_role === "admin"
+      ? [...defaultNavItems, { to: "/admin", label: "Admin" }]
+      : defaultNavItems;
 
   return (
     <header className="w-full transition-all duration-300">
@@ -27,7 +28,8 @@ function Header({ title = "Concensus", searchSlot = null }) {
           </h1>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
+          {/* Navigation */}
           <nav
             className="flex items-center gap-1.5 rounded-2xl bg-slate-100/50 dark:bg-slate-800/50 p-1.5 ring-1 ring-slate-200/50 dark:ring-slate-700/50"
             aria-label="Primary Navigation"
@@ -36,7 +38,7 @@ function Header({ title = "Concensus", searchSlot = null }) {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) => 
+                className={({ isActive }) =>
                   `flex items-center rounded-[12px] px-4 py-2 text-sm font-bold transition-all duration-200 ${
                     isActive
                       ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm shadow-slate-200 dark:shadow-slate-900 ring-1 ring-slate-200 dark:ring-slate-600"
@@ -49,13 +51,17 @@ function Header({ title = "Concensus", searchSlot = null }) {
             ))}
           </nav>
 
+          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
             className="flex items-center justify-center rounded-2xl bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white ml-2"
             aria-label="Toggle dark mode"
           >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
           </button>
+
+          {/* User Profile Avatar */}
+         
         </div>
       </div>
 

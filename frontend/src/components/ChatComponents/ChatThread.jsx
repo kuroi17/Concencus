@@ -60,8 +60,18 @@ function EmptyState() {
 function ContactIntroCard({ otherUser }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 dark:bg-slate-700 text-2xl font-bold text-white shadow-lg">
-        {getInitials(otherUser?.full_name)}
+      <div className="flex h-20 w-20 items-center justify-center">
+        {otherUser?.avatar_url ? (
+          <img
+            src={otherUser.avatar_url}
+            alt="Avatar"
+            className="h-20 w-20 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 dark:bg-slate-700 text-2xl font-bold text-white shadow-lg">
+            {getInitials(otherUser?.full_name)}
+          </div>
+        )}
       </div>
       <div>
         <h3 className="m-0 text-xl font-bold text-slate-900 dark:text-white">
@@ -131,8 +141,18 @@ function ChatThread({
         )}
 
         {/* Avatar */}
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-800 dark:bg-slate-700 text-sm font-semibold text-white">
-          {getInitials(conversation.otherUser?.full_name)}
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+          {conversation.otherUser?.avatar_url ? (
+            <img
+              src={conversation.otherUser.avatar_url}
+              alt="Avatar"
+              className="h-9 w-9 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-800 dark:bg-slate-700 text-sm font-semibold text-white">
+              {getInitials(conversation.otherUser?.full_name)}
+            </div>
+          )}
         </div>
 
         {/* Name + role */}
