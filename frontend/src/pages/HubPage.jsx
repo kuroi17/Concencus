@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import MainLayout from "../components/layouts/MainLayout";
 import TabSwitcher from "../components/common/TabSwitcher";
@@ -120,11 +121,14 @@ function HubPage() {
         )}
       </section>
 
-      <CreatePostModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreatePost}
-      />
+      {createPortal(
+        <CreatePostModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleCreatePost}
+        />,
+        document.body
+      )}
     </MainLayout>
   );
 }

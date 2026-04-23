@@ -4,7 +4,7 @@ import {
   Flag,
   ShieldCheck,
   Tag,
-  UserRound 
+  UserRound
 } from "lucide-react";
 
 // Mga Priority Colors para mas maganda tingnan (To feel the urgency)
@@ -26,10 +26,10 @@ function AnnouncementCard({ item, delay = 0, onOpen }) {
   const postedAt =
     dateObj && !isNaN(dateObj)
       ? dateObj.toLocaleDateString("en-PH", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
       : "—";
 
   return (
@@ -87,7 +87,7 @@ function AnnouncementCard({ item, delay = 0, onOpen }) {
               {postedAt}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.15em] text-[#800000]">
             Full Notice
             <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
