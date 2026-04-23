@@ -184,7 +184,7 @@ function AuthPage({ onGuestMode }) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#f8f9fb] to-[#f2f4f7] px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#f8f9fb] to-[#f2f4f7] px-4 py-8 overflow-y-auto">
       <section className="soft-enter w-full max-w-[460px] rounded-[20px] border border-slate-200/90 bg-white p-6 shadow-[0_16px_34px_rgba(15,23,42,0.08)] sm:p-7">
         <p className="m-0 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
           Academic Monolith
