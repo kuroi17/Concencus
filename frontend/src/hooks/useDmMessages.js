@@ -110,6 +110,33 @@ export function useDmMessages(conversationId, socket) {
     loadReactions();
   }, [loadReactions]);
 
+  // useDmMessages.js — add this new effect
+useEffect(() => {
+  if (!conversationId) return undefined;
+
+  const instanceId = Math.random().toString(36).slice(2, 8);
+  const channel = supabase
+    .channel(`dm-messages-${conversationId}-${instanceId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "dm_messages",
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => {
+        if (!payload.new) return;
+        setMessages((previous) => mergeMessageList(previous, payload.new));
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [conversationId]);
+
   useEffect(() => {
     if (!conversationId) return undefined;
 
