@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowBigUp, ArrowBigDown, MessageCircle, Clock, CheckCircle2, Construction, XCircle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import SDGBadge from "../Common/SDGBadge";
 
 const STATUS_CONFIG = {
   "Under Review": { icon: Clock, color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-200" },
@@ -50,7 +51,14 @@ function ProposalCard({ proposal, onVote, userVote, isAdmin, currentUserId, onSt
               {proposal.title}
             </h3>
           </div>
-          {proposal.sdg_tag && (
+          {proposal.sdg_tags && proposal.sdg_tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {proposal.sdg_tags.map(tagId => (
+                <SDGBadge key={tagId} sdgId={tagId} />
+              ))}
+            </div>
+          )}
+          {proposal.sdg_tag && (!proposal.sdg_tags || proposal.sdg_tags.length === 0) && (
             <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30">
               {proposal.sdg_tag}
             </div>

@@ -11,6 +11,7 @@ import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
 import { uploadPublicImage, deletePublicImage } from "../../lib/storage";
 import { AnnouncementSkeleton } from "../../common/Skeleton";
 import { EmptyState } from "../../common/EmptyState";
+import SDGBadge from "../Common/SDGBadge";
 
 // ── Tags + Priorities ─────────────────────────────────────────────────────────
 const TAGS = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
@@ -403,6 +404,13 @@ function AnnouncementDetailHero({ notice, onClose, onImageClick, isAdmin, onDele
               <Flag size={12} />
               {localNotice.priority}
             </span>
+            {localNotice.sdg_tags && localNotice.sdg_tags.length > 0 && (
+              <div className="flex gap-1.5">
+                {localNotice.sdg_tags.map(tagId => (
+                  <SDGBadge key={tagId} sdgId={tagId} />
+                ))}
+              </div>
+            )}
           </div>
           <div className="ml-auto flex items-center gap-2">
             {/* Edit button (admin only) */}
@@ -585,6 +593,7 @@ function AnnouncementBoard({ channelId }) {
         tag: announcementData.tag,
         priority: announcementData.priority,
         unit: announcementData.unit || null,
+        sdg_tags: announcementData.sdgTags,
         // Store array; keep legacy image_url as first image for backwards compat
         image_urls: imageUrls.length > 0 ? imageUrls : null,
         image_url: imageUrls[0] || null,

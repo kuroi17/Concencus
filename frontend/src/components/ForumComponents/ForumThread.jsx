@@ -7,6 +7,7 @@ import CommentSection from "./CommentSection";
 import { supabase } from "../../lib/supabaseClient";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 import toast from "react-hot-toast";
+import SDGBadge from "../Common/SDGBadge";
 
 function timeAgoStr(dateStr) {
   const date = new Date(dateStr);
@@ -239,6 +240,13 @@ function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand, onBack
             <span className="inline-flex rounded-md bg-slate-50 dark:bg-slate-800 px-2 py-1 text-[10px] font-black shadow-sm ring-1 ring-slate-200 dark:ring-slate-700 text-slate-400 dark:text-slate-500">
               {item.tag || "General"}
             </span>
+            {item.sdg_tags && item.sdg_tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {item.sdg_tags.map(tagId => (
+                  <SDGBadge key={tagId} sdgId={tagId} />
+                ))}
+              </div>
+            )}
           </div>
 
           <h3 className="m-0 mt-3.5 text-[1.15rem] font-black leading-tight text-slate-900 dark:text-white sm:text-[1.45rem] tracking-tight group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors">

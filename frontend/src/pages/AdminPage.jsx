@@ -3,6 +3,8 @@ import { Search, ShieldAlert, ShieldCheck, Users, FileText, CheckCircle, Clock, 
 import { supabase } from "../lib/supabaseClient";
 import { useCurrentUserProfile } from "../hooks/useCurrentUserProfile";
 import MainLayout from "../components/layouts/MainLayout";
+import SDGImpactDashboard from "../components/AdminComponents/SDGImpactDashboard";
+import { BarChart3 } from "lucide-react";
 
 const roles = ["student", "faculty", "admin"];
 
@@ -14,7 +16,7 @@ function AdminPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [savingIds, setSavingIds] = useState([]);
-  const [adminView, setAdminView] = useState("users"); // "users" or "proposals"
+  const [adminView, setAdminView] = useState("impact"); // Default to impact
   const [proposals, setProposals] = useState([]);
   const [isLoadingProposals, setIsLoadingProposals] = useState(false);
 
@@ -203,6 +205,13 @@ function AdminPage() {
               <FileText size={16} />
               Proposals
             </button>
+            <button
+              onClick={() => setAdminView("impact")}
+              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-all ${adminView === "impact" ? "bg-[#800000] text-white shadow-lg shadow-red-900/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+            >
+              <BarChart3 size={16} />
+              SDG Impact
+            </button>
           </div>
 
           {(errorMessage || successMessage) && (
@@ -213,55 +222,59 @@ function AdminPage() {
         </div>
 
         {/* Content Table Area */}
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/40 dark:shadow-black/20">
-          <div className="overflow-x-auto no-scrollbar">
-            {adminView === "users" ? (
-              <table className="w-full text-left">
-                <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <tr>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Identity</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">SR Code</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Block</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Governance Role</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {isLoadingUsers ? (
-                    <LoadingRows cols={4} />
-                  ) : filteredUsers.length === 0 ? (
-                    <EmptyRows label="No users matched your search" cols={4} />
-                  ) : (
-                    filteredUsers.map((user) => (
-                      <UserRow key={user.id} user={user} isSelf={profile?.id === user.id} isSaving={savingIds.includes(user.id)} onRoleChange={updateUserRole} />
-                    ))
-                  )}
-                </tbody>
-              </table>
-            ) : (
-              <table className="w-full text-left">
-                <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <tr>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Proposal Title</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Channel</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Author</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {isLoadingProposals ? (
-                    <LoadingRows cols={4} />
-                  ) : filteredProposals.length === 0 ? (
-                    <EmptyRows label="No proposals found" cols={4} />
-                  ) : (
-                    filteredProposals.map((p) => (
-                      <ProposalRow key={p.id} p={p} />
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </section>
+        {adminView === "impact" ? (
+          <SDGImpactDashboard />
+        ) : (
+          <section className="overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/40 dark:shadow-black/20">
+            <div className="overflow-x-auto no-scrollbar">
+              {adminView === "users" ? (
+                <table className="w-full text-left">
+                  <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <tr>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Identity</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">SR Code</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Block</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Governance Role</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {isLoadingUsers ? (
+                      <LoadingRows cols={4} />
+                    ) : filteredUsers.length === 0 ? (
+                      <EmptyRows label="No users matched your search" cols={4} />
+                    ) : (
+                      filteredUsers.map((user) => (
+                        <UserRow key={user.id} user={user} isSelf={profile?.id === user.id} isSaving={savingIds.includes(user.id)} onRoleChange={updateUserRole} />
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="w-full text-left">
+                  <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <tr>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Proposal Title</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Channel</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Author</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {isLoadingProposals ? (
+                      <LoadingRows cols={4} />
+                    ) : filteredProposals.length === 0 ? (
+                      <EmptyRows label="No proposals found" cols={4} />
+                    ) : (
+                      filteredProposals.map((p) => (
+                        <ProposalRow key={p.id} p={p} />
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </section>
+        )}
       </div>
     </MainLayout>
   );

@@ -2,34 +2,15 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
+import SDGSelector from "../Common/SDGSelector";
 
 const categories = ["Academic", "Facilities", "Policy"];
-const sdgs = [
-  "None",
-  "SDG 1: No Poverty",
-  "SDG 2: Zero Hunger",
-  "SDG 3: Good Health and Well-being",
-  "SDG 4: Quality Education",
-  "SDG 5: Gender Equality",
-  "SDG 6: Clean Water and Sanitation",
-  "SDG 7: Affordable and Clean Energy",
-  "SDG 8: Decent Work and Economic Growth",
-  "SDG 9: Industry, Innovation and Infrastructure",
-  "SDG 10: Reduced Inequality",
-  "SDG 11: Sustainable Cities and Communities",
-  "SDG 12: Responsible Consumption and Production",
-  "SDG 13: Climate Action",
-  "SDG 14: Life Below Water",
-  "SDG 15: Life on Land",
-  "SDG 16: Peace and Justice Strong Institutions",
-  "SDG 17: Partnerships to achieve the Goal",
-];
 
 function CreateProposalModal({ isOpen, onClose, onSubmit }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(categories[0]);
-  const [sdgTag, setSdgTag] = useState(sdgs[0]);
+  const [sdgTags, setSdgTags] = useState([]);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,7 +18,7 @@ function CreateProposalModal({ isOpen, onClose, onSubmit }) {
     setTitle("");
     setDescription("");
     setCategory(categories[0]);
-    setSdgTag(sdgs[0]);
+    setSdgTags([]);
     setIsAnonymous(false);
     onClose();
   };
@@ -55,7 +36,7 @@ function CreateProposalModal({ isOpen, onClose, onSubmit }) {
       title, 
       description, 
       category, 
-      sdgTag: sdgTag === "None" ? "" : sdgTag, 
+      sdgTags, 
       isAnonymous
     });
     setIsSubmitting(false);
@@ -116,7 +97,7 @@ function CreateProposalModal({ isOpen, onClose, onSubmit }) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label htmlFor="p-cat" className="mb-1.5 block text-sm font-semibold text-slate-700">
                   Category
@@ -132,23 +113,12 @@ function CreateProposalModal({ isOpen, onClose, onSubmit }) {
                   ))}
                 </select>
               </div>
-
-              <div>
-                <label htmlFor="p-sdg" className="mb-1.5 block text-sm font-semibold text-slate-700">
-                  SDG Tag
-                </label>
-                <select
-                  id="p-sdg"
-                  value={sdgTag}
-                  onChange={(e) => setSdgTag(e.target.value)}
-                  className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
-                >
-                  {sdgs.map((s) => (
-                    <option key={s} value={s}>{s.split(":")[0]}</option>
-                  ))}
-                </select>
-              </div>
             </div>
+
+            <SDGSelector 
+              selectedSDGs={sdgTags} 
+              onChange={setSdgTags} 
+            />
 
             <div className="flex items-center gap-2">
               <input

@@ -40,14 +40,14 @@ function ProposalsPage() {
     const user = authData?.user;
     if (!user || !currentChannel) return;
 
-    const { imageFiles, isAnonymous, sdgTag, ...rest } = proposalData;
+    const { imageFiles, isAnonymous, sdgTags, ...rest } = proposalData;
 
     // 1. Insert proposal base data
     const { data: insertedProposal, error: insertError } = await supabase
       .from("proposals")
       .insert([{
         ...rest,
-        sdg_tag: sdgTag,
+        sdg_tags: sdgTags,
         is_anonymous: isAnonymous,
         author_id: user.id,
         channel_id: currentChannel.id
