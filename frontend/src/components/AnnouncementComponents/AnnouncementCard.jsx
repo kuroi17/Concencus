@@ -2,35 +2,40 @@ import {
   ArrowUpRight,
   CalendarDays,
   Flag,
+  Images,
   ShieldCheck,
-  Tag,
   UserRound
 } from "lucide-react";
 
-// Mga Priority Colors para mas maganda tingnan (To feel the urgency)
 const getPriorityStyle = (priorityText) => {
-  if (!priorityText) return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"; // Default
-
+  if (!priorityText) return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
   const p = priorityText.trim().toLowerCase();
-
   if (p.includes("urgent")) return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/50";
   if (p.includes("important")) return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-900/50";
   if (p.includes("fyi") || p.includes("notice")) return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50";
-
-  return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"; // Para sa "Normal"
+  return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
 };
 
 function AnnouncementCard({ item, delay = 0, onOpen }) {
-  // Ligtas at perfect na Date Formatter mo
   const dateObj = item.created_at ? new Date(item.created_at) : null;
   const postedAt =
     dateObj && !isNaN(dateObj)
       ? dateObj.toLocaleDateString("en-PH", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
       : "—";
+
+  // Support both legacy single image_url and new image_urls array
+  const images = Array.isArray(item.image_urls) && item.image_urls.length > 0
+    ? item.image_urls
+    : item.image_url
+    ? [item.image_url]
+    : [];
+
+  const coverImage = images[0] || null;
+  const hasMultipleImages = images.length > 1;
 
   return (
     <button
@@ -40,15 +45,23 @@ function AnnouncementCard({ item, delay = 0, onOpen }) {
       style={{ animationDelay: `${delay}ms` }}
       aria-label={`Open announcement: ${item.title}`}
     >
-      {item.image_url && (
+      {coverImage && (
         <div className="relative h-[160px] w-full shrink-0 bg-slate-50 dark:bg-slate-800">
           <img
-            src={item.image_url}
+            src={coverImage}
             alt=""
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent dark:from-black/40" />
+
+          {/* Multiple images badge */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1 text-[10px] font-black text-white backdrop-blur-sm">
+              <Images size={10} />
+              {images.length}
+            </div>
+          )}
         </div>
       )}
 
