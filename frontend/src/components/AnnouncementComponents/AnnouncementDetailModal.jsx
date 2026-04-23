@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, CalendarDays, ShieldCheck, Megaphone, Flag, UserRound } from "lucide-react";
+import { X, CalendarDays, ShieldCheck, Megaphone, Flag, UserRound, Trash2 } from "lucide-react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 const getPriorityStyle = (priorityText) => {
@@ -58,7 +58,7 @@ function AnnouncementDetailModal({ isOpen, onClose, notice, isAdmin, onDelete })
         <div className="flex flex-col md:flex-row max-h-[90vh]">
           {/* Visual Hero Side */}
           <div className="relative w-full md:w-2/5 shrink-0 bg-slate-100">
-            {notice.image_url ? (
+            {notice.image_url && notice.image_url.trim().length > 0 && notice.image_url !== "null" && notice.image_url !== "undefined" ? (
               <img
                 src={notice.image_url}
                 alt=""

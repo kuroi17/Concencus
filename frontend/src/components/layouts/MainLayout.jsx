@@ -52,7 +52,7 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot })
     // For chat page, show custom sidebar if provided
     if (title === "Communications") {
       return (
-        <div className="flex min-h-screen bg-[#f3f5f8] dark:bg-slate-950 dark:text-slate-100 lg:grid lg:grid-cols-[380px_1fr]">
+        <div className="flex h-screen bg-[#f3f5f8] dark:bg-slate-950 dark:text-slate-100 lg:grid lg:grid-cols-[380px_1fr] overflow-hidden">
           {renderSidebar(sidebarSlot)}
 
           {/* Content Area */}
@@ -76,7 +76,7 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot })
     }
 
     return (
-      <div className={`flex min-h-screen bg-[#f3f5f8] dark:bg-slate-950 dark:text-slate-100 transition-all duration-300 ease-in-out lg:grid ${isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[280px_1fr]"}`}>
+      <div className={`flex h-screen bg-[#f3f5f8] dark:bg-slate-950 dark:text-slate-100 transition-all duration-300 ease-in-out lg:grid ${isSidebarCollapsed ? "lg:grid-cols-[80px_1fr]" : "lg:grid-cols-[280px_1fr]"} overflow-hidden`}>
         <div className={`fixed inset-y-0 left-0 z-[70] w-[280px] transition-transform duration-300 ease-in-out lg:static lg:block lg:w-full lg:translate-x-0 ${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}`}>
           <ChannelSidebar
             collapsed={isSidebarCollapsed}

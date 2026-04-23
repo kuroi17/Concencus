@@ -6,8 +6,7 @@ import { Moon, Sun, Menu } from "lucide-react";
 const defaultNavItems = [
   { to: "/hub", label: "Hub" },
   { to: "/chat", label: "Chat" },
-  { to: "/transparency", label: "Transparency" },
-  { to: "/profile", label: "Profile" },
+  { to: "/transparency", label: "Transparency" }
 ];
 
 function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
