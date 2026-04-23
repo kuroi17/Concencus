@@ -75,7 +75,8 @@ const SDGImpactDashboard = () => {
       const timelineMap = {};
       allItems.forEach(item => {
         const date = new Date(item.created_at);
-        const key = `${months[date.getMonth()]} ${date.getFullYear()}`;
+        const monthName = months[date.getMonth()];
+        const key = `${monthName} ${date.getFullYear()}`;
         timelineMap[key] = (timelineMap[key] || 0) + 1;
       });
 
@@ -150,6 +151,28 @@ const SDGImpactDashboard = () => {
 
   useEffect(() => {
     fetchRealtimeData();
+
+    // Subscribe to changes across all impact-related tables
+    const proposalsSub = supabase
+      .channel('sdg-impact-proposals')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'proposals' }, fetchRealtimeData)
+      .subscribe();
+      
+    const postsSub = supabase
+      .channel('sdg-impact-posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'forum_posts' }, fetchRealtimeData)
+      .subscribe();
+
+    const announcementsSub = supabase
+      .channel('sdg-impact-announcements')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, fetchRealtimeData)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(proposalsSub);
+      supabase.removeChannel(postsSub);
+      supabase.removeChannel(announcementsSub);
+    };
   }, []);
 
   const coreSdgStats = useMemo(() => {
@@ -220,7 +243,7 @@ const SDGImpactDashboard = () => {
                 <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                   {data.distribution.map((entry, index) => {
                     const sdg = getSDGById(entry.tagId);
-                    const hexColor = sdg?.color.match(/#([a-fA-F0-9]{6})/)?.[0] || '#800000';
+                    const hexColor = sdg?.hex || '#800000';
                     return <Cell key={`cell-${index}`} fill={hexColor} />;
                   })}
                 </Bar>

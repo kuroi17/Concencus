@@ -45,7 +45,7 @@ function AdminPage() {
       admins: users.filter(u => u.campus_role === "admin").length,
       faculty: users.filter(u => u.campus_role === "faculty").length,
       students: users.filter(u => u.campus_role === "student").length,
-      pendingProposals: proposals.filter(p => p.status === "Pending").length,
+      pendingProposals: proposals.filter(p => p.status === "Pending" || p.status === "Under Review").length,
     };
   }, [users, proposals]);
 
@@ -482,8 +482,8 @@ function ProposalRow({ p }) {
         </div>
       </td>
       <td className="px-10 py-5">
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border ${statusStyles[p.status] || statusStyles.Pending}`}>
-          {p.status === "Pending" ? <Clock size={12} /> : p.status === "Rejected" ? <ShieldAlert size={12} /> : <CheckCircle size={12} />}
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border ${statusStyles[p.status] || (p.status === "Under Review" ? statusStyles.Pending : "")}`}>
+          {(p.status === "Pending" || p.status === "Under Review") ? <Clock size={12} /> : p.status === "Rejected" ? <ShieldAlert size={12} /> : <CheckCircle size={12} />}
           {p.status}
         </span>
       </td>

@@ -118,8 +118,9 @@ function TransparencyPage() {
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const timelineMap = {};
       data.forEach(item => {
-        const month = new Date(item.created_at).toLocaleString('default', { month: 'short' });
-        timelineMap[month] = (timelineMap[month] || 0) + 1;
+        const date = new Date(item.created_at);
+        const monthName = months[date.getMonth()];
+        timelineMap[monthName] = (timelineMap[monthName] || 0) + 1;
       });
 
       const currentMonthIndex = new Date().getMonth();
@@ -150,6 +151,19 @@ function TransparencyPage() {
 
   useEffect(() => {
     fetchStats();
+
+    // Subscribe to real-time changes in proposals
+    const subscription = supabase
+      .channel('transparency-hub-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'proposals' }, () => {
+        console.log("Real-time update received: Refreshing stats...");
+        fetchStats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   const successRate = useMemo(() => {
