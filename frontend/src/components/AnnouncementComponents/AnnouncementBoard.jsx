@@ -11,6 +11,7 @@ import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
 import { uploadPublicImage, deletePublicImage } from "../../lib/storage";
 import { AnnouncementSkeleton } from "../../common/Skeleton";
 import { EmptyState } from "../../common/EmptyState";
+import { linkifyText } from "../../common/linkifyText";
 
 // ── Tags + Priorities ─────────────────────────────────────────────────────────
 const TAGS = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
@@ -463,7 +464,7 @@ function AnnouncementDetailHero({ notice, onClose, onImageClick, isAdmin, onDele
 
                 <article className="prose prose-slate dark:prose-invert prose-lg lg:prose-xl max-w-none">
                   <p className="whitespace-pre-wrap font-medium leading-relaxed text-slate-600 dark:text-slate-400">
-                    {localNotice.content || localNotice.excerpt}
+                    {linkifyText(localNotice.content || localNotice.excerpt)}
                   </p>
                 </article>
 
