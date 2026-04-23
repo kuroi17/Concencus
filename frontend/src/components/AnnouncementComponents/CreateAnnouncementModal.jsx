@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Images, Trash2, GripVertical } from "lucide-react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
+import SDGSelector from "../Common/SDGSelector";
 
 const tags = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
 const priorities = ["FYI", "Normal", "Important", "Urgent"];
@@ -142,6 +143,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
   const [tag, setTag] = useState(tags[0]);
   const [priority, setPriority] = useState(priorities[0]);
   const [unit, setUnit] = useState("");
+  const [sdgTags, setSdgTags] = useState([]);
   const [images, setImages] = useState([]); // [{ file, previewUrl, id }]
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -150,6 +152,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
   const closeModal = () => {
     revokeAll(images);
     setImages([]);
+    setSdgTags([]);
     onClose();
   };
 
@@ -187,6 +190,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
         tag,
         priority,
         unit: unit.trim(),
+        sdgTags,
         imageFiles: images.map((img) => img.file), // ordered array of File objects
       });
 
@@ -198,6 +202,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
       setTag(tags[0]);
       setPriority(priorities[0]);
       setUnit("");
+      setSdgTags([]);
       setImages([]);
       closeModal();
     } finally {
@@ -308,6 +313,11 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
               className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
             />
           </div>
+
+          <SDGSelector 
+            selectedSDGs={sdgTags} 
+            onChange={setSdgTags} 
+          />
 
           {/* Multi-image uploader */}
           <MultiImageUploader

@@ -36,6 +36,7 @@ function ForumPage() {
             title: postData.title,
             excerpt: postData.excerpt,
             tag: postData.tag,
+            sdg_tags: postData.sdgTags,
             is_anonymous: postData.isAnonymous,
           },
         ])

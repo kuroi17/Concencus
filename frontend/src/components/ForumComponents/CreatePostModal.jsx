@@ -1,6 +1,7 @@
 import { ImageUp, X } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
+import SDGSelector from "../Common/SDGSelector";
 
 const MAX_IMAGES = 5;
 const tags = ["General", "Announcement", "Curriculum", "Feedback"];
@@ -9,6 +10,7 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [tag, setTag] = useState(tags[0]);
+  const [sdgTags, setSdgTags] = useState([]);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [imageFiles, setImageFiles] = useState([]); // File[]
   const [imagePreviews, setImagePreviews] = useState([]); // string[]
@@ -25,6 +27,7 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
     revokeAllPreviews();
     setImageFiles([]);
     setImagePreviews([]);
+    setSdgTags([]);
     onClose();
   };
 
@@ -53,13 +56,14 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
     if (!title.trim() || !excerpt.trim()) return;
 
     setIsSubmitting(true);
-    await onSubmit({ title, excerpt, tag, isAnonymous, imageFiles });
+    await onSubmit({ title, excerpt, tag, sdgTags, isAnonymous, imageFiles });
     setIsSubmitting(false);
 
     // Reset form
     setTitle("");
     setExcerpt("");
     setTag(tags[0]);
+    setSdgTags([]);
     setIsAnonymous(false);
     revokeAllPreviews();
     setImageFiles([]);
@@ -121,22 +125,29 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
               />
             </div>
 
-            <div>
-              <label htmlFor="tag" className="mb-1.5 block text-sm font-semibold text-slate-700">
-                Tag
-              </label>
-              <select
-                id="tag"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
-              >
-                {tags.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col gap-4">
+              <div className="flex-1">
+                <label htmlFor="tag" className="mb-1.5 block text-sm font-semibold text-slate-700">
+                  Tag
+                </label>
+                <select
+                  id="tag"
+                  value={tag}
+                  onChange={(e) => setTag(e.target.value)}
+                  className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+                >
+                  {tags.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <SDGSelector 
+                selectedSDGs={sdgTags} 
+                onChange={setSdgTags} 
+              />
             </div>
 
             {/* ── Multi-Image Upload ─────────────────────────────────── */}

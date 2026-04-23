@@ -1,10 +1,31 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, ShieldAlert, ShieldCheck, Users, FileText, CheckCircle, Clock, UserCheck, GraduationCap, LayoutDashboard } from "lucide-react";
+import { Search, ShieldAlert, ShieldCheck, Users, FileText, CheckCircle, Clock, UserCheck, GraduationCap, LayoutDashboard, TrendingUp, BarChart3, MoreVertical, ExternalLink } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabaseClient";
 import { useCurrentUserProfile } from "../hooks/useCurrentUserProfile";
 import MainLayout from "../components/layouts/MainLayout";
+import SDGImpactDashboard from "../components/AdminComponents/SDGImpactDashboard";
 
 const roles = ["student", "faculty", "admin"];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.03
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] } 
+  }
+};
 
 function AdminPage() {
   const { profile, isAdmin, isLoadingProfile } = useCurrentUserProfile();
@@ -14,7 +35,7 @@ function AdminPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [savingIds, setSavingIds] = useState([]);
-  const [adminView, setAdminView] = useState("users"); // "users" or "proposals"
+  const [adminView, setAdminView] = useState("impact"); // Default to impact
   const [proposals, setProposals] = useState([]);
   const [isLoadingProposals, setIsLoadingProposals] = useState(false);
 
@@ -175,94 +196,163 @@ function AdminPage() {
   );
 
   return (
-    <MainLayout title="Admin Center" searchSlot={searchSlot}>
-      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-8 py-6">
+    <MainLayout title="Admin Console" searchSlot={searchSlot}>
+      <motion.div 
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="mx-auto flex w-full max-w-[1400px] flex-col gap-10 py-8 px-4"
+      >
+        {/* Premium Header */}
+        <header className="relative overflow-hidden rounded-[40px] bg-slate-900 px-8 py-12 text-white shadow-2xl dark:shadow-black/40">
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#800000]/20 blur-[100px]" />
+          <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-blue-500/10 blur-[100px]" />
+          
+          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <motion.div variants={itemVariants} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/70 backdrop-blur-md border border-white/10">
+                <ShieldCheck size={14} />
+                Governance Administrator
+              </motion.div>
+              <motion.h1 variants={itemVariants} className="text-4xl font-black tracking-tight sm:text-5xl">
+                Administrative Hub
+              </motion.h1>
+              <motion.p variants={itemVariants} className="max-w-xl text-lg font-medium text-slate-400">
+                Manage campus identities, oversee student proposals, and track 
+                the real-world impact of governance decisions.
+              </motion.p>
+            </div>
+            
+            <motion.div variants={itemVariants} className="flex gap-4">
+               <div className="rounded-3xl bg-white/5 p-5 backdrop-blur-xl border border-white/10">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">System Status</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+                    <span className="text-sm font-bold">All Systems Operational</span>
+                  </div>
+               </div>
+            </motion.div>
+          </div>
+        </header>
+
         {/* Dashboard Stats */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
-          <StatCard icon={Users} label="Total Users" value={stats.totalUsers} color="slate" />
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <StatCard icon={Users} label="Total Users" value={stats.totalUsers} color="slate" trend="+12 this week" />
           <StatCard icon={ShieldCheck} label="Admins" value={stats.admins} color="rose" />
           <StatCard icon={UserCheck} label="Faculty" value={stats.faculty} color="blue" />
           <StatCard icon={GraduationCap} label="Students" value={stats.students} color="emerald" />
           <StatCard icon={FileText} label="Pending" value={stats.pendingProposals} color="amber" isMobileHidden />
         </div>
 
-        {/* Action Header */}
+        {/* Action Header & Tabs */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-900 p-1.5 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
-            <button
-              onClick={() => setAdminView("users")}
-              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-all ${adminView === "users" ? "bg-[#800000] text-white shadow-lg shadow-red-900/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
-            >
-              <Users size={16} />
-              User Roles
-            </button>
-            <button
-              onClick={() => setAdminView("proposals")}
-              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-all ${adminView === "proposals" ? "bg-[#800000] text-white shadow-lg shadow-red-900/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
-            >
-              <FileText size={16} />
-              Proposals
-            </button>
-          </div>
+          <motion.div variants={itemVariants} className="relative flex items-center gap-2 rounded-[24px] bg-slate-100 dark:bg-slate-900/50 p-1.5 ring-1 ring-slate-200 dark:ring-slate-800">
+            {[
+              { id: "users", label: "User Roles", icon: Users },
+              { id: "proposals", label: "Proposals", icon: FileText },
+              { id: "impact", label: "SDG Impact", icon: BarChart3 }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setAdminView(tab.id)}
+                className={`relative flex items-center gap-2 rounded-[18px] px-6 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                  adminView === tab.id ? "text-white" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
+              >
+                {adminView === tab.id && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 rounded-[18px] bg-[#800000] shadow-lg shadow-red-900/20"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <tab.icon size={16} />
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </motion.div>
 
-          {(errorMessage || successMessage) && (
-            <div className={`rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-widest ${errorMessage ? "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400" : "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400"}`}>
-              {errorMessage || successMessage}
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {(errorMessage || successMessage) && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className={`rounded-2xl px-6 py-3 text-[11px] font-black uppercase tracking-widest ${errorMessage ? "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30" : "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30"}`}
+              >
+                {errorMessage || successMessage}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Content Table Area */}
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/40 dark:shadow-black/20">
-          <div className="overflow-x-auto no-scrollbar">
-            {adminView === "users" ? (
-              <table className="w-full text-left">
-                <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <tr>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Identity</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">SR Code</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Block</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Governance Role</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {isLoadingUsers ? (
-                    <LoadingRows cols={4} />
-                  ) : filteredUsers.length === 0 ? (
-                    <EmptyRows label="No users matched your search" cols={4} />
-                  ) : (
-                    filteredUsers.map((user) => (
-                      <UserRow key={user.id} user={user} isSelf={profile?.id === user.id} isSaving={savingIds.includes(user.id)} onRoleChange={updateUserRole} />
-                    ))
-                  )}
-                </tbody>
-              </table>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={adminView}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={containerVariants}
+          >
+            {adminView === "impact" ? (
+              <SDGImpactDashboard />
             ) : (
-              <table className="w-full text-left">
-                <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <tr>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Proposal Title</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Channel</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Author</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {isLoadingProposals ? (
-                    <LoadingRows cols={4} />
-                  ) : filteredProposals.length === 0 ? (
-                    <EmptyRows label="No proposals found" cols={4} />
+              <section className="overflow-hidden rounded-[40px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-200/40 dark:shadow-black/40">
+                <div className="overflow-x-auto no-scrollbar">
+                  {adminView === "users" ? (
+                    <table className="w-full text-left">
+                      <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                        <tr>
+                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Identity</th>
+                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">SR Code</th>
+                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Block</th>
+                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Governance Role</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {isLoadingUsers ? (
+                          <LoadingRows cols={4} />
+                        ) : filteredUsers.length === 0 ? (
+                          <EmptyRows label="No users matched your search" cols={4} />
+                        ) : (
+                          filteredUsers.map((user) => (
+                            <UserRow key={user.id} user={user} isSelf={profile?.id === user.id} isSaving={savingIds.includes(user.id)} onRoleChange={updateUserRole} />
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   ) : (
-                    filteredProposals.map((p) => (
-                      <ProposalRow key={p.id} p={p} />
-                    ))
+                    <table className="w-full text-left">
+                      <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                        <tr>
+                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Proposal Title</th>
+                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Channel</th>
+                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Author</th>
+                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {isLoadingProposals ? (
+                          <LoadingRows cols={4} />
+                        ) : filteredProposals.length === 0 ? (
+                          <EmptyRows label="No proposals found" cols={4} />
+                        ) : (
+                          filteredProposals.map((p) => (
+                            <ProposalRow key={p.id} p={p} />
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   )}
-                </tbody>
-              </table>
+                </div>
+              </section>
             )}
-          </div>
-        </section>
-      </div>
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
     </MainLayout>
   );
 }
@@ -270,114 +360,167 @@ function AdminPage() {
 /* ── Sub-components ──────────────────────────────────────────────────────── */
 
 function StatCard(props) {
-  const { label, value, color, isMobileHidden } = props;
+  const { label, value, color, trend, isMobileHidden } = props;
   const CardIcon = props.icon;
   const colors = {
-    slate: "text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800",
-    rose: "text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/20",
-    blue: "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/20",
-    emerald: "text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/20",
-    amber: "text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20",
+    slate: "text-slate-600 bg-slate-100 dark:text-slate-400 dark:bg-slate-800",
+    rose: "text-rose-600 bg-rose-100 dark:text-rose-400 dark:bg-rose-900/20",
+    blue: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20",
+    emerald: "text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/20",
+    amber: "text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/20",
   };
 
   return (
-    <div className={`rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 transition-all hover:shadow-md ${isMobileHidden ? "hidden lg:block" : ""}`}>
-      <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}>
-        <CardIcon size={20} />
+    <motion.div 
+      variants={itemVariants}
+      whileHover={{ y: -5 }}
+      className={`rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 transition-all hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-black/40 ${isMobileHidden ? "hidden lg:block" : ""}`}
+    >
+      <div className="flex items-start justify-between">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${colors[color]}`}>
+          <CardIcon size={24} />
+        </div>
+        {trend && (
+          <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-1 rounded-full">
+            <TrendingUp size={10} />
+            {trend}
+          </div>
+        )}
       </div>
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{value}</p>
-    </div>
+      <div className="mt-6">
+        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">{label}</p>
+        <p className="mt-1 text-3xl font-black text-slate-900 dark:text-white">{value}</p>
+      </div>
+    </motion.div>
   );
 }
 
 function UserRow({ user, isSelf, isSaving, onRoleChange }) {
   return (
-    <tr className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-      <td className="px-8 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] font-black text-slate-500">
-            {user.full_name?.[0]}
+    <motion.tr 
+      variants={itemVariants}
+      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+    >
+      <td className="px-10 py-5">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-slate-900 text-[14px] font-black text-white shadow-lg shadow-slate-900/20">
+              {user.full_name?.[0]}
+            </div>
+            {user.campus_role === "admin" && (
+              <div className="absolute -right-1 -top-1 rounded-full bg-amber-400 p-1 text-slate-900 shadow-md ring-2 ring-white dark:ring-slate-900">
+                <ShieldCheck size={10} />
+              </div>
+            )}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+            <p className="text-sm font-black text-slate-900 dark:text-white truncate flex items-center gap-2">
               {user.full_name}
-              {isSelf && <span className="ml-2 rounded-full bg-[#800000]/10 dark:bg-red-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-[#800000] dark:text-red-400">You</span>}
+              {isSelf && <span className="rounded-full bg-[#800000]/10 dark:bg-red-500/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[#800000] dark:text-red-400">You</span>}
             </p>
-            <p className="text-[10px] text-slate-400 font-medium">Member since {new Date(user.created_at).toLocaleDateString()}</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Member since {new Date(user.created_at).toLocaleDateString()}</p>
           </div>
         </div>
       </td>
-      <td className="px-8 py-4 text-sm font-bold text-slate-600 dark:text-slate-400">{user.sr_code || "—"}</td>
-      <td className="px-8 py-4 text-sm font-bold text-slate-600 dark:text-slate-400">{user.block || "—"}</td>
-      <td className="px-8 py-4">
-        <div className="flex items-center gap-3">
-          <select
-            value={user.campus_role}
-            onChange={(e) => onRoleChange(user.id, e.target.value)}
-            disabled={isSaving || isSelf}
-            className="rounded-xl border-none bg-slate-100 dark:bg-slate-800 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 outline-none ring-1 ring-slate-200 dark:ring-slate-700 transition-all focus:ring-2 focus:ring-[#800000]/20 disabled:opacity-50"
-          >
-            {roles.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
-          {user.campus_role === "admin" && <ShieldCheck size={16} className="text-emerald-500" />}
+      <td className="px-10 py-5 text-xs font-black text-slate-600 dark:text-slate-400 tabular-nums">{user.sr_code || "—"}</td>
+      <td className="px-10 py-5 text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">{user.block || "—"}</td>
+      <td className="px-10 py-5">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <select
+              value={user.campus_role}
+              onChange={(e) => onRoleChange(user.id, e.target.value)}
+              disabled={isSaving || isSelf}
+              className="appearance-none rounded-[14px] border-none bg-slate-100 dark:bg-slate-800 pl-4 pr-10 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 outline-none ring-1 ring-slate-200 dark:ring-slate-700 transition-all focus:ring-2 focus:ring-[#800000]/30 disabled:opacity-50 cursor-pointer"
+            >
+              {roles.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <MoreVertical size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          </div>
+          
+          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+              <ExternalLink size={14} />
+            </button>
+          </div>
         </div>
       </td>
-    </tr>
+    </motion.tr>
   );
 }
 
 function ProposalRow({ p }) {
   const statusStyles = {
-    Pending: "bg-slate-100 dark:bg-slate-800 text-slate-500",
-    Approved: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
-    Implemented: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400",
+    Pending: "bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700",
+    Approved: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30",
+    Implemented: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30",
+    Rejected: "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/30",
   };
 
   return (
-    <tr className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-      <td className="px-8 py-4">
-        <p className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">{p.title}</p>
-        <p className="text-[10px] text-slate-400 font-medium">{new Date(p.created_at).toLocaleDateString()}</p>
+    <motion.tr 
+      variants={itemVariants}
+      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+    >
+      <td className="px-10 py-5">
+        <div className="space-y-1">
+          <p className="text-sm font-black text-slate-900 dark:text-white line-clamp-1">{p.title}</p>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider tabular-nums">{new Date(p.created_at).toLocaleDateString()}</p>
+        </div>
       </td>
-      <td className="px-8 py-4">
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{p.channel?.name}</span>
+      <td className="px-10 py-5">
+        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
+          {p.channel?.name}
+        </span>
       </td>
-      <td className="px-8 py-4 text-sm font-bold text-slate-600 dark:text-slate-400">{p.author?.full_name}</td>
-      <td className="px-8 py-4">
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${statusStyles[p.status] || statusStyles.Pending}`}>
-          {p.status === "Pending" ? <Clock size={12} /> : <CheckCircle size={12} />}
+      <td className="px-10 py-5">
+        <div className="flex items-center gap-2">
+          <div className="h-6 w-6 rounded-full bg-[#800000]/10 flex items-center justify-center text-[10px] font-black text-[#800000]">
+            {p.author?.full_name?.[0]}
+          </div>
+          <span className="text-xs font-black text-slate-600 dark:text-slate-400">{p.author?.full_name}</span>
+        </div>
+      </td>
+      <td className="px-10 py-5">
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border ${statusStyles[p.status] || statusStyles.Pending}`}>
+          {p.status === "Pending" ? <Clock size={12} /> : p.status === "Rejected" ? <ShieldAlert size={12} /> : <CheckCircle size={12} />}
           {p.status}
         </span>
       </td>
-    </tr>
+    </motion.tr>
   );
 }
 
 function LoadingRows({ cols }) {
   return (
-    <tr>
-      <td colSpan={cols} className="px-8 py-20 text-center">
+    <motion.tr variants={itemVariants}>
+      <td colSpan={cols} className="px-10 py-20 text-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 dark:border-slate-800 border-t-[#800000]" />
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Loading records...</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-[#800000]" />
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Syncing database records...</p>
         </div>
       </td>
-    </tr>
+    </motion.tr>
   );
 }
 function EmptyRows({ label, cols }) {
   return (
-    <tr>
-      <td colSpan={cols} className="px-8 py-20 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="rounded-full bg-slate-50 dark:bg-slate-800/50 p-4">
-            <LayoutDashboard size={32} className="text-slate-200 dark:text-slate-700" />
+    <motion.tr variants={itemVariants}>
+      <td colSpan={cols} className="px-10 py-24 text-center">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800 blur-2xl rounded-full opacity-20" />
+            <div className="relative rounded-[24px] bg-slate-50 dark:bg-slate-900/50 p-6 border border-slate-200 dark:border-slate-800">
+              <LayoutDashboard size={40} className="text-slate-300 dark:text-slate-600" />
+            </div>
           </div>
-          <p className="text-sm font-bold text-slate-400 dark:text-slate-500">{label}</p>
+          <div className="space-y-1">
+            <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">{label}</p>
+            <p className="text-xs text-slate-500 font-medium">Try adjusting your filters or search term</p>
+          </div>
         </div>
       </td>
-    </tr>
+    </motion.tr>
   );
 }
 

@@ -107,35 +107,53 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
   const handleCreateProposal = async (proposalData) => {
     const { data: authData } = await supabase.auth.getUser();
     const user = authData?.user;
-    if (!user) return;
+    if (!user) {
+      toast.error("Please log in to submit a proposal.");
+      return false;
+    }
 
-    const { isAnonymous, sdgTag, ...rest } = proposalData;
+    const { title, description, category, sdgTags, isAnonymous } = proposalData;
 
-    // 1. Insert proposal base data
-    const { data: insertedProposal, error: insertError } = await supabase
-      .from("proposals")
-      .insert([{
-        ...rest,
-        sdg_tag: sdgTag,
-        is_anonymous: isAnonymous,
-        author_id: user.id,
-        channel_id: channelId
-      }])
-      .select(`
-        *,
-        author:user_profiles!author_id(full_name, avatar_url)
-      `)
-      .single();
+    try {
+      // 1. Insert proposal base data
+      const { data: insertedProposal, error: insertError } = await supabase
+        .from("proposals")
+        .insert([{
+          title,
+          description,
+          category,
+          sdg_tags: sdgTags || [],
+          is_anonymous: !!isAnonymous,
+          author_id: user.id,
+          channel_id: channelId
+        }])
+        .select(`
+          *,
+          author:user_profiles!author_id(full_name, avatar_url)
+        `)
+        .single();
 
-    if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Database Error:", insertError);
+        toast.error(`Post failed: ${insertError.message}`);
+        return false;
+      }
+
     
-    const formatted = {
-      ...insertedProposal,
-      author_name: insertedProposal.author?.full_name,
-      author_avatar: insertedProposal.author?.avatar_url,
-      responses: []
-    };
-    setProposals([formatted, ...proposals]);
+      const formatted = {
+        ...insertedProposal,
+        author_name: insertedProposal.author?.full_name,
+        author_avatar: insertedProposal.author?.avatar_url,
+        responses: []
+      };
+      setProposals([formatted, ...proposals]);
+      toast.success("Proposal submitted successfully!");
+      return true;
+    } catch (err) {
+      console.error("Submission error:", err);
+      toast.error("An unexpected error occurred during submission.");
+      return false;
+    }
   };
 
   const handleVote = async (proposalId, voteType) => {

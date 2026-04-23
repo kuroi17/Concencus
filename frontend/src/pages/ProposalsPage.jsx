@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 
 function ProposalsPage() {
   const { currentChannel } = useChannel();
-  const { isAdmin } = useCurrentUserProfile();
+  const { isAdmin, user } = useCurrentUserProfile();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [socket, setSocket] = useState(null);
 
@@ -36,56 +36,83 @@ function ProposalsPage() {
   }, []);
 
   const handleCreateProposal = async (proposalData) => {
-    const { data: authData } = await supabase.auth.getUser();
-    const user = authData?.user;
-    if (!user || !currentChannel) return;
+    console.log("Starting proposal submission...", proposalData);
+    setIsModalOpen(true); // Ensure modal stays in posting state
 
-    const { imageFiles, isAnonymous, sdgTag, ...rest } = proposalData;
-
-    // 1. Insert proposal base data
-    const { data: insertedProposal, error: insertError } = await supabase
-      .from("proposals")
-      .insert([{
-        ...rest,
-        sdg_tag: sdgTag,
-        is_anonymous: isAnonymous,
-        author_id: user.id,
-        channel_id: currentChannel.id
-      }])
-      .select(`
-        *,
-        author:user_profiles!author_id(full_name, avatar_url)
-      `)
-      .single();
-
-    if (insertError) {
-      console.error("Error creating proposal:", insertError);
-      toast.error("Failed to create proposal: " + insertError.message);
-      return;
-    }
-
-    // 2. Upload images if any
-    const files = imageFiles || [];
-    if (files.length > 0 && insertedProposal?.id) {
-      const uploadedUrls = [];
-      for (const file of files) {
-        const url = await uploadPublicImage(file, "forum-post-images");
-        if (url) uploadedUrls.push(url);
+    try {
+      const authUser = user; // Use user from context
+      
+      if (!authUser) {
+        console.warn("Submission failed: No user found in context");
+        toast.error("Please log in to submit a proposal.");
+        return false;
       }
 
-      if (uploadedUrls.length > 0) {
-        await supabase
-          .from("proposals")
-          .update({
-            image_url: uploadedUrls[0],
-            image_urls: uploadedUrls,
-          })
-          .eq("id", insertedProposal.id);
+      if (!currentChannel || !currentChannel.id) {
+        console.warn("Submission failed: No active channel", currentChannel);
+        toast.error("No active channel selected. Please select a college/channel first.");
+        return false;
       }
+
+      const { title, description, category, sdgTags, isAnonymous, imageFiles } = proposalData;
+
+      console.log("Inserting proposal to DB...");
+      // 1. Insert proposal base data
+      const { data: insertedData, error: insertError } = await supabase
+        .from("proposals")
+        .insert([{
+          title,
+          description,
+          category,
+          sdg_tags: sdgTags || [],
+          is_anonymous: !!isAnonymous,
+          author_id: authUser.id,
+          channel_id: currentChannel.id
+        }])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Database Error:", insertError);
+        toast.error(`Post failed: ${insertError.message}`);
+        return false;
+      }
+
+      console.log("Proposal inserted successfully:", insertedData);
+
+      // 2. Upload images (if any)
+      const files = imageFiles || [];
+      if (files.length > 0 && insertedData?.id) {
+        console.log(`Uploading ${files.length} images...`);
+        const uploadedUrls = [];
+        for (const file of files) {
+          try {
+            const url = await uploadPublicImage(file, "forum-post-images");
+            if (url) uploadedUrls.push(url);
+          } catch (uploadErr) {
+            console.error("Image upload failed:", uploadErr);
+          }
+        }
+
+        if (uploadedUrls.length > 0) {
+          await supabase
+            .from("proposals")
+            .update({
+              image_url: uploadedUrls[0],
+              image_urls: uploadedUrls,
+            })
+            .eq("id", insertedData.id);
+        }
+      }
+      
+      toast.success("Proposal submitted successfully!");
+      setIsModalOpen(false);
+      return true;
+    } catch (err) {
+      console.error("Unexpected submission error:", err);
+      toast.error("An unexpected error occurred. Please check your connection.");
+      return false;
     }
-    
-    toast.success("Proposal submitted successfully!");
-    setIsModalOpen(false);
   };
 
   if (!currentChannel) return null;

@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   UserRound
 } from "lucide-react";
+import SDGBadge from "../Common/SDGBadge";
 
 const getPriorityStyle = (priorityText) => {
   if (!priorityText) return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
@@ -72,6 +73,13 @@ function AnnouncementCard({ item, delay = 0, onOpen }) {
               <Flag size={10} />
               {item.priority}
             </span>
+            {item.sdg_tags && item.sdg_tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {item.sdg_tags.map(tagId => (
+                  <SDGBadge key={tagId} sdgId={tagId} />
+                ))}
+              </div>
+            )}
           </div>
 
           <h3 className="m-0 text-lg font-black leading-tight text-slate-900 dark:text-white group-hover:text-[#800000] dark:group-hover:text-[#ff4d4d] transition-colors">
