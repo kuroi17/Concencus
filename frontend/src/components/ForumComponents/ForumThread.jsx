@@ -41,7 +41,6 @@ function getImageUrls(item) {
 }
 
 // ── Horizontal scroll carousel ──────────────────────────────────────────────
-// ── Horizontal scroll carousel ──────────────────────────────────────────────
 function ImageCarousel({ images, onOpenLightbox }) {
     const scrollRef = useRef(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -587,7 +586,6 @@ function ForumThread({
                 </div>
             )}
 
-            {/* Gallery Lightbox */}
             {/* Gallery Lightbox */}
             {lightboxIndex >= 0 &&
                 images.length > 0 &&
