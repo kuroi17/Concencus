@@ -70,7 +70,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
         if (event.target === event.currentTarget) closeModal();
       }}
     >
-      <div className="soft-enter w-full max-w-[500px] overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.1)]">
+      <div className="soft-enter w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-[16px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.1)] no-scrollbar">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <h2 className="text-lg font-bold text-slate-900">Post Announcement</h2>
           <button

@@ -13,6 +13,8 @@ function AnnouncementBoard({ channelId }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [postError, setPostError] = useState("");
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [lightboxImage, setLightboxImage] = useState(null);
   const { user, isAdmin } = useCurrentUserProfile();
 
   const fetchAnnouncements = useCallback(async () => {
@@ -122,7 +124,7 @@ function AnnouncementBoard({ channelId }) {
         }
       }
 
-      setSelectedNotice(null);
+      setSelectedAnnouncement(null);
       await fetchAnnouncements();
       return true;
     } catch (error) {
@@ -160,14 +162,14 @@ function AnnouncementBoard({ channelId }) {
 
   const tags = ["All", ...new Set(announcements.map(a => a.tag).filter(Boolean))];
 
-  const filteredAnnouncements = selectedTag === "All" 
-    ? announcements 
+  const filteredAnnouncements = selectedTag === "All"
+    ? announcements
     : announcements.filter(a => a.tag === selectedTag);
 
   return (
-    <section className="soft-enter pb-2 w-full overflow-x-hidden box-border" aria-label="Announcement board">
+    <section className="soft-enter pb-2 w-full overflow-visible box-border" aria-label="Announcement board">
       {/* ── Board header ──────────────────────────────────────────────────── */}
-      <div className="mb-8 space-y-6">
+      <div className="mb-8 space-y-6 pt-2">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="m-0 text-lg font-black uppercase tracking-[0.2em] text-slate-400">
             Institutional Notices
@@ -178,7 +180,7 @@ function AnnouncementBoard({ channelId }) {
               type="button"
               onClick={() => setIsModalOpen(true)}
               disabled={isPosting}
-              className="inline-flex items-center gap-2 rounded-2xl bg-[#800000] px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-[#a00000] active:translate-y-0 disabled:opacity-70"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#800000] px-6 py-3 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-[#a00000] active:translate-y-0 disabled:opacity-70"
             >
               <Megaphone size={16} />
               <span>{isPosting ? "Posting..." : "Create Notice"}</span>
@@ -192,11 +194,10 @@ function AnnouncementBoard({ channelId }) {
             <button
               key={tag}
               onClick={() => setSelectedTag(tag)}
-              className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
-                selectedTag === tag
-                  ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
-                  : "bg-white text-slate-500 ring-1 ring-slate-200/60 hover:bg-slate-50 hover:text-slate-900"
-              }`}
+              className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${selectedTag === tag
+                ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
+                : "bg-white text-slate-500 ring-1 ring-slate-200/60 hover:bg-slate-50 hover:text-slate-900"
+                }`}
             >
               {tag}
             </button>
@@ -212,7 +213,7 @@ function AnnouncementBoard({ channelId }) {
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
       {selectedAnnouncement && createPortal(
-        <div 
+        <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-2xl p-4 sm:p-8 md:p-12 soft-enter no-scrollbar cursor-pointer"
           onClick={(e) => e.target === e.currentTarget && setSelectedAnnouncement(null)}
         >
@@ -221,6 +222,7 @@ function AnnouncementBoard({ channelId }) {
               key={selectedAnnouncement.id}
               notice={selectedAnnouncement}
               onClose={() => setSelectedAnnouncement(null)}
+              onImageClick={(url) => setLightboxImage(url)}
             />
           </div>
         </div>,
@@ -241,7 +243,7 @@ function AnnouncementBoard({ channelId }) {
             There are currently no announcements under this category.
           </p>
           {selectedTag !== "All" && (
-            <button 
+            <button
               onClick={() => setSelectedTag("All")}
               className="mt-6 text-xs font-black uppercase tracking-widest text-[#800000] hover:underline"
             >
@@ -262,17 +264,43 @@ function AnnouncementBoard({ channelId }) {
         </div>
       )}
 
-      <CreateAnnouncementModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateAnnouncement}
-      />
+      {createPortal(
+        <CreateAnnouncementModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleCreateAnnouncement}
+        />,
+        document.body
+      )}
+
+      {/* ── Fullscreen Image Lightbox ─────────────────────────────────────── */}
+      {lightboxImage && createPortal(
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 backdrop-blur-xl soft-enter cursor-zoom-out"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            onClick={() => setLightboxImage(null)}
+            className="absolute top-6 right-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white transition-all hover:bg-white/20"
+            aria-label="Close Lightbox"
+          >
+            <X size={24} />
+          </button>
+          <img
+            src={lightboxImage}
+            alt="Full view"
+            className="h-auto max-h-[90vh] w-auto max-w-[95vw] rounded-2xl shadow-2xl transition-transform duration-500"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>,
+        document.body
+      )}
     </section>
   );
 }
 
 /** ── Integrated Detail View ────────────────────────────────────────────── */
-function AnnouncementDetailHero({ notice, onClose }) {
+function AnnouncementDetailHero({ notice, onClose, onImageClick }) {
   const getPriorityStyle = (priorityText) => {
     if (!priorityText) return "bg-slate-100 text-slate-600 border-slate-200";
     const p = priorityText.trim().toLowerCase();
@@ -286,10 +314,10 @@ function AnnouncementDetailHero({ notice, onClose }) {
   const postedAt =
     dateObj && !isNaN(dateObj)
       ? dateObj.toLocaleDateString("en-PH", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        })
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
       : "—";
 
   return (
@@ -297,14 +325,19 @@ function AnnouncementDetailHero({ notice, onClose }) {
       {/* Hero Visual Area (Left/Top) */}
       <div className="relative h-[300px] w-full shrink-0 md:h-full md:w-[40%] lg:w-[45%] overflow-hidden bg-slate-900">
         {notice.image_url ? (
-          <img src={notice.image_url} className="h-full w-full object-cover" alt="" />
+          <img
+            src={notice.image_url}
+            className="h-full w-full object-cover cursor-zoom-in"
+            alt=""
+            onClick={() => onImageClick(notice.image_url)}
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
             <Megaphone size={80} className="text-white/10" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 md:from-transparent to-transparent" />
-        
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 md:from-transparent to-transparent pointer-events-none" />
+
         {/* Tag on Image (Mobile only or just for flair) */}
         <div className="absolute bottom-6 left-6 md:hidden">
           <span className="rounded-xl bg-[#800000] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-xl">
@@ -362,7 +395,7 @@ function AnnouncementDetailHero({ notice, onClose }) {
                 {notice.content || notice.excerpt}
               </p>
             </article>
-            
+
             <div className="mt-16 border-t border-slate-100 pt-10">
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center text-[#800000] font-black">
