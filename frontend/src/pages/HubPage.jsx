@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import MainLayout from "../components/layouts/MainLayout";
 import TabSwitcher from "../components/common/TabSwitcher";
