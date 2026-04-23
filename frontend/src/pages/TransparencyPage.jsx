@@ -76,43 +76,43 @@ function TransparencyPage() {
       const rejected = data.filter(p => p.status === "Rejected").length;
 
       // 2. Calculate SDG Distribution using the new TEXT[] sdg_tags
+      // Initialize with all 17 SDGs so they all exist in the map (even with 0 count)
       const sdgMap = {};
+      for (let i = 1; i <= 17; i++) {
+        sdgMap[i.toString()] = 0;
+      }
+
       data.forEach(p => {
         if (p.sdg_tags && Array.isArray(p.sdg_tags)) {
           p.sdg_tags.forEach(tagId => {
-            sdgMap[tagId] = (sdgMap[tagId] || 0) + 1;
+            if (!tagId) return;
+            const numberMatch = tagId.toString().match(/\d+/);
+            const normalizedId = numberMatch ? parseInt(numberMatch[0], 10).toString() : null;
+            if (normalizedId) {
+              sdgMap[normalizedId] = (sdgMap[normalizedId] || 0) + 1;
+            }
           });
         }
       });
 
       const sdgDistribution = Object.entries(sdgMap)
-        .map(([rawId, count]) => {
-          const numberMatch = rawId.match(/\d+/);
-          // Normalize to a string number without leading zeros (e.g., "02" -> "2")
-          const normalizedId = numberMatch ? parseInt(numberMatch[0], 10).toString() : rawId.trim();
-            
-          const sdg = getSDGById(normalizedId);
+        .map(([id, count]) => {
+          const sdg = getSDGById(id);
           
-          // Better name extraction: if the DB has "SDG 8: Name", use "Name"
-          let displayName = sdg?.name;
-          if (!displayName) {
-            if (rawId.includes(":")) {
-              displayName = rawId.split(":")[1].trim();
-            } else {
-              displayName = rawId; // Fallback to raw string
-            }
-          }
-
           return {
-            id: rawId,
-            number: sdg?.number || normalizedId,
-            name: displayName,
+            id,
+            number: sdg?.number || id,
+            name: sdg?.name || `SDG ${id}`,
             count,
             hex: sdg?.hex || "#808080",
             icon: sdg?.icon || Target
           };
         })
-        .sort((a, b) => b.count - a.count);
+        .sort((a, b) => {
+          // Sort by count first, then by number (to keep it stable)
+          if (b.count !== a.count) return b.count - a.count;
+          return parseInt(a.number, 10) - parseInt(b.number, 10);
+        });
 
       // 3. Monthly Activity
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -350,12 +350,12 @@ function TransparencyPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
                         <span>Campus Impact</span>
-                        <span>{Math.round((sdg.count / stats.total) * 100)}%</span>
+                        <span>{stats.total > 0 ? Math.round((sdg.count / stats.total) * 100) : 0}%</span>
                       </div>
                       <div className="h-2.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                         <div 
                           className="h-full transition-all duration-1000 ease-out" 
-                          style={{ backgroundColor: sdg.hex, width: `${(sdg.count / stats.total) * 100}%` }} 
+                          style={{ backgroundColor: sdg.hex, width: `${stats.total > 0 ? (sdg.count / stats.total) * 100 : 0}%` }} 
                         />
                       </div>
                     </div>
@@ -425,7 +425,7 @@ function TransparencyPage() {
                             <p className="text-xs font-bold text-slate-700 dark:text-slate-200 line-clamp-2 leading-snug h-8">{sdg.name}</p>
                           </div>
                           <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                            <div className="h-full transition-all duration-1000" style={{ backgroundColor: sdg.hex, width: `${(sdg.count / stats.total) * 100}%` }} />
+                            <div className="h-full transition-all duration-1000" style={{ backgroundColor: sdg.hex, width: `${stats.total > 0 ? (sdg.count / stats.total) * 100 : 0}%` }} />
                           </div>
                         </div>
                       </div>
