@@ -78,7 +78,7 @@
 
 ## 🏗️ Component Architecture
 
-Concencus is built with a highly modular, scalable React architecture consisting of ~35 distinct components categorized into 6 core modules:
+Concensus is built with a highly modular, scalable React architecture consisting of ~35 distinct components categorized into 6 core modules:
 
 1. **Announcements Module:** `AnnouncementBoard`, `AnnouncementCard`, `CreateAnnouncementModal`, `AnnouncementDetailModal`, `AnnouncementSidebar`.
 2. **Governance Forum Module:** `ForumBoard`, `ForumThread`, `VoteWidget`, `CommentSection`, `CommentItem`, `CreatePostModal`.
@@ -91,7 +91,7 @@ Concencus is built with a highly modular, scalable React architecture consisting
 
 ## 🌍 SDG Alignment
 
-Concencus is directly aligned with the United Nations Sustainable Development Goals:
+Concensus is directly aligned with the United Nations Sustainable Development Goals:
 - **Target 4 (Quality Education):** Facilitating better communication between educators and students.
 - **Target 16 (Peace, Justice, and Strong Institutions):** Building transparent, accountable, and inclusive campus governance through public proposals and forums.
 - **Target 17 (Partnerships for the Goals):** Creating a unified digital hub for organizations and administrative bodies to collaborate.
@@ -108,8 +108,8 @@ Concencus is directly aligned with the United Nations Sustainable Development Go
 
 ### 2. Clone & Install
 ```bash
-git clone [https://github.com/kuroi17/Concencus.git](https://github.com/kuroi17/Concencus.git)
-cd Concencus
+git clone [https://github.com/kuroi17/Concensus.git](https://github.com/kuroi17/Concensus.git)
+cd Concensus
 
 # Install all workspace dependencies
 npm install
