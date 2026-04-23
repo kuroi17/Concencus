@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "../hooks/useCurrentUserProfile";
 import { useTheme } from "../context/ThemeContext";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Menu } from "lucide-react";
 
 const defaultNavItems = [
   { to: "/hub", label: "Hub" },
@@ -10,7 +10,7 @@ const defaultNavItems = [
   { to: "/profile", label: "Profile" },
 ];
 
-function Header({ title = "Concensus", searchSlot = null }) {
+function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
   const { profile } = useCurrentUserProfile();
   const { theme, toggleTheme } = useTheme();
 
@@ -22,7 +22,14 @@ function Header({ title = "Concensus", searchSlot = null }) {
   return (
     <header className="w-full transition-all duration-300">
       <div className="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <button
+            onClick={onMenuClick}
+            className="md:hidden flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 active:scale-95 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+            aria-label="Toggle menu"
+          >
+            <Menu size={20} />
+          </button>
           <h1 className="m-0 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-[1.5rem] font-extrabold tracking-tight text-transparent sm:text-[1.85rem]">
             {title}
           </h1>
@@ -61,7 +68,28 @@ function Header({ title = "Concensus", searchSlot = null }) {
           </button>
 
           {/* User Profile Avatar */}
-         
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              `flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 transition-all ${
+                isActive
+                  ? "border-[#800000] shadow-lg shadow-red-900/20"
+                  : "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600"
+              }`
+            }
+          >
+            {profile?.avatar_url ? (
+              <img
+                src={`${profile.avatar_url}${profile.avatar_url.includes("?") ? "&" : "?"}t=${Date.now()}`}
+                alt="Profile"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-slate-100 text-[10px] font-black text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                ME
+              </div>
+            )}
+          </NavLink>
         </div>
       </div>
 

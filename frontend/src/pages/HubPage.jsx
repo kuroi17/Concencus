@@ -73,7 +73,7 @@ function HubPage() {
       if (files.length > 0 && insertedPost?.id) {
         const uploadedUrls = [];
         for (const file of files) {
-          const url = await uploadPublicImage(file, "forum-post-images");
+          const url = await uploadPublicImage({ file, bucketName: "forum-post-images" });
           if (url) uploadedUrls.push(url);
         }
 

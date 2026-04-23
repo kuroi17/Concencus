@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import VoteWidget from "./VoteWidget";
 import CommentSection from "./CommentSection";
 import { supabase } from "../../lib/supabaseClient";
+import { useUser } from "../../context/UserContext";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 import toast from "react-hot-toast";
 
@@ -125,10 +126,99 @@ function ImageCarousel({ images, onOpenLightbox }) {
   );
 }
 
-// ... GalleryLightbox component ...
+function GalleryLightbox({ images, startIndex, onClose }) {
+  const [index, setIndex] = useState(startIndex);
+  useEscapeKey(true, onClose);
+
+  const next = (e) => {
+    e?.stopPropagation();
+    setIndex((prev) => (prev + 1) % images.length);
+  };
+  const prev = (e) => {
+    e?.stopPropagation();
+    setIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl animate-in fade-in duration-300"
+      onClick={onClose}
+    >
+      {/* Header / Controls */}
+      <div className="absolute top-0 flex w-full items-center justify-between p-4 sm:p-6">
+        <div className="rounded-full bg-white/10 px-4 py-1.5 text-sm font-bold text-white backdrop-blur-md">
+          {index + 1} / {images.length}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="group flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 hover:scale-110 active:scale-95"
+          aria-label="Close lightbox"
+        >
+          <X size={20} className="transition-transform group-hover:rotate-90" />
+        </button>
+      </div>
+
+      {/* Main Image View */}
+      <div className="relative flex h-full w-full items-center justify-center p-4 sm:p-12">
+        {images.length > 1 && (
+          <button
+            type="button"
+            onClick={prev}
+            className="absolute left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 hover:scale-110 sm:left-10"
+            aria-label="Previous image"
+          >
+            <ChevronLeft size={28} />
+          </button>
+        )}
+
+        <img
+          src={images[index]}
+          alt=""
+          className="max-h-full max-w-full rounded-2xl object-contain shadow-2xl animate-in zoom-in-95 duration-300"
+          onClick={(e) => e.stopPropagation()}
+        />
+
+        {images.length > 1 && (
+          <button
+            type="button"
+            onClick={next}
+            className="absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 hover:scale-110 sm:right-10"
+            aria-label="Next image"
+          >
+            <ChevronRight size={28} />
+          </button>
+        )}
+      </div>
+
+      {/* Thumbnails Strip */}
+      {images.length > 1 && (
+        <div className="absolute bottom-6 flex gap-2 overflow-x-auto px-4 max-w-full no-scrollbar">
+          {images.map((url, i) => (
+            <button
+              key={url}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIndex(i);
+              }}
+              className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                i === index ? "border-white scale-110 shadow-lg shadow-white/20" : "border-transparent opacity-40 hover:opacity-80"
+              }`}
+            >
+              <img src={url} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+import { X } from "lucide-react";
 
 // ── Forum Thread ────────────────────────────────────────────────────────────
 function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand, onBack }) {
+  const { user: currentUser } = useUser();
   const [searchParams, setSearchParams] = useSearchParams();
   // Capture on mount so highlight persists even after clearing the URL
   const [isTargetPost] = useState(() => searchParams.get("post") === item.id);
@@ -154,28 +244,29 @@ function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand, onBack
 
   // Check if user has saved this post
   useEffect(() => {
+    if (!currentUser?.id) {
+      setIsSaved(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData?.user || cancelled) return;
       const { data } = await supabase
         .from("saved_posts")
         .select("post_id")
-        .eq("user_id", authData.user.id)
+        .eq("user_id", currentUser.id)
         .eq("post_id", item.id)
         .maybeSingle();
       if (!cancelled) setIsSaved(Boolean(data));
     })();
     return () => { cancelled = true; };
-  }, [item.id]);
+  }, [item.id, currentUser?.id]);
 
   const toggleSave = async () => {
     // Optimistic update
     const previousState = isSaved;
     setIsSaved(!previousState);
 
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData?.user) {
+    if (!currentUser) {
       setIsSaved(previousState); // Revert
       toast.error("You must be logged in to save posts.");
       return;
@@ -186,14 +277,14 @@ function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand, onBack
         const { error } = await supabase
           .from("saved_posts")
           .delete()
-          .eq("user_id", authData.user.id)
+          .eq("user_id", currentUser.id)
           .eq("post_id", item.id);
         if (error) throw error;
         toast.success("Post unsaved!");
       } else {
         const { error } = await supabase
           .from("saved_posts")
-          .insert([{ user_id: authData.user.id, post_id: item.id }]);
+          .insert([{ user_id: currentUser.id, post_id: item.id }]);
         if (error) throw error;
         toast.success("Post saved!");
       }
@@ -369,9 +460,7 @@ function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand, onBack
                     );
 
                     queueMicrotask(async () => {
-                      const { data: authData, error: authError } =
-                        await supabase.auth.getUser();
-                      if (authError || !authData?.user) {
+                      if (!currentUser) {
                         toast.error("You must be logged in to report.");
                         return;
                       }
@@ -381,7 +470,7 @@ function ForumThread({ item, isAdmin = false, isExpanded, onToggleExpand, onBack
                         .insert([
                           {
                             post_id: item.id,
-                            reporter_id: authData.user.id,
+                            reporter_id: currentUser.id,
                             reason: reason?.trim() || null,
                           },
                         ]);

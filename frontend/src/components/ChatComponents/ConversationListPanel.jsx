@@ -1,5 +1,5 @@
-
 import { MessageCircleMore, Search, X } from "lucide-react";
+import { useLayout } from "../layouts/MainLayout";
 
 function getInitials(name) {
   if (!name) return "?";
@@ -63,6 +63,7 @@ function ConversationListPanel({
   isOpeningConversation,
   onSelectSearchResult,
 }) {
+  const { closeMobileMenu } = useLayout();
   const hasSearchText = searchQuery.trim().length >= 2;
 
   return (
@@ -122,7 +123,10 @@ function ConversationListPanel({
                 <button
                   key={profile.id}
                   type="button"
-                  onClick={() => onSelectSearchResult(profile)}
+                  onClick={() => {
+                    closeMobileMenu();
+                    onSelectSearchResult(profile);
+                  }}
                   disabled={isOpeningConversation}
                   className="flex w-full items-center gap-3 rounded-[10px] px-2 py-2.5 text-left transition hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-60"
                 >
@@ -181,7 +185,10 @@ function ConversationListPanel({
                   <button
                     key={conversation.id}
                     type="button"
-                    onClick={() => onOpenConversation(conversation.id)}
+                    onClick={() => {
+                      closeMobileMenu();
+                      onOpenConversation(conversation.id);
+                    }}
                     className={`group flex w-full items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-all duration-300 ${
                       isActive
                         ? "bg-slate-900 text-white shadow-xl shadow-slate-900/10 dark:bg-white dark:text-slate-900"

@@ -10,6 +10,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  X,
 } from "lucide-react";
 import { useChannel } from "../../context/useChannel";
 import { useUser } from "../../context/UserContext";
@@ -32,13 +33,13 @@ const categoryAccent = {
   organizations: "text-amber-600",
 };
 
-function ChannelSidebar({ collapsed = false, onCollapseChange }) {
+function ChannelSidebar({ collapsed = false, onCollapseChange, onCloseMobile }) {
   const {
     categories, currentChannel, setCurrentChannel, loadingChannels,
     createChannel, updateChannel, deleteChannel,
     createCategory,
   } = useChannel();
-  const { user, profile, isAdmin } = useUser();
+  const { profile, isAdmin } = useUser();
   const navigate = useNavigate();
 
   const [openCategories, setOpenCategories] = useState(() =>
@@ -59,7 +60,7 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
 
   const handleDeleteChannel = async (e, ch) => {
     e.stopPropagation();
-    if (!confirm(`Delete "${ch.name}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete "${ch.name}"? This cannot be undone.`)) return;
     await deleteChannel(ch.id);
   };
 
@@ -96,6 +97,7 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
                     type="button"
                     onClick={() => {
                       if (category.channels.length > 0) {
+                        if (onCloseMobile) onCloseMobile();
                         setCurrentChannel(category.channels[0]);
                         navigate("/hub");
                       }
@@ -129,7 +131,7 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
   return (
     <>
       <aside
-        className="flex flex-col border-b border-slate-200/60 bg-white/80 dark:border-slate-800/60 dark:bg-slate-950/90 px-4 py-6 backdrop-blur-xl sm:px-6 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:overflow-x-hidden lg:border-b-0 lg:border-r no-scrollbar transition-all duration-300"
+        className="flex h-full flex-col bg-white/80 dark:bg-slate-950/90 px-4 py-6 backdrop-blur-xl transition-all duration-300"
         aria-label="Channel sidebar"
       >
         {/* Header */}
@@ -139,6 +141,15 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
               Channels
             </h2>
             <div className="flex items-center gap-1">
+              {/* Mobile Close Button */}
+              <button
+                onClick={onCloseMobile}
+                className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 lg:hidden"
+                aria-label="Close menu"
+              >
+                <X size={16} />
+              </button>
+
               {isAdmin && (
                 <button
                   onClick={() => setCategoryModal({ mode: "create" })}
@@ -164,7 +175,7 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
         </div>
 
         {/* Category accordion */}
-        <nav className="flex-1 space-y-6">
+        <nav className="flex-1 space-y-6 overflow-y-auto no-scrollbar">
           {loadingChannels ? (
             <div className="space-y-6 px-1">
               {[...Array(4)].map((_, i) => (
@@ -183,7 +194,6 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
 
               return (
                 <section key={category.id} className="space-y-2">
-                  {/* Category header — collapse only, no edit/delete */}
                   <button
                     type="button"
                     onClick={() => toggleCategory(category.id)}
@@ -200,7 +210,6 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
                     />
                   </button>
 
-                  {/* Channel list */}
                   {isOpen && (
                     <ul className="space-y-1" role="list">
                       {category.channels.map((ch) => {
@@ -209,7 +218,11 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
                           <li key={ch.id} className="group/item">
                             <button
                               type="button"
-                              onClick={() => { setCurrentChannel(ch); navigate("/hub"); }}
+                              onClick={() => {
+                                if (onCloseMobile) onCloseMobile();
+                                setCurrentChannel(ch);
+                                navigate("/hub");
+                              }}
                               className={`relative flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm transition-all duration-300 overflow-hidden ${
                                 isActive
                                   ? "bg-[#800000] text-white shadow-lg shadow-red-900/20 ring-1 ring-[#800000]"
@@ -218,17 +231,14 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
                               aria-current={isActive ? "page" : undefined}
                               title={ch.name}
                             >
-                              {/* Channel name — shrinks on hover to make room for admin icons */}
                               <span className={`truncate transition-all duration-200 ${isAdmin ? "group-hover/item:mr-14" : ""} ${isActive ? "font-bold" : "font-semibold"}`}>
                                 {ch.name}
                               </span>
 
-                              {/* Active dot — hidden on hover when admin controls show */}
                               {isActive && (
                                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)] group-hover/item:hidden" />
                               )}
 
-                              {/* Admin controls — overlaid inside the button */}
                               {isAdmin && (
                                 <span
                                   className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity"
@@ -257,7 +267,6 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
                         );
                       })}
 
-                      {/* Add channel */}
                       {isAdmin && (
                         <li>
                           <button
@@ -277,7 +286,7 @@ function ChannelSidebar({ collapsed = false, onCollapseChange }) {
           )}
         </nav>
 
-        <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-4 lg:mt-auto">
+        <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-4">
           <SidebarLogoutAction />
         </div>
       </aside>
