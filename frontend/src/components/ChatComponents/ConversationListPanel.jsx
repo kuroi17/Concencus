@@ -227,7 +227,6 @@ function ConversationListPanel({
                     </div>
                   </button>
                 );
-                );
               })}
             </div>
           </>
