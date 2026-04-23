@@ -13,9 +13,11 @@ const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
 const app = express();
 const httpServer = http.createServer(app);
 
+console.log(`[backend] Allowed Frontend Origin: ${frontendOrigin}`);
+
 app.use(
   cors({
-    origin: frontendOrigin,
+    origin: [frontendOrigin, "https://concencus.onrender.com", "http://localhost:5173"],
     credentials: true,
   }),
 );
@@ -27,7 +29,7 @@ app.get("/health", (_req, res) => {
 
 const io = new Server(httpServer, {
   cors: {
-    origin: frontendOrigin,
+    origin: [frontendOrigin, "https://concencus.onrender.com", "http://localhost:5173"],
     credentials: true,
   },
   pingTimeout: 60000,
