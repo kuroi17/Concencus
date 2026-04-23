@@ -146,6 +146,42 @@ export function useDmConversations(currentUserId) {
     [currentUserId, loadConversations],
   );
 
+  // useDmConversations.js — add this before the return
+useEffect(() => {
+  if (!currentUserId) return undefined;
+
+  const instanceId = Math.random().toString(36).slice(2, 8);
+  const channel = supabase
+    .channel(`dm-conversations-preview-${currentUserId}-${instanceId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "dm_messages",
+      },
+      (payload) => {
+        const msg = payload.new;
+        if (!msg) return;
+
+        setConversations((prev) => {
+          const idx = prev.findIndex((c) => c.id === msg.conversation_id);
+          if (idx === -1) return prev; // conversation not in list yet, ignore
+
+          const updated = { ...prev[idx], latestMessage: msg };
+          const next = [...prev];
+          next.splice(idx, 1);       // remove from current position
+          return [updated, ...next]; // put it at the top
+        });
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [currentUserId]);
+
   return {
     conversations,
     conversationMap,
