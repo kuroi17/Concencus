@@ -2,7 +2,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
-import SDGSelector from "../Common/SDGSelector";
+import SDGSelector from "../common/SDGSelector";
 
 const categories = ["Academic", "Facilities", "Policy"];
 

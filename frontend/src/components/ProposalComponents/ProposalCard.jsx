@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowBigUp, ArrowBigDown, MessageCircle, Clock, CheckCircle2, Construction, XCircle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import SDGBadge from "../Common/SDGBadge";
+import SDGBadge from "../common/SDGBadge";
 
 const STATUS_CONFIG = {
   "Under Review": { icon: Clock, color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-200" },

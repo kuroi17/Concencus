@@ -1,7 +1,7 @@
 import { ImageUp, X } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
-import SDGSelector from "../Common/SDGSelector";
+import SDGSelector from "../common/SDGSelector";
 
 const MAX_IMAGES = 5;
 const tags = ["General", "Announcement", "Curriculum", "Feedback"];

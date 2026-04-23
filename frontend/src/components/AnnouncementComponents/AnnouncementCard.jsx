@@ -6,7 +6,7 @@ import {
   ShieldCheck,
   UserRound
 } from "lucide-react";
-import SDGBadge from "../Common/SDGBadge";
+import SDGBadge from "../common/SDGBadge";
 
 const getPriorityStyle = (priorityText) => {
   if (!priorityText) return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";

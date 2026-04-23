@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Images, Trash2, GripVertical } from "lucide-react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
-import SDGSelector from "../Common/SDGSelector";
+import SDGSelector from "../common/SDGSelector";
 
 const tags = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
 const priorities = ["FYI", "Normal", "Important", "Urgent"];
