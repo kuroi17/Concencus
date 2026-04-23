@@ -47,13 +47,13 @@ function EditProfileModal({ isOpen, initialProfile, onClose, onSave }) {
         if (event.target === event.currentTarget) closeModal();
       }}
     >
-      <div className="soft-enter w-full max-w-[560px] overflow-hidden rounded-[18px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 className="m-0 text-lg font-bold text-slate-900">Edit Profile</h2>
+      <div className="soft-enter w-full max-w-[560px] overflow-hidden rounded-[18px] bg-white dark:bg-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] dark:shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-4">
+          <h2 className="m-0 text-lg font-bold text-slate-900 dark:text-white">Edit Profile</h2>
           <button
             type="button"
             onClick={closeModal}
-            className="rounded-[10px] p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-[10px] p-2 text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-white"
             aria-label="Close"
           >
             <X size={18} />
@@ -79,25 +79,25 @@ function EditProfileModal({ isOpen, initialProfile, onClose, onSave }) {
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 SR Code
               </label>
               <input
                 value={srCode}
                 onChange={(e) => setSrCode(e.target.value)}
                 placeholder="e.g. 21-0000-000"
-                className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+                className="w-full rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d] dark:focus:border-red-900"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Block
               </label>
               <input
                 value={block}
                 onChange={(e) => setBlock(e.target.value)}
                 placeholder="e.g. CS 2201"
-                className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+                className="w-full rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d] dark:focus:border-red-900"
               />
             </div>
           </div>
@@ -121,7 +121,7 @@ function EditProfileModal({ isOpen, initialProfile, onClose, onSave }) {
                 setAvatarPreviewUrl("");
               }}
             />
-            <p className="m-0 mt-2 text-xs text-slate-500">
+            <p className="m-0 mt-2 text-xs text-slate-500 dark:text-slate-400">
               Tip: a square image works best.
             </p>
           </div>
@@ -130,7 +130,7 @@ function EditProfileModal({ isOpen, initialProfile, onClose, onSave }) {
             <button
               type="button"
               onClick={closeModal}
-              className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+              className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Cancel
             </button>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AtSign, Bookmark, GraduationCap, Hash, UserRound, Users } from "lucide-react";
+import toast from "react-hot-toast";
 import Header from "../common/Header";
 import { supabase } from "../lib/supabaseClient";
 import EditProfileModal from "../components/ProfileComponents/EditProfileModal";
@@ -177,7 +178,7 @@ function ProfilePage() {
       <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-6 py-6">
         <main className="soft-enter space-y-6 pt-2" role="main">
           {/* ── Profile Hero Section ────────────────────────────────────────── */}
-          <section className="relative overflow-hidden rounded-[24px] border border-slate-200/60 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
+          <section className="relative overflow-hidden rounded-[24px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-[0_20px_50px_rgba(15,23,42,0.06)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
             {/* Banner */}
             <div className="relative h-48 w-full overflow-hidden sm:h-64">
               <img
@@ -191,7 +192,7 @@ function ProfilePage() {
             <div className="relative px-6 pb-8">
               {/* Overlapping Avatar */}
               <div className="relative -mt-16 mb-4 flex items-end justify-between sm:-mt-20">
-                <div className="group relative h-32 w-32 shrink-0 overflow-hidden rounded-full border-[6px] border-white bg-white shadow-xl sm:h-40 sm:w-40">
+                <div className="group relative h-32 w-32 shrink-0 overflow-hidden rounded-full border-[6px] border-white dark:border-slate-900 bg-white dark:bg-slate-900 shadow-xl sm:h-40 sm:w-40">
                   {profile?.avatar_url ? (
                     <img
                       src={profile.avatar_url}
@@ -210,7 +211,7 @@ function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsEditOpen(true)}
-                  className="mb-2 inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0"
+                  className="mb-2 inline-flex items-center justify-center rounded-xl bg-slate-900 dark:bg-slate-100 px-5 py-2.5 text-sm font-semibold text-white dark:text-slate-900 shadow-lg shadow-slate-900/20 dark:shadow-black/20 transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:hover:bg-white active:translate-y-0"
                 >
                   Edit Profile
                 </button>
@@ -218,29 +219,29 @@ function ProfilePage() {
 
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div className="min-w-0">
-                  <h2 className="m-0 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                  <h2 className="m-0 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
                     {isLoading ? "Loading profile..." : profile?.full_name}
                   </h2>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center rounded-lg bg-red-50 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[#800000] ring-1 ring-inset ring-red-100">
+                    <span className="inline-flex items-center rounded-lg bg-red-50 dark:bg-red-900/20 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[#800000] dark:text-red-400 ring-1 ring-inset ring-red-100 dark:ring-red-900/30">
                       {isLoading ? "..." : profile?.campus_role || "student"}
                     </span>
                     <span className="text-sm text-slate-500">•</span>
-                    <p className="m-0 text-sm font-medium text-slate-500">
+                    <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">
                       Digital Governance ID for BatStateU
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6 rounded-2xl bg-slate-50/80 p-4 backdrop-blur-sm ring-1 ring-slate-200/50">
+                <div className="flex items-center gap-6 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 p-4 backdrop-blur-sm ring-1 ring-slate-200/50 dark:ring-slate-700/50">
                   <div className="text-center">
-                    <p className="text-lg font-bold text-slate-900">{followersCount}</p>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Followers</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">{followersCount}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Followers</p>
                   </div>
-                  <div className="h-8 w-px bg-slate-200" />
+                  <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />
                   <div className="text-center">
-                    <p className="text-lg font-bold text-slate-900">{followingCount}</p>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Following</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">{followingCount}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Following</p>
                   </div>
                 </div>
               </div>
@@ -250,29 +251,29 @@ function ProfilePage() {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* ── Left Column: Identity Info ────────────────────────────────── */}
             <section className="lg:col-span-1 space-y-4">
-              <div className="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-400">Governance Identity</h3>
+              <div className="rounded-[24px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 p-6 shadow-sm">
+                <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Governance Identity</h3>
                 <div className="space-y-4">
-                  <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 p-4 transition-all hover:bg-slate-50">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">SR Code</p>
-                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900">
-                      <Hash size={16} className="text-slate-400" />
+                  <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 p-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">SR Code</p>
+                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                      <Hash size={16} className="text-slate-400 dark:text-slate-500" />
                       {isLoading ? "..." : profile?.sr_code || "No SR Code"}
                     </p>
                   </article>
 
-                  <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 p-4 transition-all hover:bg-slate-50">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Block / Section</p>
-                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900">
-                      <GraduationCap size={16} className="text-slate-400" />
+                  <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 p-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Block / Section</p>
+                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                      <GraduationCap size={16} className="text-slate-400 dark:text-slate-500" />
                       {isLoading ? "..." : profile?.block || "Unassigned"}
                     </p>
                   </article>
 
-                  <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 p-4 transition-all hover:bg-slate-50">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Official Email</p>
-                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900">
-                      <AtSign size={16} className="text-slate-400" />
+                  <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 p-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Official Email</p>
+                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                      <AtSign size={16} className="text-slate-400 dark:text-slate-500" />
                       {isLoading ? "..." : profile?.email || "No email"}
                     </p>
                   </article>
@@ -282,15 +283,15 @@ function ProfilePage() {
 
             {/* ── Right Column: Saved Content ────────────────────────────────── */}
             <section className="lg:col-span-2">
-              <div className="overflow-hidden rounded-[24px] border border-slate-200/60 bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+              <div className="overflow-hidden rounded-[24px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-5">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-500">
                       <Bookmark size={20} fill="currentColor" className="opacity-80" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">Bookmarked Discussions</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Bookmarked Discussions</h3>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-500">
+                  <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                     {savedPosts.length} Items
                   </span>
                 </div>
@@ -298,15 +299,15 @@ function ProfilePage() {
                 <div className="p-6">
                   {savedLoading ? (
                     <div className="flex flex-col items-center justify-center py-12">
-                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-[#800000]" />
-                      <p className="mt-4 text-sm font-medium text-slate-400">Syncing bookmarks...</p>
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-[#800000]" />
+                      <p className="mt-4 text-sm font-medium text-slate-400 dark:text-slate-500">Syncing bookmarks...</p>
                     </div>
                   ) : savedPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="mb-4 rounded-full bg-slate-50 p-4">
-                        <Bookmark size={32} className="text-slate-200" />
+                      <div className="mb-4 rounded-full bg-slate-50 dark:bg-slate-800 p-4">
+                        <Bookmark size={32} className="text-slate-200 dark:text-slate-700" />
                       </div>
-                      <p className="max-w-[240px] text-sm font-medium text-slate-400">
+                      <p className="max-w-[240px] text-sm font-medium text-slate-400 dark:text-slate-500">
                         No saved posts yet. Bookmark discussions from the forum to find them here.
                       </p>
                     </div>
@@ -316,17 +317,17 @@ function ProfilePage() {
                         <div
                           key={post.id}
                           onClick={() => navigate(`/hub?post=${post.id}`)}
-                          className="group flex cursor-pointer items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 transition-all hover:border-red-100 hover:bg-red-50/30 hover:shadow-md hover:shadow-red-900/5"
+                          className="group flex cursor-pointer items-center gap-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 transition-all hover:border-red-100 dark:hover:border-red-900/40 hover:bg-red-50/30 dark:hover:bg-red-900/10 hover:shadow-md hover:shadow-red-900/5"
                         >
                           <div className="min-w-0 flex-1">
-                            <h4 className="m-0 text-[15px] font-bold text-slate-900 group-hover:text-[#800000] transition-colors line-clamp-1">
+                            <h4 className="m-0 text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors line-clamp-1">
                               {post.title}
                             </h4>
                             <div className="mt-2 flex items-center gap-3">
-                              <span className="inline-flex rounded-md bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 shadow-sm ring-1 ring-slate-200">
+                              <span className="inline-flex rounded-md bg-white dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
                                 {post.tag || "General"}
                               </span>
-                              <div className="flex items-center gap-3 text-[11px] font-medium text-slate-400">
+                              <div className="flex items-center gap-3 text-[11px] font-medium text-slate-400 dark:text-slate-500">
                                 <span className="flex items-center gap-1">
                                   {parseInt(post.score, 10) || 0} votes
                                 </span>
@@ -341,7 +342,7 @@ function ProfilePage() {
                               e.stopPropagation();
                               handleUnsave(post.id);
                             }}
-                            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl text-slate-300 transition-all hover:bg-red-100 hover:text-red-600"
+                            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl text-slate-300 dark:text-slate-600 transition-all hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-600 dark:hover:text-red-400"
                             title="Remove bookmark"
                           >
                             <Bookmark size={18} fill="currentColor" />
@@ -364,7 +365,7 @@ function ProfilePage() {
         onSave={async ({ sr_code, block, avatarFile }) => {
           const { data: authData, error: authError } = await supabase.auth.getUser();
           if (authError || !authData?.user) {
-            alert("You must be logged in.");
+            toast.error("You must be logged in.");
             return false;
           }
 
@@ -378,7 +379,7 @@ function ProfilePage() {
                 upsert: true,
               });
             } catch (error) {
-              alert(error?.message || "Failed to upload avatar.");
+              toast.error(error?.message || "Failed to upload avatar.");
               return false;
             }
           }
@@ -395,7 +396,7 @@ function ProfilePage() {
             .maybeSingle();
 
           if (error) {
-            alert(error.message || "Failed to update profile.");
+            toast.error(error.message || "Failed to update profile.");
             return false;
           }
 

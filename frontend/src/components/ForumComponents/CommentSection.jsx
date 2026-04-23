@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import CommentItem from "./CommentItem";
+import toast from "react-hot-toast";
 
 function CommentSection({ postId }) {
   const [comments, setComments] = useState([]);
@@ -45,11 +46,11 @@ function CommentSection({ postId }) {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
-        alert("You must be logged in to comment.");
+        toast.error("You must be logged in to comment.");
         return;
       }
 
-      const { error } = await supabase.from("forum_comments").insert([
+      const { error: insertError } = await supabase.from("forum_comments").insert([
         {
           post_id: postId,
           author_id: userData.user.id,
@@ -59,10 +60,15 @@ function CommentSection({ postId }) {
         },
       ]);
 
-      if (error) throw error;
+      if (insertError) {
+        console.error("Comment error:", insertError);
+        toast.error("Failed to create comment.");
+      } else {
+        toast.success("Comment added!");
+      }
     } catch (err) {
       console.error("Error creating comment:", err);
-      alert("Failed to create comment. Check console.");
+      toast.error("Failed to create comment. Check console.");
     }
   };
 
@@ -81,28 +87,28 @@ function CommentSection({ postId }) {
   const rootComments = comments.filter((c) => !c.parent_id);
 
   if (loading) {
-    return <div className="py-4 text-center text-sm text-slate-500">Loading comments...</div>;
+    return <div className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">Loading comments...</div>;
   }
 
   return (
-    <section className="bg-slate-50 rounded-[12px] border border-slate-200/80 p-4 mt-3">
-      <form onSubmit={handleRootSubmit} className="mb-5 bg-white p-3 rounded-[10px] border border-slate-200 shadow-sm">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Add a comment</p>
+    <section className="bg-slate-50 dark:bg-slate-800/50 rounded-[12px] border border-slate-200/80 dark:border-slate-800 p-4 mt-3">
+      <form onSubmit={handleRootSubmit} className="mb-5 bg-white dark:bg-slate-900 p-3 rounded-[10px] border border-slate-200 dark:border-slate-800 shadow-sm">
+        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">Add a comment</p>
         <textarea
           value={rootReplyText}
           onChange={(e) => setRootReplyText(e.target.value)}
           placeholder="What are your thoughts?"
           rows={3}
-          className="w-full resize-none rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d] focus:bg-white"
+          className="w-full resize-none rounded-[8px] border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d] dark:focus:border-red-400 focus:bg-white dark:focus:bg-slate-800"
           required
         />
         <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-          <label className="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none">
+          <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="h-3 w-3 rounded border-slate-300 text-[#7f1d1d]"
+              className="h-3 w-3 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-[#7f1d1d]"
             />
             Post anonymously
           </label>
@@ -117,7 +123,7 @@ function CommentSection({ postId }) {
       </form>
 
       {rootComments.length === 0 ? (
-        <div className="py-4 text-center text-sm text-slate-400">
+        <div className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
           No comments yet. Be the first to share your thoughts!
         </div>
       ) : (

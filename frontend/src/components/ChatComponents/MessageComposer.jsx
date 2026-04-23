@@ -39,7 +39,7 @@ function MessageComposer({ onSendMessage, disabled = false }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="overflow-hidden rounded-[12px] border border-slate-200 bg-white shadow-[0_4px_16px_rgba(15,23,42,0.06)] transition focus-within:border-slate-300 focus-within:shadow-[0_6px_20px_rgba(15,23,42,0.09)]"
+      className="overflow-hidden rounded-[12px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_4px_16px_rgba(15,23,42,0.06)] transition focus-within:border-slate-300 dark:focus-within:border-slate-700 focus-within:shadow-[0_6px_20px_rgba(15,23,42,0.09)]"
       aria-label="Message composer"
     >
       {sendError && (
@@ -60,7 +60,7 @@ function MessageComposer({ onSendMessage, disabled = false }) {
         }}
         disabled={disabled || isSending}
         rows={2}
-        className="w-full resize-none border-0 bg-transparent px-3 pt-3 pb-1 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+        className="w-full resize-none border-0 bg-transparent px-3 pt-3 pb-1 text-sm text-slate-700 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
         placeholder={
           disabled
             ? "Select a conversation to start messaging…"
@@ -69,7 +69,7 @@ function MessageComposer({ onSendMessage, disabled = false }) {
       />
 
       <div className="flex items-center justify-between px-3 pb-2.5">
-        <p className="m-0 text-[11px] text-slate-400">
+        <p className="m-0 text-[11px] text-slate-400 dark:text-slate-500">
           Enter&nbsp;<span className="font-medium">to send</span>, Shift+Enter for new line
         </p>
 

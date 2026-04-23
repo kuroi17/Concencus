@@ -1,92 +1,112 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { MessageSquare, X, Maximize2, Send, Search, ChevronLeft, Loader2, Smile, Settings, ExternalLink } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { MessageSquare, X, Send, Search, ChevronLeft, Loader2, ExternalLink, AlertCircle } from "lucide-react";
 import { useDmConversations } from "../../hooks/useDmConversations";
 import { useDmMessages } from "../../hooks/useDmMessages";
 import { useUnreadCounts } from "../../hooks/useUnreadCounts";
 import { createSocketClient } from "../../lib/socketClient";
 import { supabase } from "../../lib/supabaseClient";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useUser } from "../../context/UserContext";
 
 export default function ChatWidget() {
+  const { user: currentUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [miniSearchResults, setMiniSearchResults] = useState([]);
   const [socket, setSocket] = useState(null);
   const [messageInput, setMessageInput] = useState("");
+  
   const navigate = useNavigate();
   const location = useLocation();
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
 
-  // Hide on Chat Page
-  if (location.pathname === "/chat") return null;
+  const currentUserId = currentUser?.id;
 
   const {
-    conversations,
-    conversationMap,
-    isLoadingConversations,
+    conversations = [],
+    conversationMap = new Map(),
     refreshConversations,
     createOrGetConversation,
-  } = useDmConversations(currentUser?.id);
+  } = useDmConversations(currentUserId);
 
   const {
-    messages,
-    isLoadingMessages,
+    messages = [],
+    isLoadingMessages = false,
     appendOptimisticMessage,
     replaceOptimisticMessage,
     removeOptimisticMessage,
   } = useDmMessages(activeConversationId, socket);
 
-  const { unreadCounts, markAsRead, refreshUnreadCounts } = useUnreadCounts(currentUser?.id);
+  const { unreadCounts = new Map(), markAsRead, refreshUnreadCounts } = useUnreadCounts(currentUserId);
 
   const activeConversation = useMemo(() => {
-    if (!activeConversationId) return null;
+    if (!activeConversationId || !conversationMap) return null;
     return conversationMap.get(activeConversationId) || null;
   }, [conversationMap, activeConversationId]);
 
+  // ── Socket Management ─────────────────────────────────────────
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) setCurrentUser(data.user);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!currentUser?.id) return;
-    let client = null;
-    supabase.auth.getSession().then(({ data }) => {
+    if (!currentUserId) return undefined;
+    
+    let isMounted = true;
+    const connect = async () => {
+      const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
-      if (token) {
-        client = createSocketClient(token);
+      if (token && isMounted) {
+        const client = createSocketClient(token);
+        socketRef.current = client;
         setSocket(client);
       }
-    });
-    return () => client?.disconnect();
-  }, [currentUser?.id]);
+    };
+
+    connect();
+
+    return () => {
+      isMounted = false;
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [currentUserId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  useEffect(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
-      setSearchResults([]);
-      return;
+    if (isOpen && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
+  }, [messages, isOpen]);
+
+  // ── User Search ───────────────────────────────────────────────
+  useEffect(() => {
+    const term = (searchQuery || "").trim();
+    
+    if (term.length < 2) {
+      // Use setTimeout(0) to avoid the "synchronous setState" warning in strict environments
+      const clearTimer = setTimeout(() => {
+        setMiniSearchResults([]);
+      }, 0);
+      return () => clearTimeout(clearTimer);
+    }
+
     const timer = setTimeout(async () => {
-      setIsSearching(true);
-      const { data } = await supabase
-        .from("user_profiles")
-        .select("id, full_name, sr_code")
-        .ilike("full_name", `%${searchQuery}%`)
-        .neq("id", currentUser.id)
-        .limit(5);
-      setSearchResults(data || []);
-      setIsSearching(false);
+      if (!currentUserId) return;
+      try {
+        const { data } = await supabase
+          .from("user_profiles")
+          .select("id, full_name, sr_code, avatar_url")
+          .or(`full_name.ilike.%${term}%,sr_code.ilike.%${term}%`)
+          .neq("id", currentUserId)
+          .limit(5);
+        setMiniSearchResults(data || []);
+      } catch (err) {
+        console.error("Widget search error:", err);
+      }
     }, 300);
+
     return () => clearTimeout(timer);
-  }, [searchQuery, currentUser?.id]);
+  }, [searchQuery, currentUserId]);
 
   const handleSendMessage = async (e) => {
     e?.preventDefault();
@@ -98,7 +118,7 @@ export default function ChatWidget() {
       id: clientId,
       client_message_id: clientId,
       body: content,
-      sender_id: currentUser.id,
+      sender_id: currentUserId,
       conversation_id: activeConversationId,
       created_at: new Date().toISOString(),
     });
@@ -107,119 +127,97 @@ export default function ChatWidget() {
     socket.emit("message:send", { conversationId: activeConversationId, body: content, clientMessageId: clientId }, (res) => {
       if (res?.ok) {
         replaceOptimisticMessage(clientId, res.message);
-        refreshConversations();
-        refreshUnreadCounts();
+        if (refreshConversations) refreshConversations({ silent: true });
+        if (refreshUnreadCounts) refreshUnreadCounts();
       } else {
         removeOptimisticMessage(clientId);
       }
     });
   };
 
-  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+  const totalUnread = useMemo(() => {
+    if (!unreadCounts || typeof unreadCounts.values !== "function") return 0;
+    return [...unreadCounts.values()].reduce((a, b) => a + b, 0);
+  }, [unreadCounts]);
 
-  if (!currentUser) return null;
+  if (location.pathname === "/chat" || !currentUser) return null;
 
   return (
     <div className="fixed bottom-0 right-6 z-[100] flex flex-col items-end gap-0 pointer-events-none">
-      {/* Dual Pane Chat Window */}
       {isOpen && (
         <div 
-          className={`bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.12)] rounded-t-[24px] overflow-hidden flex border-x border-t border-slate-200 transition-all duration-500 ease-in-out pointer-events-auto h-[480px] ${
+          className={`bg-white dark:bg-slate-900 shadow-[0_-20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_-20px_50px_rgba(0,0,0,0.5)] rounded-t-[24px] overflow-hidden flex border-x border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ease-in-out pointer-events-auto h-[480px] ${
             activeConversationId ? "w-[680px]" : "w-[320px]"
           }`}
         >
-          {/* LEFT PANE: Conversations List */}
-          <div className={`flex flex-col border-r border-slate-100 transition-all duration-500 ${activeConversationId ? "w-[240px]" : "w-full"}`}>
-            <header className="bg-slate-900 px-4 py-3 flex items-center justify-between text-white shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="bg-[#800000] p-1 rounded-lg">
-                  <MessageSquare size={14} />
-                </div>
-                <span className="font-black text-[11px] uppercase tracking-widest">Chats</span>
-              </div>
+          {/* Left Pane (Conversations) */}
+          <div className={`flex flex-col border-r border-slate-100 dark:border-slate-800 transition-all duration-300 ${activeConversationId ? "w-[240px]" : "w-full"}`}>
+            <header className="bg-slate-900 dark:bg-black px-4 py-3 flex items-center justify-between text-white shrink-0">
+              <span className="font-black text-[11px] uppercase tracking-widest">Messages</span>
               {!activeConversationId && (
-                <button onClick={() => setIsOpen(false)} className="hover:bg-white/10 p-1 rounded-lg transition-colors">
+                <button onClick={() => setIsOpen(false)} className="hover:bg-white/10 p-1 rounded-lg">
                   <X size={18} />
                 </button>
               )}
             </header>
 
-            <div className="flex-1 flex flex-col min-h-0 bg-white">
+            <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900">
               <div className="p-3 shrink-0">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={14} />
                   <input
                     type="text"
-                    placeholder="Search..."
+                    placeholder="Search students..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-50 border-none rounded-xl pl-9 pr-3 py-2 text-[11px] font-bold focus:ring-2 focus:ring-[#800000]/10 transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl pl-9 pr-3 py-2 text-[11px] font-bold dark:text-white dark:placeholder-slate-500"
                   />
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto no-scrollbar px-2 space-y-0.5 pb-4">
-                {searchQuery.trim() ? (
-                  searchResults.map(profile => (
-                    <button
-                      key={profile.id}
-                      onClick={async () => {
-                        const convo = await createOrGetConversation(profile.id);
-                        setActiveConversationId(convo.id);
+              <div className="flex-1 overflow-y-auto no-scrollbar px-2 pb-4">
+                {(searchQuery || "").trim().length >= 2 ? (
+                  miniSearchResults.map(p => (
+                    <button key={p.id} onClick={async () => {
+                      const c = await createOrGetConversation(p.id);
+                      if (c) {
+                        setActiveConversationId(c.id);
                         setSearchQuery("");
-                      }}
-                      className="w-full flex items-center gap-2 p-2 hover:bg-slate-50 rounded-xl transition-all text-left"
-                    >
-                      <div className="h-8 w-8 shrink-0 rounded-full bg-[#800000]/10 text-[#800000] flex items-center justify-center font-black text-[10px] overflow-hidden">
-                        {profile.avatar_url ? (
-                          <img src={profile.avatar_url} className="h-full w-full object-cover" />
-                        ) : profile.full_name[0]}
+                        if (markAsRead) markAsRead(c.id);
+                      }
+                    }} className="w-full flex items-center gap-2 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-left">
+                      <div className="h-8 w-8 rounded-full bg-[#800000]/10 dark:bg-red-500/20 text-[#800000] dark:text-red-400 flex items-center justify-center font-black text-[10px]">
+                        {p.full_name?.[0] || "?"}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-black text-slate-900 truncate">{profile.full_name}</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter truncate">{profile.sr_code}</p>
+                        <p className="text-[11px] font-black truncate dark:text-white">{p.full_name}</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 truncate">{p.sr_code}</p>
                       </div>
                     </button>
                   ))
                 ) : (
-                  conversations.map(convo => {
-                    const otherUser = convo.otherUser || {};
-                    const lastMsg = convo.latestMessage;
-                    const isLastMsgMine = lastMsg?.sender_id === currentUser.id;
-                    const displayMsg = lastMsg 
-                      ? `${isLastMsgMine ? "You: " : ""}${lastMsg.body}`
-                      : "New chat";
-
+                  conversations.map(c => {
+                    const unread = unreadCounts?.get(c.id) || 0;
                     return (
-                      <button
-                        key={convo.id}
-                        onClick={() => {
-                          setActiveConversationId(convo.id);
-                          markAsRead(convo.id);
-                        }}
-                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all text-left group ${
-                          activeConversationId === convo.id ? "bg-slate-50 ring-1 ring-slate-100" : "hover:bg-slate-50/50"
-                        }`}
+                      <button 
+                        key={c.id} 
+                        onClick={() => { 
+                          setActiveConversationId(c.id); 
+                          if (markAsRead) markAsRead(c.id); 
+                        }} 
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-colors ${activeConversationId === c.id ? "bg-slate-50 dark:bg-slate-800" : "hover:bg-slate-50/50 dark:hover:bg-slate-800/50"}`}
                       >
-                        <div className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center font-black text-[11px] transition-all overflow-hidden ${
-                          activeConversationId === convo.id ? "bg-[#800000] text-white" : "bg-slate-100 text-slate-400 group-hover:bg-white"
-                        }`}>
-                          {otherUser.avatar_url ? (
-                            <img src={otherUser.avatar_url} className="h-full w-full object-cover" />
-                          ) : otherUser.full_name?.[0] || "?"}
+                        <div className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center font-black text-[11px] ${activeConversationId === c.id ? "bg-[#800000] dark:bg-red-900 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}>
+                          {c.otherUser?.full_name?.[0] || "?"}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start">
-                            <p className={`text-[11px] font-black truncate ${activeConversationId === convo.id ? "text-slate-900" : "text-slate-600"}`}>
-                              {otherUser.full_name}
-                            </p>
-                            {unreadCounts[convo.id] > 0 && (
-                              <span className="bg-[#800000] text-white text-[8px] font-black px-1 py-0.5 rounded-full">
-                                {unreadCounts[convo.id]}
-                              </span>
-                            )}
+                            <p className="text-[11px] font-black truncate text-slate-900 dark:text-white">{c.otherUser?.full_name}</p>
+                            {unread > 0 && <span className="bg-[#800000] dark:bg-red-600 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center">{unread}</span>}
                           </div>
-                          <p className="text-[9px] text-slate-400 truncate font-bold mt-0.5">{displayMsg}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                            {c.latestMessage?.body || "Start a conversation"}
+                          </p>
                         </div>
                       </button>
                     );
@@ -229,81 +227,51 @@ export default function ChatWidget() {
             </div>
           </div>
 
-          {/* RIGHT PANE: Chat Thread */}
+          {/* Right Pane (Chat Thread) */}
           {activeConversationId && (
-            <div className="flex-1 flex flex-col bg-slate-50 transition-all duration-500 animate-in fade-in slide-in-from-right-2">
-              <header className="bg-white border-b border-slate-100 px-4 py-2.5 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-7 w-7 rounded-full bg-[#800000] text-white flex items-center justify-center font-black text-[10px] overflow-hidden">
-                    {activeConversation?.otherUser?.avatar_url ? (
-                      <img src={activeConversation.otherUser.avatar_url} className="h-full w-full object-cover" />
-                    ) : activeConversation?.otherUser?.full_name?.[0]}
+            <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950">
+              <header className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 dark:text-slate-500 shrink-0">
+                    {activeConversation?.otherUser?.full_name?.[0]}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[12px] font-black text-slate-900 truncate">{activeConversation?.otherUser?.full_name}</p>
-                    <div className="flex items-center gap-1">
-                      <span className="h-1 w-1 rounded-full bg-emerald-500" />
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Online</p>
-                    </div>
-                  </div>
+                  <span className="text-[12px] font-black truncate text-slate-900 dark:text-white">{activeConversation?.otherUser?.full_name}</span>
                 </div>
-                <div className="flex items-center gap-0.5">
-                  {/* Minimize Button (Back to List) */}
-                  <button 
-                    onClick={() => setActiveConversationId(null)} 
-                    className="p-1.5 text-slate-400 hover:text-[#800000] hover:bg-slate-50 rounded-lg transition-all"
-                    title="Minimize Thread"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button onClick={() => navigate("/chat")} className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all" title="Full Page">
-                    <ExternalLink size={16} />
-                  </button>
-                  <button onClick={() => setIsOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all">
-                    <X size={18} />
-                  </button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setActiveConversationId(null)} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-[#800000] dark:hover:text-red-400 transition-colors"><ChevronLeft size={16} /></button>
+                  <button onClick={() => navigate("/chat")} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"><ExternalLink size={16} /></button>
+                  <button onClick={() => setIsOpen(false)} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"><X size={18} /></button>
                 </div>
               </header>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
                 {isLoadingMessages ? (
-                  <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-slate-200" /></div>
-                ) : messages.length === 0 ? (
-                  <div className="flex flex-col h-full items-center justify-center text-center p-6 opacity-30">
-                    <MessageSquare size={32} className="mb-2" />
-                    <p className="text-[10px] font-black uppercase tracking-widest">Start a conversation</p>
-                  </div>
+                  <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-slate-200 dark:text-slate-700" /></div>
                 ) : (
-                  messages.map((msg, idx) => {
-                    const isMine = msg.sender_id === currentUser.id;
-                    const prevMsg = messages[idx - 1];
-                    const isSameSender = prevMsg?.sender_id === msg.sender_id;
-                    
-                    return (
-                      <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} ${isSameSender ? "-mt-2" : "mt-1.5"}`}>
-                        <div className={`max-w-[80%] px-3 py-2 rounded-[16px] text-[12px] font-medium shadow-sm ring-1 ${
-                          isMine 
-                            ? "bg-[#800000] text-white ring-red-900/5 rounded-tr-none" 
-                            : "bg-white text-slate-800 ring-slate-100 rounded-tl-none"
-                        }`}>
-                          {msg.body}
-                        </div>
+                  messages.map((m, i) => (
+                    <div key={m.id || i} className={`flex ${m.sender_id === currentUserId ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[85%] px-3 py-2 rounded-[16px] text-[12px] leading-relaxed shadow-sm ${m.sender_id === currentUserId ? "bg-[#800000] dark:bg-red-900/80 text-white rounded-br-none" : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-slate-800"}`}>
+                        {m.body}
                       </div>
-                    );
-                  })
+                    </div>
+                  ))
                 )}
                 <div ref={messagesEndRef} />
               </div>
 
-              <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
-                <input
-                  type="text"
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Message..."
-                  className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-2 text-[12px] font-medium focus:ring-2 focus:ring-[#800000]/10 transition-all"
+              <form onSubmit={handleSendMessage} className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={messageInput} 
+                  onChange={(e) => setMessageInput(e.target.value)} 
+                  placeholder="Type a message..." 
+                  className="flex-1 bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-[12px] font-medium focus:ring-1 focus:ring-[#800000]/20 dark:focus:ring-red-400/20 dark:text-white dark:placeholder-slate-500 transition-all" 
                 />
-                <button type="submit" className="h-9 w-9 flex items-center justify-center bg-[#800000] text-white rounded-xl shadow-lg shadow-red-900/10 hover:scale-105 active:scale-95 transition-all">
+                <button 
+                  type="submit" 
+                  disabled={!messageInput.trim() || !socket}
+                  className="h-10 w-10 bg-[#800000] dark:bg-red-900 text-white rounded-xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+                >
                   <Send size={14} />
                 </button>
               </form>
@@ -312,16 +280,14 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Floating Button */}
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="mb-6 h-16 w-16 bg-[#800000] text-white rounded-[24px] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 group pointer-events-auto relative"
-          aria-label="Open Chat"
+        <button 
+          onClick={() => setIsOpen(true)} 
+          className="mb-6 h-16 w-16 bg-[#800000] text-white rounded-[24px] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 pointer-events-auto relative group"
         >
-          <MessageSquare size={28} />
+          <MessageSquare size={28} className="transition-transform group-hover:rotate-12" />
           {totalUnread > 0 && (
-            <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[11px] font-black h-6 w-6 rounded-xl flex items-center justify-center shadow-lg ring-4 ring-slate-50">
+            <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[11px] font-black h-6 w-6 rounded-xl flex items-center justify-center shadow-lg ring-4 ring-white animate-bounce-slow">
               {totalUnread}
             </span>
           )}
