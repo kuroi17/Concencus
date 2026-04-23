@@ -27,7 +27,7 @@
 
 **The Problem:** Campus communities often suffer from weak leadership commitment, fragmented student engagement, and a lack of transparent sustainability platforms. Students feel unheard, and administrators lack real-time data on the community's most pressing concerns.
 
-**The Solution:** **Concencus** bridges the gap between the student body and campus administration. By integrating institutional announcements, a democratic governance forum, actionable student proposals, and real-time communication, Concencus creates a unified ecosystem for campus progression.
+**The Solution:** **Concensus** bridges the gap between the student body and campus administration. By integrating institutional announcements, a democratic governance forum, actionable student proposals, and real-time communication, Concensus creates a unified ecosystem for campus progression.
 
 ---
 
