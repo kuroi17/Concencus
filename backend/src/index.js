@@ -30,6 +30,8 @@ const io = new Server(httpServer, {
     origin: frontendOrigin,
     credentials: true,
   },
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 io.use(socketAuth);

@@ -4,7 +4,7 @@ const socketUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:3001";
 
 export function createSocketClient(accessToken) {
   return io(socketUrl, {
-    transports: ["websocket"],
+    transports: ["polling", "websocket"],
     autoConnect: true,
     reconnection: true,
     auth: {
