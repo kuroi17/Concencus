@@ -4,6 +4,9 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import ForumThread from "./ForumThread";
 import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
+import { PostCardSkeleton } from "../../common/Skeleton";
+import { EmptyState } from "../../common/EmptyState";
+import { MessageSquarePlus, SearchX } from "lucide-react";
 
 const filters = [
   { id: "hot", label: "Hot", icon: Flame },
@@ -84,8 +87,8 @@ function ForumBoard({ channelId, refreshKey = 0 }) {
 
   return (
     <section className="space-y-3" aria-label="Forum board">
-      <div className="soft-enter flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-1 rounded-xl bg-slate-100/50 p-1 ring-1 ring-slate-200/50">
+      <div className="soft-enter flex flex-col gap-4 border-b border-slate-100 dark:border-slate-800 pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-1 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 p-1 ring-1 ring-slate-200/50 dark:ring-slate-700/50">
           {filters.map((filter) => {
             const Icon = filter.icon;
             const isActive = activeFilter === filter.id;
@@ -96,11 +99,11 @@ function ForumBoard({ channelId, refreshKey = 0 }) {
                 onClick={() => setActiveFilter(filter.id)}
                 className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-bold transition-all ${
                   isActive
-                    ? "bg-white text-slate-900 shadow-sm shadow-slate-200"
-                    : "text-slate-500 hover:text-slate-900"
+                    ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm shadow-slate-200 dark:shadow-black"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <Icon size={14} className={isActive ? "text-[#800000]" : ""} />
+                <Icon size={14} className={isActive ? "text-[#800000] dark:text-red-400" : ""} />
                 <span>{filter.label}</span>
               </button>
             );
@@ -110,27 +113,29 @@ function ForumBoard({ channelId, refreshKey = 0 }) {
         <label className="relative block w-full sm:max-w-[280px]">
           <Search
             size={16}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
           />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search discussions..."
-            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-700 outline-none transition-all focus:border-[#800000] focus:ring-4 focus:ring-red-500/5"
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 pl-10 pr-4 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none transition-all focus:border-[#800000] dark:focus:border-red-400 focus:ring-4 focus:ring-red-500/5 dark:focus:ring-red-400/5"
           />
         </label>
       </div>
 
       <div className="space-y-3">
         {loading && posts.length === 0 ? (
-          <div className="py-8 text-center text-sm text-slate-500">
-            Loading threads...
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => <PostCardSkeleton key={i} />)}
           </div>
         ) : posts.length === 0 ? (
-          <div className="py-8 text-center text-sm text-slate-500">
-            No discussions in this channel yet. Be the first to start one!
-          </div>
+          <EmptyState 
+            icon={MessageSquarePlus}
+            title="No discussions yet"
+            description="Be the first to start a discussion in this channel!"
+          />
         ) : filteredPosts.length > 0 ? (
           filteredPosts.map((item) => (
             <ForumThread
@@ -142,9 +147,11 @@ function ForumBoard({ channelId, refreshKey = 0 }) {
             />
           ))
         ) : (
-          <div className="py-8 text-center text-sm text-slate-500">
-            No discussions match your search.
-          </div>
+          <EmptyState 
+            icon={SearchX}
+            title="No results found"
+            description="We couldn't find any discussions matching your search."
+          />
         )}
       </div>
     </section>

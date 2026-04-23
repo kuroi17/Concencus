@@ -43,7 +43,7 @@ function mergeMessageList(previous, incoming) {
 
 export function useDmMessages(conversationId, socket) {
   const [messages, setMessages] = useState([]);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [messagesError, setMessagesError] = useState("");
   const [reactions, setReactions] = useState([]);
 
@@ -74,12 +74,10 @@ export function useDmMessages(conversationId, socket) {
         .order("created_at", { ascending: true })
         .limit(150);
 
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       setMessages(data || []);
     } catch (error) {
+      console.error("Error loading messages:", error);
       setMessagesError(error.message || "Failed to load messages");
     } finally {
       setIsLoadingMessages(false);
@@ -92,33 +90,32 @@ export function useDmMessages(conversationId, socket) {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("dm_message_reactions")
-      .select("id, message_id, user_id, emoji, created_at")
-      .in("message_id", messageIds);
+    try {
+      const { data, error } = await supabase
+        .from("dm_message_reactions")
+        .select("id, message_id, user_id, emoji, created_at")
+        .in("message_id", messageIds);
 
-    if (!error) {
-      setReactions(data || []);
+      if (!error) setReactions(data || []);
+    } catch (err) {
+      console.error("Error loading reactions:", err);
     }
   }, [messageIds]);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      loadMessages();
-    });
+    loadMessages();
   }, [loadMessages]);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      loadReactions();
-    });
+    loadReactions();
   }, [loadReactions]);
 
   useEffect(() => {
     if (!conversationId) return undefined;
 
+    const instanceId = Math.random().toString(36).slice(2, 8);
     const channel = supabase
-      .channel(`dm-reactions-${conversationId}`)
+      .channel(`dm-reactions-${conversationId}-${instanceId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "dm_message_reactions" },
@@ -142,7 +139,6 @@ export function useDmMessages(conversationId, socket) {
       if (payload?.conversationId !== conversationId || !payload?.message) {
         return;
       }
-
       setMessages((previous) => mergeMessageList(previous, payload.message));
     };
 

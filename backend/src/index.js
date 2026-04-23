@@ -5,6 +5,7 @@ import http from "node:http";
 import { Server } from "socket.io";
 import { socketAuth } from "./middleware/socketAuth.js";
 import { registerChatSocket } from "./socket/chatSocket.js";
+import { registerProposalSocket } from "./socket/proposalSocket.js";
 
 const port = Number(process.env.PORT || 3001);
 const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
@@ -35,6 +36,7 @@ io.use(socketAuth);
 
 io.on("connection", (socket) => {
   registerChatSocket(io, socket);
+  registerProposalSocket(io, socket);
 });
 
 httpServer.listen(port, () => {

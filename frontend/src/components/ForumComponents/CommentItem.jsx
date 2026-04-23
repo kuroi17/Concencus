@@ -85,14 +85,14 @@ function InlineVotes({ itemId, baseScore }) {
   return (
     <span className="inline-flex items-center gap-1">
       <button type="button" onClick={() => handleVote(1)} aria-label="Upvote"
-        className={`rounded p-0.5 transition-colors ${vote === 1 ? "text-[#7f1d1d]" : "text-slate-400 hover:text-[#7f1d1d]"}`}>
+        className={`rounded p-0.5 transition-colors ${vote === 1 ? "text-[#7f1d1d] dark:text-red-400" : "text-slate-400 hover:text-[#7f1d1d] dark:hover:text-red-400"}`}>
         <ArrowUp size={13} strokeWidth={2.5} />
       </button>
-      <span className={`text-xs font-semibold min-w-[1.5ch] text-center ${vote === 1 ? "text-[#7f1d1d]" : vote === -1 ? "text-slate-600" : "text-slate-600"}`}>
+      <span className={`text-xs font-semibold min-w-[1.5ch] text-center ${vote === 1 ? "text-[#7f1d1d] dark:text-red-400" : vote === -1 ? "text-slate-600 dark:text-slate-400" : "text-slate-600 dark:text-slate-400"}`}>
         {display}
       </span>
       <button type="button" onClick={() => handleVote(-1)} aria-label="Downvote"
-        className={`rounded p-0.5 transition-colors ${vote === -1 ? "text-slate-600" : "text-slate-400 hover:text-slate-600"}`}>
+        className={`rounded p-0.5 transition-colors ${vote === -1 ? "text-slate-600 dark:text-slate-400" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}>
         <ArrowDown size={13} strokeWidth={2.5} />
       </button>
     </span>
@@ -152,7 +152,7 @@ function CommentItem({ comment, allComments, onReplySubmit, depth = 0 }) {
             <Avatar name={authorName} avatarUrl={avatarUrl} size={AVATAR_SIZE} />
             {hasChildren && !isCollapsed && (
               <div
-                className="flex-1 mt-1 rounded-full cursor-pointer transition-colors bg-slate-200 hover:bg-[#7f1d1d]"
+                className="flex-1 mt-1 rounded-full cursor-pointer transition-colors bg-slate-200 dark:bg-slate-800 hover:bg-[#7f1d1d] dark:hover:bg-red-500"
                 style={{ width: 2, minHeight: 12 }}
                 onClick={() => setIsCollapsed(true)}
                 title="Collapse thread"
@@ -168,35 +168,35 @@ function CommentItem({ comment, allComments, onReplySubmit, depth = 0 }) {
             {atMaxDepth && (
               <Avatar name={authorName} avatarUrl={avatarUrl} size={18} />
             )}
-            <span className={`font-semibold ${comment.is_anonymous ? "text-slate-500" : "text-slate-800"}`}>
+            <span className={`font-semibold ${comment.is_anonymous ? "text-slate-500 dark:text-slate-400" : "text-slate-800 dark:text-slate-200"}`}>
               {comment.is_anonymous ? "🙈 Anonymous" : authorName}
             </span>
-            <span className="text-slate-300">·</span>
-            <span className="text-slate-400">{timeStr}</span>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
+            <span className="text-slate-400 dark:text-slate-500">{timeStr}</span>
           </div>
 
           {isCollapsed ? (
             <button type="button" onClick={() => setIsCollapsed(false)}
-              className="text-xs text-slate-400 italic hover:text-slate-600 transition-colors">
+              className="text-xs text-slate-400 dark:text-slate-500 italic hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
               [{descendantCount + 1} {descendantCount + 1 === 1 ? "comment" : "comments"} collapsed] — click to expand
             </button>
           ) : (
             <>
               {/* Content */}
-              <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+              <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
                 {comment.content}
               </p>
 
               {/* Action bar */}
-              <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
+              <div className="mt-2 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
                 <button type="button" onClick={() => setIsCollapsed(true)}
-                  className="text-slate-400 hover:text-slate-600 transition-colors text-base leading-none font-mono"
+                  className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors text-base leading-none font-mono"
                   title="Collapse" aria-label="Collapse thread">⊖</button>
 
                 <InlineVotes itemId={comment.id} baseScore={score} />
 
                 <button type="button" onClick={() => setIsReplying(!isReplying)}
-                  className="flex items-center gap-1 font-medium hover:text-slate-800 transition-colors">
+                  className="flex items-center gap-1 font-medium hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
                   <MessageSquare size={13} strokeWidth={2} />
                   Reply
                 </button>
@@ -205,27 +205,27 @@ function CommentItem({ comment, allComments, onReplySubmit, depth = 0 }) {
               {/* Reply form — always outside collapse so it's never clipped */}
               {isReplying && (
                 <form onSubmit={handleSubmitReply}
-                  className="mt-3 bg-white border border-slate-200 rounded-[8px] p-3">
+                  className="mt-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[8px] p-3 shadow-sm">
                   <textarea
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder={`Reply to ${authorName}…`}
                     rows={3}
                     autoFocus
-                    className="w-full resize-none rounded-[6px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#7f1d1d] focus:bg-white transition-colors"
+                    className="w-full resize-none rounded-[6px] border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-[#7f1d1d] dark:focus:border-red-400 focus:bg-white dark:focus:bg-slate-800 transition-colors"
                     required
                   />
                   <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-                    <label className="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none">
+                    <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
                       <input type="checkbox" checked={isAnonymous}
                         onChange={(e) => setIsAnonymous(e.target.checked)}
-                        className="h-3 w-3 rounded border-slate-300" />
+                        className="h-3 w-3 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" />
                       Post anonymously
                     </label>
                     <div className="flex gap-2">
                       <button type="button"
                         onClick={() => { setIsReplying(false); setReplyText(""); }}
-                        className="px-3 py-1 text-xs text-slate-500 hover:text-slate-700 transition-colors">
+                        className="px-3 py-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
                         Cancel
                       </button>
                       <button type="submit" disabled={isSubmitting}

@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import toast from "react-hot-toast";
 
 function VoteWidget({
   itemId,
@@ -53,9 +54,9 @@ function VoteWidget({
   const handleVote = async (nextVote) => {
     if (isVoting || !voteLoaded) return;
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        alert("You must be logged in to vote.");
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData?.user) {
+        toast.error("You must be logged in to vote.");
         return;
       }
 
@@ -69,22 +70,26 @@ function VoteWidget({
       setIsVoting(true);
 
       if (newVote === 0) {
-        await supabase
+        const { error } = await supabase
           .from(tableName)
           .delete()
-          .match({ [idColumn]: itemId, user_id: userData.user.id });
+          .match({ [idColumn]: itemId, user_id: authData.user.id });
+        if (error) throw error;
       } else {
         // Upsert handles switching from upvote → downvote atomically
-        await supabase
+        const { error } = await supabase
           .from(tableName)
           .upsert({
             [idColumn]: itemId,
-            user_id: userData.user.id,
+            user_id: authData.user.id,
             vote_value: newVote,
           });
+        if (error) throw error;
       }
-    } catch (error) {
-      console.error("Error voting:", error);
+    } catch {
+      toast.error("Failed to save vote.");
+      setVote(vote);
+      setScoreOffset(scoreOffset);
     } finally {
       setIsVoting(false);
     }
@@ -93,15 +98,15 @@ function VoteWidget({
   const displayScore = baseScore + scoreOffset;
 
   const scoreColor =
-    vote === 1 ? "text-[#7f1d1d]"
-    : vote === -1 ? "text-slate-600"
-    : "text-slate-700";
+    vote === 1 ? "text-[#7f1d1d] dark:text-red-400"
+    : vote === -1 ? "text-slate-600 dark:text-slate-400"
+    : "text-slate-700 dark:text-slate-300";
 
   return (
     <div className={`flex w-10 flex-col items-center gap-1 rounded-[10px] border px-1 py-2 shrink-0 transition-colors duration-150 ${
-      vote === 1 ? "border-[#7f1d1d]/20 bg-[#7f1d1d]/5"
-      : vote === -1 ? "border-slate-300 bg-slate-100"
-      : "border-slate-200 bg-slate-50"
+      vote === 1 ? "border-[#7f1d1d]/20 bg-[#7f1d1d]/5 dark:bg-red-900/10 dark:border-red-900/20"
+      : vote === -1 ? "border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
+      : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
     }`}>
       {/* Upvote */}
       <button
@@ -110,8 +115,8 @@ function VoteWidget({
         disabled={!voteLoaded}
         className={`rounded p-0.5 transition-colors disabled:opacity-40 ${
           vote === 1
-            ? "text-[#7f1d1d]"
-            : "text-slate-400 hover:text-[#7f1d1d]"
+            ? "text-[#7f1d1d] dark:text-red-400"
+            : "text-slate-400 hover:text-[#7f1d1d] dark:hover:text-red-400"
         }`}
         aria-label="Upvote"
       >
@@ -130,8 +135,8 @@ function VoteWidget({
         disabled={!voteLoaded}
         className={`rounded p-0.5 transition-colors disabled:opacity-40 ${
           vote === -1
-            ? "text-slate-600"
-            : "text-slate-400 hover:text-slate-600"
+            ? "text-slate-600 dark:text-slate-400"
+            : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
         }`}
         aria-label="Downvote"
       >

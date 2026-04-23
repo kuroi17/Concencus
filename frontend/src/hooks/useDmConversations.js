@@ -3,192 +3,126 @@ import { supabase } from "../lib/supabaseClient";
 
 export function useDmConversations(currentUserId) {
   const [conversations, setConversations] = useState([]);
-  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
-  const [conversationsError, setConversationsError] = useState("");
+  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
 
-  const loadConversations = useCallback(async () => {
+  const loadConversations = useCallback(async (options = { silent: false }) => {
     if (!currentUserId) {
       setConversations([]);
       setIsLoadingConversations(false);
       return;
     }
 
-    setIsLoadingConversations(true);
-    setConversationsError("");
+    if (!options.silent) setIsLoadingConversations(true);
 
     try {
-      const { data: conversationRows, error: conversationsQueryError } =
-        await supabase
-          .from("dm_conversations")
-          .select(
-            "id, participant_one, participant_two, latest_message_at, created_at",
-          )
-          .or(
-            `participant_one.eq.${currentUserId},participant_two.eq.${currentUserId}`,
-          )
-          .order("latest_message_at", { ascending: false, nullsFirst: false });
+      const { data: convos, error: convoError } = await supabase
+        .from("dm_conversations")
+        .select("*")
+        .or(`participant_one.eq.${currentUserId},participant_two.eq.${currentUserId}`)
+        .order("latest_message_at", { ascending: false });
 
-      if (conversationsQueryError) {
-        throw conversationsQueryError;
-      }
-
-      if (!conversationRows?.length) {
+      if (convoError) throw convoError;
+      if (!convos || convos.length === 0) {
         setConversations([]);
         return;
       }
 
-      const counterpartIds = [
-        ...new Set(
-          conversationRows.map((item) =>
-            item.participant_one === currentUserId
-              ? item.participant_two
-              : item.participant_one,
-          ),
-        ),
-      ];
-
-      const [
-        { data: profiles, error: profilesError },
-        { data: messageRows, error: messagesError },
-      ] = await Promise.all([
-        supabase
-          .from("user_profiles")
-          .select("id, full_name, avatar_url, campus_role, block, sr_code")
-          .in("id", counterpartIds),
-        supabase
-          .from("dm_messages")
-          .select("id, conversation_id, body, created_at, sender_id")
-          .in(
-            "conversation_id",
-            conversationRows.map((item) => item.id),
-          )
-          .order("created_at", { ascending: false }),
-      ]);
-
-      if (profilesError) throw profilesError;
-      if (messagesError) throw messagesError;
-
-      const profileMap = new Map(
-        (profiles || []).map((item) => [item.id, item]),
+      const otherUserIds = convos.map(c => 
+        c.participant_one === currentUserId ? c.participant_two : c.participant_one
       );
-      const latestMessageMap = new Map();
 
-      (messageRows || []).forEach((item) => {
-        if (!latestMessageMap.has(item.conversation_id)) {
-          latestMessageMap.set(item.conversation_id, item);
-        }
+      const { data: profiles, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("id, full_name, avatar_url, campus_role, sr_code")
+        .in("id", otherUserIds);
+
+      if (profileError) throw profileError;
+      const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+
+      const { data: latestMessages, error: msgError } = await supabase
+        .from("dm_messages")
+        .select("id, conversation_id, body, created_at")
+        .in("conversation_id", convos.map(c => c.id))
+        .order("created_at", { ascending: false });
+
+      const msgMap = new Map();
+      if (!msgError && latestMessages) {
+        latestMessages.forEach(m => {
+          if (!msgMap.has(m.conversation_id)) {
+            msgMap.set(m.conversation_id, m);
+          }
+        });
+      }
+
+      const enriched = convos.map(c => {
+        const otherId = c.participant_one === currentUserId ? c.participant_two : c.participant_one;
+        return {
+          ...c,
+          otherUserId: otherId,
+          otherUser: profileMap.get(otherId) || { id: otherId, full_name: "User" },
+          latestMessage: msgMap.get(c.id) || null
+        };
       });
 
-      const mapped = conversationRows
-        .map((conversation) => {
-          const counterpartId =
-            conversation.participant_one === currentUserId
-              ? conversation.participant_two
-              : conversation.participant_one;
-
-          return {
-            ...conversation,
-            otherUserId: counterpartId,
-            otherUser: profileMap.get(counterpartId) || {
-              id: counterpartId,
-              full_name: "Unknown User",
-              avatar_url: null,
-              campus_role: "student",
-            },
-            latestMessage: latestMessageMap.get(conversation.id) || null,
-          };
-        })
-        .sort((left, right) => {
-          const leftDate =
-            left.latestMessage?.created_at ||
-            left.latest_message_at ||
-            left.created_at;
-          const rightDate =
-            right.latestMessage?.created_at ||
-            right.latest_message_at ||
-            right.created_at;
-
-          return new Date(rightDate).getTime() - new Date(leftDate).getTime();
-        });
-
-      setConversations(mapped);
-    } catch (error) {
-      setConversationsError(error.message || "Failed to load conversations");
+      setConversations(enriched);
+    } catch (err) {
+      console.error("Error in loadConversations:", err);
     } finally {
-      setIsLoadingConversations(false);
+      if (!options.silent) setIsLoadingConversations(false);
     }
   }, [currentUserId]);
 
-  const createOrGetConversation = useCallback(
-    async (targetUserId) => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      const authUserId = authError ? null : authData?.user?.id || null;
-      if (!authUserId) {
-        throw new Error("Missing authenticated user");
-      }
-
-      if (!targetUserId || targetUserId === authUserId) {
-        throw new Error("Invalid conversation target");
-      }
-
-      const { data, error } = await supabase.rpc(
-        "create_or_get_dm_conversation",
-        {
-          p_target_user_id: targetUserId,
-        },
-      );
-
-      if (error || !data?.id) {
-        throw new Error(error?.message || "Failed to create conversation");
-      }
-
-      await loadConversations();
-      return data;
-    },
-    [loadConversations],
-  );
-
   useEffect(() => {
-    queueMicrotask(() => {
-      loadConversations();
-    });
+    loadConversations();
   }, [loadConversations]);
 
-  useEffect(() => {
-    if (!currentUserId) return undefined;
-
-    const channel = supabase
-      .channel(`dm-conversations-${currentUserId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "dm_conversations" },
-        () => {
-          loadConversations();
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "dm_messages" },
-        () => {
-          loadConversations();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentUserId, loadConversations]);
-
   const conversationMap = useMemo(() => {
-    return new Map(conversations.map((item) => [item.id, item]));
+    return new Map(conversations.map((c) => [c.id, c]));
   }, [conversations]);
+
+  const createOrGetConversation = useCallback(
+    async (otherUserId) => {
+      if (!currentUserId || !otherUserId) return null;
+
+      try {
+        const p1 = currentUserId < otherUserId ? currentUserId : otherUserId;
+        const p2 = currentUserId < otherUserId ? otherUserId : currentUserId;
+
+        const { data: existing } = await supabase
+          .from("dm_conversations")
+          .select("*")
+          .eq("participant_one", p1)
+          .eq("participant_two", p2)
+          .maybeSingle();
+
+        if (existing) return existing;
+
+        const { data: created, error: createError } = await supabase
+          .from("dm_conversations")
+          .insert({
+            participant_one: p1,
+            participant_two: p2,
+            created_by: currentUserId
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        await loadConversations({ silent: true });
+        return created;
+      } catch (err) {
+        console.error("Failed to create/get conversation:", err);
+        return null;
+      }
+    },
+    [currentUserId, loadConversations],
+  );
 
   return {
     conversations,
     conversationMap,
     isLoadingConversations,
-    conversationsError,
     refreshConversations: loadConversations,
     createOrGetConversation,
   };

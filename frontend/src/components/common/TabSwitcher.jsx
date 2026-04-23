@@ -1,8 +1,9 @@
-import { Megaphone, MessageSquare } from "lucide-react";
+import { Megaphone, MessageSquare, Gavel } from "lucide-react";
 
 const TABS = [
   { id: "announcement", label: "Announcement", icon: Megaphone },
   { id: "forum", label: "Forum", icon: MessageSquare },
+  { id: "proposals", label: "Proposals", icon: Gavel },
 ];
 
 /**
@@ -13,12 +14,13 @@ const TABS = [
 function TabSwitcher({ view, onChangeView }) {
   return (
     <div
-      className="inline-flex items-center gap-1 rounded-2xl border border-slate-200/60 bg-white/50 p-1.5 shadow-sm backdrop-blur-md ring-1 ring-slate-200/20"
+      className="inline-flex items-center gap-1 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50 p-1.5 shadow-sm backdrop-blur-md ring-1 ring-slate-200/20 dark:ring-slate-800/20"
       role="tablist"
       aria-label="Content view switcher"
     >
       {TABS.map((tab) => {
         const isActive = view === tab.id;
+        const Icon = tab.icon;
         return (
           <button
             key={tab.id}
@@ -28,11 +30,11 @@ function TabSwitcher({ view, onChangeView }) {
             onClick={() => onChangeView(tab.id)}
             className={`relative inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-300 ${
               isActive
-                ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                ? "bg-[#800000] text-white shadow-lg shadow-red-900/20"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <tab.icon size={16} className={isActive ? "text-amber-400" : "text-slate-400"} />
+            <Icon size={16} className={isActive ? "text-amber-400 dark:text-amber-600" : "text-slate-400 dark:text-slate-500"} />
             {tab.label}
           </button>
         );

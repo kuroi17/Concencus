@@ -10,6 +10,11 @@
   background-color: #f3f5f8;
 }
 
+:root.dark {
+  color: #f8fafc;
+  background-color: #020617;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -29,6 +34,22 @@ body {
       transparent 34%
     ),
     linear-gradient(180deg, #f8f9fb 0%, #f2f4f7 100%);
+  transition: background-color 0.3s ease;
+}
+
+body.dark {
+  background: 
+    radial-gradient(
+      circle at 15% 12%,
+      rgba(30, 41, 59, 0.4),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 78% 6%,
+      rgba(15, 23, 42, 0.6),
+      transparent 34%
+    ),
+    linear-gradient(180deg, #020617 0%, #0f172a 100%);
 }
 
 .soft-enter {

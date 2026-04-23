@@ -68,7 +68,7 @@ function ForumInfoPanel({ onOpenModal }) {
 
   return (
     <aside className="space-y-4" aria-label="Forum details">
-      <section className="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm">
+      <section className="rounded-[24px] border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
         <button
           type="button"
           onClick={onOpenModal}
@@ -79,18 +79,18 @@ function ForumInfoPanel({ onOpenModal }) {
 
         <div className="mt-6 space-y-4">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">About Channel</h3>
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">About Channel</h3>
+            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-400">
               Official community for BS Computer Science curriculum concerns, student governance, and academic collaboration.
             </p>
           </div>
           
-          <div className="flex flex-col gap-2 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-            <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
-              <Users size={16} className="text-slate-400" />
+          <div className="flex flex-col gap-2 rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4 ring-1 ring-slate-100 dark:ring-slate-800">
+            <span className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+              <Users size={16} className="text-slate-400 dark:text-slate-500" />
               {memberCount.toLocaleString()} Verified Members
             </span>
-            <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
+            <span className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
               <CircleDot size={16} className="text-emerald-500 animate-pulse" />
               {onlineCount.toLocaleString()} Active Now
             </span>
@@ -98,12 +98,12 @@ function ForumInfoPanel({ onOpenModal }) {
         </div>
       </section>
 
-      <section className="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Institutional Rules</h3>
+      <section className="rounded-[24px] border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Institutional Rules</h3>
         <ol className="mt-4 space-y-3">
           {rules.map((rule, idx) => (
-            <li key={rule} className="flex gap-3 text-sm font-medium text-slate-600">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-400">
+            <li key={rule} className="flex gap-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-400 dark:text-slate-500">
                 {idx + 1}
               </span>
               {rule}
@@ -112,11 +112,11 @@ function ForumInfoPanel({ onOpenModal }) {
         </ol>
       </section>
 
-      <section className="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Safe Engagement</h3>
-        <div className="mt-4 flex gap-3 rounded-2xl bg-amber-50/50 p-4 ring-1 ring-amber-100/50">
-          <EyeOff size={20} className="shrink-0 text-amber-600" />
-          <p className="text-xs font-semibold leading-relaxed text-amber-800">
+      <section className="rounded-[24px] border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Safe Engagement</h3>
+        <div className="mt-4 flex gap-3 rounded-2xl bg-amber-50/50 dark:bg-amber-900/10 p-4 ring-1 ring-amber-100/50 dark:ring-amber-900/20">
+          <EyeOff size={20} className="shrink-0 text-amber-600 dark:text-amber-400" />
+          <p className="text-xs font-semibold leading-relaxed text-amber-800 dark:text-amber-300">
             Anonymous posting is supported for sensitive governance feedback. Moderators maintain encrypted logs for safety.
           </p>
         </div>
