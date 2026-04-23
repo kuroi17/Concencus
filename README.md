@@ -1,4 +1,4 @@
-# 🏛️ Concencus
+# 🏛️ Concensus
 ### *Where Campus Voices Shape Governance*
 
 > **Techofusion 2026 Hackathon Entry** — A campus-wide participatory governance platform designed to transform fragmented student engagement into structured, transparent, and SDG-aligned institutional change.
