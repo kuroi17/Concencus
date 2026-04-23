@@ -341,11 +341,8 @@ function AnnouncementDetailHero({ notice, onClose, onImageClick, isAdmin, onDele
     : "—";
 
   // Normalize images: support new image_urls array and legacy image_url
-  const images = Array.isArray(localNotice.image_urls) && localNotice.image_urls.length > 0
-    ? localNotice.image_urls
-    : localNotice.image_url
-    ? [localNotice.image_url]
-    : [];
+  const images = (Array.isArray(localNotice.image_urls) ? localNotice.image_urls : [localNotice.image_url])
+    .filter(url => typeof url === "string" && url.trim().length > 0 && url !== "null" && url !== "undefined");
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -570,7 +567,7 @@ function AnnouncementBoard({ channelId }) {
       if (announcementData.imageFiles && announcementData.imageFiles.length > 0) {
         for (const file of announcementData.imageFiles) {
           try {
-            const url = await uploadPublicImage(file, "announcement-images");
+            const url = await uploadPublicImage({ file, bucketName: "announcement-images" });
             imageUrls.push(url);
           } catch (uploadErr) {
             throw new Error(`Image upload failed: ${uploadErr.message}`);
@@ -636,7 +633,7 @@ function AnnouncementBoard({ channelId }) {
       if (fields.newImageFiles && fields.newImageFiles.length > 0) {
         for (const file of fields.newImageFiles) {
           try {
-            const url = await uploadPublicImage(file, "announcement-images");
+            const url = await uploadPublicImage({ file, bucketName: "announcement-images" });
             uploadedUrls.push(url);
           } catch (uploadErr) {
             throw new Error(`Image upload failed: ${uploadErr.message}`);

@@ -28,11 +28,8 @@ function AnnouncementCard({ item, delay = 0, onOpen }) {
       : "—";
 
   // Support both legacy single image_url and new image_urls array
-  const images = Array.isArray(item.image_urls) && item.image_urls.length > 0
-    ? item.image_urls
-    : item.image_url
-    ? [item.image_url]
-    : [];
+  const images = (Array.isArray(item.image_urls) ? item.image_urls : [item.image_url])
+    .filter(url => typeof url === "string" && url.trim().length > 0 && url !== "null" && url !== "undefined");
 
   const coverImage = images[0] || null;
   const hasMultipleImages = images.length > 1;

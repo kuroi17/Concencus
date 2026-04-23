@@ -237,17 +237,7 @@ function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 p-4 backdrop-blur-sm ring-1 ring-slate-200/50 dark:ring-slate-700/50">
-                  <div className="text-center">
-                    <p className="text-lg font-bold text-slate-900 dark:text-white">{followersCount}</p>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Followers</p>
-                  </div>
-                  <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />
-                  <div className="text-center">
-                    <p className="text-lg font-bold text-slate-900 dark:text-white">{followingCount}</p>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Following</p>
-                  </div>
-                </div>
+               
               </div>
             </div>
           </section>
