@@ -73,8 +73,35 @@ export function useDmConversations(currentUserId) {
   }, [currentUserId]);
 
   useEffect(() => {
+    if (!currentUserId) return undefined;
+
+    // Initial load
     loadConversations();
-  }, [loadConversations]);
+
+    // Use unique channel name to avoid collisions if the hook is reused or re-mounted
+    const channelId = `dm-sync-${currentUserId}-${Math.random().toString(36).slice(2, 9)}`;
+    const syncChannel = supabase
+      .channel(channelId)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "user_profiles" },
+        () => {
+          loadConversations({ silent: true });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "dm_conversations" },
+        () => {
+          loadConversations({ silent: true });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(syncChannel);
+    };
+  }, [currentUserId, loadConversations]);
 
   const conversationMap = useMemo(() => {
     return new Map(conversations.map((c) => [c.id, c]));

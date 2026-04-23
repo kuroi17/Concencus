@@ -11,6 +11,7 @@ import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
 import { uploadPublicImage, deletePublicImage } from "../../lib/storage";
 import { AnnouncementSkeleton } from "../../common/Skeleton";
 import { EmptyState } from "../../common/EmptyState";
+import { linkifyText } from "../../common/linkifyText";
 
 // ── Tags + Priorities ─────────────────────────────────────────────────────────
 const TAGS = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
@@ -93,10 +94,58 @@ function EditPanel({ notice, onSave, onCancel, isSaving }) {
   const [priority, setPriority] = useState(notice.priority || PRIORITIES[0]);
   const [unit, setUnit] = useState(notice.unit || "");
 
+  // Existing images from DB (URLs). Admin can remove these.
+  const existingImages = Array.isArray(notice.image_urls) && notice.image_urls.length > 0
+    ? notice.image_urls
+    : notice.image_url
+    ? [notice.image_url]
+    : [];
+  const [keptImages, setKeptImages] = useState(existingImages); // subset of existingImages to keep
+  const [removedImages, setRemovedImages] = useState([]);        // URLs to delete from storage on save
+
+  // New images picked by the admin (File objects + preview URLs)
+  const [newImages, setNewImages] = useState([]);
+
+  const handleRemoveExisting = (url) => {
+    setKeptImages((prev) => prev.filter((u) => u !== url));
+    setRemovedImages((prev) => [...prev, url]);
+  };
+
+  const handleAddNew = (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const entries = files.map((file) => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+      id: `${Date.now()}-${Math.random()}`,
+    }));
+    setNewImages((prev) => [...prev, ...entries]);
+    e.target.value = "";
+  };
+
+  const handleRemoveNew = (id) => {
+    setNewImages((prev) => {
+      const entry = prev.find((n) => n.id === id);
+      if (entry) URL.revokeObjectURL(entry.previewUrl);
+      return prev.filter((n) => n.id !== id);
+    });
+  };
+
   const handleSave = () => {
     if (!title.trim() || !excerpt.trim()) return;
-    onSave({ title: title.trim(), excerpt: excerpt.trim(), tag, priority, unit: unit.trim() });
+    onSave({
+      title: title.trim(),
+      excerpt: excerpt.trim(),
+      tag,
+      priority,
+      unit: unit.trim(),
+      keptImages,        // existing URLs to keep
+      removedImages,     // existing URLs to delete from storage
+      newImageFiles: newImages.map((n) => n.file), // new File objects to upload
+    });
   };
+
+  const totalImageCount = keptImages.length + newImages.length;
 
   const inputCls = "w-full rounded-[10px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#800000]";
   const labelCls = "mb-1 block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500";
@@ -112,7 +161,7 @@ function EditPanel({ notice, onSave, onCancel, isSaving }) {
         <textarea
           value={excerpt}
           onChange={(e) => setExcerpt(e.target.value)}
-          rows={5}
+          rows={4}
           className={`${inputCls} resize-none`}
         />
       </div>
@@ -134,6 +183,114 @@ function EditPanel({ notice, onSave, onCancel, isSaving }) {
         <label className={labelCls}>Unit / Office</label>
         <input value={unit} onChange={(e) => setUnit(e.target.value)} className={inputCls} placeholder="CICS Student Affairs" />
       </div>
+
+      {/* ── Image Editor ── */}
+      <div>
+        <label className={labelCls}>
+          Images
+          <span className="ml-1.5 normal-case font-normal text-slate-400">
+            ({totalImageCount} total · first = cover)
+          </span>
+        </label>
+
+        <div className="flex flex-wrap gap-2 mt-2">
+          {/* Existing images */}
+          {keptImages.map((url, i) => (
+            <div
+              key={url}
+              className={`relative group rounded-[10px] overflow-hidden border-2 transition-colors ${
+                i === 0 && newImages.length === 0
+                  ? "border-[#800000] ring-2 ring-[#800000]/20"
+                  : "border-slate-200 dark:border-slate-700"
+              }`}
+              style={{ width: 72, height: 72 }}
+            >
+              <img src={url} alt="" className="w-full h-full object-cover" />
+              {i === 0 && newImages.length === 0 && (
+                <span className="absolute bottom-0 inset-x-0 bg-[#800000] text-white text-[7px] font-black uppercase tracking-wider text-center py-0.5">
+                  Cover
+                </span>
+              )}
+              {!isSaving && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveExisting(url)}
+                  className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  aria-label="Remove image"
+                >
+                  <X size={10} />
+                </button>
+              )}
+            </div>
+          ))}
+
+          {/* New (pending upload) images */}
+          {newImages.map((img, i) => {
+            const isCover = keptImages.length === 0 && i === 0;
+            return (
+              <div
+                key={img.id}
+                className={`relative group rounded-[10px] overflow-hidden border-2 transition-colors ${
+                  isCover ? "border-[#800000] ring-2 ring-[#800000]/20" : "border-slate-200 dark:border-slate-700"
+                }`}
+                style={{ width: 72, height: 72 }}
+              >
+                <img src={img.previewUrl} alt="" className="w-full h-full object-cover" />
+                {isCover && (
+                  <span className="absolute bottom-0 inset-x-0 bg-[#800000] text-white text-[7px] font-black uppercase tracking-wider text-center py-0.5">
+                    Cover
+                  </span>
+                )}
+                {/* "New" badge */}
+                <span className="absolute top-1 left-1 rounded-md bg-emerald-500 px-1 text-[7px] font-black text-white uppercase">
+                  New
+                </span>
+                {!isSaving && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveNew(img.id)}
+                    className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    aria-label="Remove new image"
+                  >
+                    <X size={10} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Add more button */}
+          {!isSaving && (
+            <label
+              className="flex flex-col items-center justify-center rounded-[10px] border-2 border-dashed border-slate-200 dark:border-slate-700 cursor-pointer hover:border-[#800000] hover:bg-[#800000]/5 transition-colors"
+              style={{ width: 72, height: 72 }}
+            >
+              <Images size={16} className="text-slate-400" />
+              <span className="text-[8px] font-bold text-slate-400 mt-1">Add</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleAddNew}
+                disabled={isSaving}
+              />
+            </label>
+          )}
+        </div>
+
+        {removedImages.length > 0 && (
+          <p className="mt-2 text-[10px] text-red-500 font-semibold">
+            {removedImages.length} image{removedImages.length > 1 ? "s" : ""} will be removed on save.
+          </p>
+        )}
+        {newImages.length > 0 && (
+          <p className="mt-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+            {newImages.length} new image{newImages.length > 1 ? "s" : ""} will be uploaded on save.
+          </p>
+        )}
+      </div>
+
       <div className="flex items-center gap-2 pt-2">
         <button
           type="button"
@@ -200,7 +357,16 @@ function AnnouncementDetailHero({ notice, onClose, onImageClick, isAdmin, onDele
     setIsSaving(true);
     const success = await onEdit(localNotice.id, fields);
     if (success) {
-      setLocalNotice((prev) => ({ ...prev, ...fields }));
+      // Optimistically update local state so carousel reflects changes immediately
+      const finalImageUrls = [...(fields.keptImages || [])];
+      // Note: newly uploaded URLs aren't available here yet (they come back via fetchAnnouncements),
+      // so we show kept images instantly and the realtime refetch fills in the rest.
+      setLocalNotice((prev) => ({
+        ...prev,
+        ...fields,
+        image_urls: finalImageUrls.length > 0 ? finalImageUrls : prev.image_urls,
+        image_url: finalImageUrls[0] || prev.image_url,
+      }));
       setIsEditing(false);
     }
     setIsSaving(false);
@@ -298,7 +464,7 @@ function AnnouncementDetailHero({ notice, onClose, onImageClick, isAdmin, onDele
 
                 <article className="prose prose-slate dark:prose-invert prose-lg lg:prose-xl max-w-none">
                   <p className="whitespace-pre-wrap font-medium leading-relaxed text-slate-600 dark:text-slate-400">
-                    {localNotice.content || localNotice.excerpt}
+                    {linkifyText(localNotice.content || localNotice.excerpt)}
                   </p>
                 </article>
 
@@ -437,7 +603,8 @@ function AnnouncementBoard({ channelId }) {
     }
   };
 
-  // ── Delete ──────────────────────────────────────────────────────────────────
+
+   // ── Delete ──────────────────────────────────────────────────────────────────
   const handleDeleteAnnouncement = async (announcementId, images = []) => {
     if (!isAdmin) return false;
     try {
@@ -464,6 +631,23 @@ function AnnouncementBoard({ channelId }) {
   const handleEditAnnouncement = async (announcementId, fields) => {
     if (!isAdmin) return false;
     try {
+      // 1. Upload new images first
+      const uploadedUrls = [];
+      if (fields.newImageFiles && fields.newImageFiles.length > 0) {
+        for (const file of fields.newImageFiles) {
+          try {
+            const url = await uploadPublicImage(file, "announcement-images");
+            uploadedUrls.push(url);
+          } catch (uploadErr) {
+            throw new Error(`Image upload failed: ${uploadErr.message}`);
+          }
+        }
+      }
+
+      // 2. Build final image array: kept existing + newly uploaded (in that order)
+      const finalImageUrls = [...(fields.keptImages || []), ...uploadedUrls];
+
+      // 3. Update the DB record
       const { error } = await supabase
         .from("announcements")
         .update({
@@ -472,10 +656,21 @@ function AnnouncementBoard({ channelId }) {
           tag: fields.tag,
           priority: fields.priority,
           unit: fields.unit || null,
+          image_urls: finalImageUrls.length > 0 ? finalImageUrls : null,
+          image_url: finalImageUrls[0] || null, // keep legacy column in sync
         })
         .eq("id", announcementId);
 
       if (error) throw error;
+
+      // 4. Delete removed images from storage (non-blocking)
+      if (fields.removedImages && fields.removedImages.length > 0) {
+        for (const url of fields.removedImages) {
+          try { await deletePublicImage(url, "announcement-images"); }
+          catch (e) { console.warn("Image cleanup failed:", e.message); }
+        }
+      }
+
       await fetchAnnouncements();
       return true;
     } catch (error) {
@@ -483,7 +678,6 @@ function AnnouncementBoard({ channelId }) {
       return false;
     }
   };
-
   useEffect(() => {
     let isMounted = true;
     if (isMounted) queueMicrotask(() => fetchAnnouncements());

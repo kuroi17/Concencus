@@ -1,7 +1,6 @@
 import { Bookmark, Check, ChevronLeft, ChevronRight, Flag, MessageSquare, MoreVertical, Share2, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { createPortal } from "react-dom";
 import VoteWidget from "./VoteWidget";
 import CommentSection from "./CommentSection";
 import { supabase } from "../../lib/supabaseClient";

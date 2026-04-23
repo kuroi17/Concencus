@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabaseClient";
 import EditProfileModal from "../components/ProfileComponents/EditProfileModal";
 import { uploadPublicImage } from "../lib/storage";
 import MainLayout from "../components/layouts/MainLayout";
+import { useCurrentUserProfile } from "../hooks/useCurrentUserProfile";
 
 function buildFallbackProfile(user) {
   return {
@@ -21,6 +22,7 @@ function buildFallbackProfile(user) {
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const { user, profile: contextProfile, refreshProfile, updateProfile } = useCurrentUserProfile();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [followersCount, setFollowersCount] = useState(0);
@@ -36,29 +38,25 @@ function ProfilePage() {
       setIsLoading(true);
 
       try {
-        const { data: authData, error: authError } =
-          await supabase.auth.getUser();
-
-        if (authError || !authData?.user) {
+        const authUser = user;
+        if (!authUser?.id) {
           throw new Error("Unable to load current user profile.");
         }
 
-        const user = authData.user;
-
         const { data: userProfile, error: profileError } = await supabase
           .from("user_profiles")
-          .select("id, full_name, sr_code, campus_role, block, avatar_url")
-          .eq("id", user.id)
+          .select("id, full_name, sr_code, campus_role, block, avatar_url, cover_url")
+          .eq("id", authUser.id)
           .maybeSingle();
 
         if (!isMounted) return;
 
         if (profileError || !userProfile) {
-          setProfile(buildFallbackProfile(user));
+          setProfile(buildFallbackProfile(authUser));
         } else {
           setProfile({
             ...userProfile,
-            email: user.email || "No email",
+            email: authUser.email || "No email",
           });
         }
 
@@ -66,11 +64,11 @@ function ProfilePage() {
           supabase
             .from("user_follows")
             .select("follower_id", { count: "exact", head: true })
-            .eq("following_id", user.id),
+            .eq("following_id", authUser.id),
           supabase
             .from("user_follows")
             .select("following_id", { count: "exact", head: true })
-            .eq("follower_id", user.id),
+            .eq("follower_id", authUser.id),
         ]);
 
         if (!isMounted) return;
@@ -106,6 +104,12 @@ function ProfilePage() {
       isMounted = false;
     };
   }, []);
+
+  // Keep local profile in sync with UserContext (avatar + sr/block updates propagate)
+  useEffect(() => {
+    if (!contextProfile) return;
+    setProfile((prev) => ({ ...(prev || {}), ...(contextProfile || {}) }));
+  }, [contextProfile]);
 
   // ── Fetch saved posts ───────────────────────────────────────────────────
   useEffect(() => {
@@ -180,10 +184,10 @@ function ProfilePage() {
           {/* ── Profile Hero Section ────────────────────────────────────────── */}
           <section className="relative overflow-hidden rounded-[24px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-[0_20px_50px_rgba(15,23,42,0.06)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
             {/* Banner */}
-            <div className="relative h-48 w-full overflow-hidden sm:h-64">
+            <div className="relative h-48 w-full overflow-hidden sm:h-64 bg-slate-200 dark:bg-slate-800">
               <img
-                src="/assets/images/campus_banner.png"
-                alt="Campus Banner"
+                src={profile?.cover_url || "/assets/images/campus_banner.png"}
+                alt="Profile Banner"
                 className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
@@ -362,7 +366,7 @@ function ProfilePage() {
         isOpen={isEditOpen}
         initialProfile={profile}
         onClose={() => setIsEditOpen(false)}
-        onSave={async ({ sr_code, block, avatarFile }) => {
+        onSave={async ({ sr_code, block, avatarFile, coverFile }) => {
           const { data: authData, error: authError } = await supabase.auth.getUser();
           if (authError || !authData?.user) {
             toast.error("You must be logged in.");
@@ -373,7 +377,7 @@ function ProfilePage() {
           if (avatarFile) {
             try {
               avatarUrl = await uploadPublicImage({
-                bucket: "user-avatars",
+                bucketName: "user-avatars",
                 pathPrefix: `${authData.user.id}`,
                 file: avatarFile,
                 upsert: true,
@@ -384,15 +388,31 @@ function ProfilePage() {
             }
           }
 
+          let coverUrl = profile?.cover_url || null;
+          if (coverFile) {
+            try {
+              coverUrl = await uploadPublicImage({
+                bucketName: "user-avatars",
+                pathPrefix: `${authData.user.id}/cover`,
+                file: coverFile,
+                upsert: true,
+              });
+            } catch (error) {
+              toast.error(error?.message || "Failed to upload cover photo.");
+              return false;
+            }
+          }
+
           const { data: updated, error } = await supabase
             .from("user_profiles")
             .update({
               sr_code,
               block,
               avatar_url: avatarUrl,
+              cover_url: coverUrl,
             })
             .eq("id", authData.user.id)
-            .select("id, full_name, sr_code, campus_role, block, avatar_url")
+            .select("id, full_name, sr_code, campus_role, block, avatar_url, cover_url")
             .maybeSingle();
 
           if (error) {
@@ -401,16 +421,20 @@ function ProfilePage() {
           }
 
           if (updated) {
-            const cacheBust =
-              updated.avatar_url && avatarFile
-                ? `${updated.avatar_url}${updated.avatar_url.includes("?") ? "&" : "?"}t=${Date.now()}`
-                : updated.avatar_url;
+            // Update local state with fresh data
             setProfile((prev) => ({
               ...(prev || {}),
               ...updated,
-              avatar_url: cacheBust,
+              avatar_url: updated.avatar_url ? `${updated.avatar_url}${updated.avatar_url.includes("?") ? "&" : "?"}t=${Date.now()}` : null,
               email: authData.user.email || prev?.email || "No email",
             }));
+
+            // Update global context so ALL pages update immediately
+            updateProfile?.({
+              ...updated,
+              avatar_url: updated.avatar_url ? `${updated.avatar_url}${updated.avatar_url.includes("?") ? "&" : "?"}t=${Date.now()}` : null,
+            });
+            refreshProfile?.();
           }
 
           return true;
