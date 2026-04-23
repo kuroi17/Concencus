@@ -51,7 +51,7 @@ function ForumPage() {
         const uploadedUrls = [];
         for (const file of files) {
           const url = await uploadPublicImage({
-            bucket: "forum-post-images",
+            bucketName: "forum-post-images",
             pathPrefix: `${userData.user.id}/${channels[0].id}/${insertedPost.id}`,
             file,
           });

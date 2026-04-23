@@ -41,15 +41,19 @@ export default function OnboardingModal({ isOpen, onClose, userProfile }) {
       // Only set initial form values when opening or when profile first loads
       // We DO NOT reset currentStepIndex here because profile updates (refreshProfile)
       // would kick the user back to step 0.
-      setSrCode(prev => prev || userProfile?.sr_code || "");
-      setBlock(prev => prev || userProfile?.block || "");
+      queueMicrotask(() => {
+        setSrCode((prev) => prev || userProfile?.sr_code || "");
+        setBlock((prev) => prev || userProfile?.block || "");
+      });
     }
   }, [isOpen, userProfile]);
 
   // Handle initial step reset only once when opening
   useEffect(() => {
     if (isOpen) {
-      setCurrentStepIndex(0);
+      queueMicrotask(() => {
+        setCurrentStepIndex(0);
+      });
     }
   }, [isOpen]);
 

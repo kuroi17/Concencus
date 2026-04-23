@@ -114,7 +114,7 @@ function ChatPage() {
       const safe = term.replace(/[,%]/g, "");
       const { data, error } = await supabase
         .from("user_profiles")
-        .select("id, full_name, sr_code, campus_role, block")
+        .select("id, full_name, sr_code, campus_role, block, avatar_url")
         .or(`full_name.ilike.%${safe}%,sr_code.ilike.%${safe}%`)
         .neq("id", currentUserId)
         .limit(8);
@@ -179,30 +179,36 @@ function ChatPage() {
   };
 
   return (
-    <MainLayout title="Communications">
-      <div className="flex h-[calc(100vh-140px)] gap-6 overflow-hidden">
-        <div className={`flex w-full shrink-0 flex-col rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-sm lg:w-[380px] ${activeConversationId ? "hidden lg:flex" : "flex"}`}>
-          <div className="p-6 h-full flex flex-col">
-            <h2 className="text-xl font-black text-slate-900 dark:text-white mb-6">Messages</h2>
-            <div className="flex-1 min-h-0">
-              <ConversationListPanel
-                conversations={conversations}
-                isLoadingConversations={isLoadingConversations}
-                onOpenConversation={handleOpenConversation}
-                activeConversationId={activeConversationId}
-                unreadCounts={unreadCounts}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                searchResults={searchResults}
-                isSearchingProfiles={isSearchingProfiles}
-                isOpeningConversation={isOpeningConversation}
-                onSelectSearchResult={handleSelectSearchResult}
-              />
-            </div>
+    <MainLayout
+      title="Communications"
+      sidebarSlot={
+        <div className="flex h-full flex-col p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
+              Messages
+            </h2>
+            <div className="h-2 w-12 rounded-full bg-[#800000]" />
+          </div>
+          <div className="flex-1 min-h-0">
+            <ConversationListPanel
+              conversations={conversations}
+              isLoadingConversations={isLoadingConversations}
+              onOpenConversation={handleOpenConversation}
+              activeConversationId={activeConversationId}
+              unreadCounts={unreadCounts}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchResults={searchResults}
+              isSearchingProfiles={isSearchingProfiles}
+              isOpeningConversation={isOpeningConversation}
+              onSelectSearchResult={handleSelectSearchResult}
+            />
           </div>
         </div>
-
-        <div className={`flex min-w-0 flex-1 flex-col rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-sm overflow-hidden ${activeConversationId ? "flex" : "hidden lg:flex"}`}>
+      }
+    >
+      <div className="flex h-[calc(100vh-120px)] pt-4 overflow-hidden">
+        <div className={`flex min-w-0 flex-1 flex-col rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-xl dark:shadow-black/20 overflow-hidden`}>
           {activeConversationId ? (
             <ChatThread
               conversation={activeConversation}
@@ -219,14 +225,42 @@ function ChatPage() {
               onDeleteMessage={deleteMessage}
             />
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center text-center p-12">
-              <div className="h-20 w-20 rounded-[32px] bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 mb-6">
-                <MessageSquare size={40} />
+            /* On mobile, show the conversation list in the main area if none selected */
+            <div className="flex h-full flex-col">
+              <div className="lg:hidden flex h-full flex-col p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
+                    Messages
+                  </h2>
+                  <div className="h-1.5 w-10 rounded-full bg-[#800000]" />
+                </div>
+                <div className="flex-1 min-h-0">
+                  <ConversationListPanel
+                    conversations={conversations}
+                    isLoadingConversations={isLoadingConversations}
+                    onOpenConversation={handleOpenConversation}
+                    activeConversationId={activeConversationId}
+                    unreadCounts={unreadCounts}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    searchResults={searchResults}
+                    isSearchingProfiles={isSearchingProfiles}
+                    isOpeningConversation={isOpeningConversation}
+                    onSelectSearchResult={handleSelectSearchResult}
+                  />
+                </div>
               </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white">Your Inbox</h3>
-              <p className="mt-2 max-w-xs text-sm font-medium text-slate-400 dark:text-slate-500">
-                Select a student from the list or search to start a new discussion.
-              </p>
+
+              {/* Desktop Empty State */}
+              <div className="hidden lg:flex flex-1 flex-col items-center justify-center text-center p-12">
+                <div className="h-20 w-20 rounded-[32px] bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 mb-6">
+                  <MessageSquare size={40} />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white">Your Inbox</h3>
+                <p className="mt-2 max-w-xs text-sm font-medium text-slate-400 dark:text-slate-500">
+                  Select a student from the list or search to start a new discussion.
+                </p>
+              </div>
             </div>
           )}
         </div>

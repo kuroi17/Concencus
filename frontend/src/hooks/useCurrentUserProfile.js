@@ -5,7 +5,7 @@ import { useUser } from "../context/UserContext";
  * Migrated from local state to global context to prevent flickering on route changes.
  */
 export function useCurrentUserProfile() {
-  const { user, profile, isLoadingProfile, isAdmin, refreshProfile } = useUser();
+  const { user, profile, isLoadingProfile, isAdmin, refreshProfile, updateProfile } = useUser();
 
   return {
     user,
@@ -14,5 +14,6 @@ export function useCurrentUserProfile() {
     isLoadingProfile,
     isAdmin,
     refreshProfile,
+    updateProfile,
   };
 }

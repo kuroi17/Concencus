@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 const UserContext = createContext();
@@ -7,6 +7,13 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  const bustAvatarCache = useCallback((nextProfile) => {
+    if (!nextProfile?.avatar_url) return nextProfile;
+    const url = String(nextProfile.avatar_url);
+    const nextUrl = `${url}${url.includes("?") ? "&" : "?"}t=${Date.now()}`;
+    return { ...nextProfile, avatar_url: nextUrl };
+  }, []);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -30,18 +37,20 @@ export function UserProvider({ children }) {
         console.error("Error fetching profile:", error);
       }
       
-      setProfile(data || {
+      const fallback = {
         id: authUser.id,
         full_name: authUser.user_metadata?.full_name || "User",
         campus_role: "student",
         has_completed_onboarding: false,
-      });
+      };
+
+      setProfile(bustAvatarCache(data || fallback));
     } catch (err) {
       console.error("Fatal error in loadProfile:", err);
     } finally {
       setIsLoadingProfile(false);
     }
-  }, []);
+  }, [bustAvatarCache]);
 
   useEffect(() => {
     // Initial load
@@ -66,12 +75,50 @@ export function UserProvider({ children }) {
     };
   }, [loadProfile]);
 
+  // Realtime: keep the current user's profile fresh (PF picture updates instantly across pages)
+  useEffect(() => {
+    if (!user?.id) return undefined;
+
+    const channel = supabase
+      .channel(`user-profile-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_profiles",
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          const next = payload?.new || null;
+          if (next) {
+            setProfile(bustAvatarCache(next));
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [bustAvatarCache, user?.id]);
+
+  const updateProfile = useCallback((partial) => {
+    setProfile((prev) => {
+      const merged = { ...(prev || {}), ...(partial || {}) };
+      return bustAvatarCache(merged);
+    });
+  }, [bustAvatarCache]);
+
+  const isAdmin = useMemo(() => profile?.campus_role === "admin", [profile?.campus_role]);
+
   const value = {
     user,
     profile,
     isLoadingProfile,
-    isAdmin: profile?.campus_role === "admin",
+    isAdmin,
     refreshProfile: loadProfile,
+    updateProfile,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

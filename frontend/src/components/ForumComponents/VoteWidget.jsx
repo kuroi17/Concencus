@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { useUser } from "../../context/UserContext";
 import toast from "react-hot-toast";
 
 function VoteWidget({
@@ -9,6 +10,7 @@ function VoteWidget({
   tableName = "forum_votes",
   idColumn = "post_id"
 }) {
+  const { user: currentUser } = useUser();
   const [vote, setVote] = useState(0);
   const [voteLoaded, setVoteLoaded] = useState(false);
   const [scoreOffset, setScoreOffset] = useState(0);
@@ -16,31 +18,31 @@ function VoteWidget({
 
   // Fetch the current user's vote from the database on mount / itemId change
   useEffect(() => {
+    if (!currentUser?.id) {
+      setVote(0);
+      setVoteLoaded(true);
+      return;
+    }
+
     let isMounted = true;
-
     const fetchVote = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user || !isMounted) {
-        if (isMounted) setVoteLoaded(true);
-        return;
-      }
-
       const { data } = await supabase
         .from(tableName)
         .select("vote_value")
         .eq(idColumn, itemId)
-        .eq("user_id", userData.user.id)
+        .eq("user_id", currentUser.id)
         .maybeSingle();
 
       if (isMounted) {
         if (data) setVote(data.vote_value);
+        else setVote(0);
         setVoteLoaded(true);
       }
     };
 
     fetchVote();
     return () => { isMounted = false; };
-  }, [itemId, tableName, idColumn]);
+  }, [itemId, tableName, idColumn, currentUser?.id]);
 
   const [prevBaseScore, setPrevBaseScore] = useState(baseScore);
 
@@ -54,8 +56,7 @@ function VoteWidget({
   const handleVote = async (nextVote) => {
     if (isVoting || !voteLoaded) return;
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData?.user) {
+      if (!currentUser) {
         toast.error("You must be logged in to vote.");
         return;
       }
@@ -73,7 +74,7 @@ function VoteWidget({
         const { error } = await supabase
           .from(tableName)
           .delete()
-          .match({ [idColumn]: itemId, user_id: authData.user.id });
+          .match({ [idColumn]: itemId, user_id: currentUser.id });
         if (error) throw error;
       } else {
         // Upsert handles switching from upvote → downvote atomically
@@ -81,7 +82,7 @@ function VoteWidget({
           .from(tableName)
           .upsert({
             [idColumn]: itemId,
-            user_id: authData.user.id,
+            user_id: currentUser.id,
             vote_value: newVote,
           });
         if (error) throw error;

@@ -11,7 +11,8 @@ import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
 import { uploadPublicImage, deletePublicImage } from "../../lib/storage";
 import { AnnouncementSkeleton } from "../../common/Skeleton";
 import { EmptyState } from "../../common/EmptyState";
-import SDGBadge from "../Common/SDGBadge";
+import SDGBadge from "../common/SDGBadge";
+import { linkifyText } from "../../common/linkifyText";
 
 // ── Tags + Priorities ─────────────────────────────────────────────────────────
 const TAGS = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
@@ -471,7 +472,7 @@ function AnnouncementDetailHero({ notice, onClose, onImageClick, isAdmin, onDele
 
                 <article className="prose prose-slate dark:prose-invert prose-lg lg:prose-xl max-w-none">
                   <p className="whitespace-pre-wrap font-medium leading-relaxed text-slate-600 dark:text-slate-400">
-                    {localNotice.content || localNotice.excerpt}
+                    {linkifyText(localNotice.content || localNotice.excerpt)}
                   </p>
                 </article>
 
@@ -611,7 +612,8 @@ function AnnouncementBoard({ channelId }) {
     }
   };
 
-  // ── Delete ──────────────────────────────────────────────────────────────────
+
+   // ── Delete ──────────────────────────────────────────────────────────────────
   const handleDeleteAnnouncement = async (announcementId, images = []) => {
     if (!isAdmin) return false;
     try {
@@ -685,7 +687,6 @@ function AnnouncementBoard({ channelId }) {
       return false;
     }
   };
-
   useEffect(() => {
     let isMounted = true;
     if (isMounted) queueMicrotask(() => fetchAnnouncements());

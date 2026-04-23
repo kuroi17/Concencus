@@ -8,6 +8,16 @@ import { supabase } from "../../lib/supabaseClient";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 
+function getInitials(name) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
+
 export default function ChatWidget() {
   const { user: currentUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
@@ -186,8 +196,14 @@ export default function ChatWidget() {
                         if (markAsRead) markAsRead(c.id);
                       }
                     }} className="w-full flex items-center gap-2 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-left">
-                      <div className="h-8 w-8 rounded-full bg-[#800000]/10 dark:bg-red-500/20 text-[#800000] dark:text-red-400 flex items-center justify-center font-black text-[10px]">
-                        {p.full_name?.[0] || "?"}
+                      <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-slate-200 dark:border-slate-800">
+                        {p.avatar_url ? (
+                          <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-[#800000]/10 dark:bg-red-500/20 text-[#800000] dark:text-red-400 font-black text-[10px]">
+                            {getInitials(p.full_name)}
+                          </div>
+                        )}
                       </div>
                       <div className="min-w-0">
                         <p className="text-[11px] font-black truncate dark:text-white">{p.full_name}</p>
@@ -207,8 +223,14 @@ export default function ChatWidget() {
                         }} 
                         className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-colors ${activeConversationId === c.id ? "bg-slate-50 dark:bg-slate-800" : "hover:bg-slate-50/50 dark:hover:bg-slate-800/50"}`}
                       >
-                        <div className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center font-black text-[11px] ${activeConversationId === c.id ? "bg-[#800000] dark:bg-red-900 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}>
-                          {c.otherUser?.full_name?.[0] || "?"}
+                        <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-slate-200 dark:border-slate-800">
+                          {c.otherUser?.avatar_url ? (
+                            <img src={c.otherUser.avatar_url} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className={`flex h-full w-full items-center justify-center font-black text-[11px] ${activeConversationId === c.id ? "bg-[#800000] dark:bg-red-900 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}>
+                              {getInitials(c.otherUser?.full_name)}
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start">
@@ -232,8 +254,14 @@ export default function ChatWidget() {
             <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950">
               <header className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 dark:text-slate-500 shrink-0">
-                    {activeConversation?.otherUser?.full_name?.[0]}
+                  <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full border border-slate-100 dark:border-slate-800">
+                    {activeConversation?.otherUser?.avatar_url ? (
+                      <img src={activeConversation.otherUser.avatar_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                        {getInitials(activeConversation?.otherUser?.full_name)}
+                      </div>
+                    )}
                   </div>
                   <span className="text-[12px] font-black truncate text-slate-900 dark:text-white">{activeConversation?.otherUser?.full_name}</span>
                 </div>
