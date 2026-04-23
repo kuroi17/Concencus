@@ -9,12 +9,10 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  Cell,
-  LineChart,
-  Line
+  Cell
 } from 'recharts';
 import { 
-  TrendingUp, 
+  ShieldCheck, 
   Users, 
   Target, 
   Award,
@@ -32,70 +30,115 @@ const SDGImpactDashboard = () => {
   const fetchRealtimeData = async () => {
     setLoading(true);
     try {
-      // Fetch all content with SDG tags
-      const [proposals, posts, announcements] = await Promise.all([
-        supabase.from('proposals').select('sdg_tags, created_at'),
-        supabase.from('forum_posts').select('sdg_tags, created_at'),
-        supabase.from('announcements').select('sdg_tags, created_at')
+      // 1. Fetch all content with SDG tags
+      const [proposalsRes, postsRes, announcementsRes] = await Promise.all([
+        supabase.from('proposals').select('sdg_tags, created_at, status, author_id'),
+        supabase.from('forum_posts').select('sdg_tags, created_at, author_id'),
+        supabase.from('announcements').select('sdg_tags, created_at, author_id')
       ]);
 
       const allItems = [
-        ...(proposals.data || []).map(i => ({ ...i, type: 'proposal' })),
-        ...(posts.data || []).map(i => ({ ...i, type: 'post' })),
-        ...(announcements.data || []).map(i => ({ ...i, type: 'announcement' }))
+        ...(proposalsRes.data || []).map(i => ({ ...i, type: 'proposal' })),
+        ...(postsRes.data || []).map(i => ({ ...i, type: 'post' })),
+        ...(announcementsRes.data || []).map(i => ({ ...i, type: 'announcement' }))
       ];
 
-      // 1. Aggregate Distribution
+      // 2. Aggregate Distribution with Normalization
       const distributionMap = {};
       allItems.forEach(item => {
         if (item.sdg_tags && Array.isArray(item.sdg_tags)) {
           item.sdg_tags.forEach(tagId => {
-            distributionMap[tagId] = (distributionMap[tagId] || 0) + 1;
+            if (!tagId) return;
+            const numberMatch = tagId.toString().match(/\d+/);
+            const normalizedId = numberMatch ? numberMatch[0] : null;
+            if (normalizedId) {
+              distributionMap[normalizedId] = (distributionMap[normalizedId] || 0) + 1;
+            }
           });
         }
       });
 
-      const distributionData = Object.entries(distributionMap).map(([tagId, count]) => {
-        const sdg = getSDGById(tagId);
-        return {
-          name: `SDG ${tagId}`,
-          tagId,
-          count,
-          fullName: sdg?.name || 'Unknown'
-        };
-      }).sort((a, b) => parseInt(a.tagId) - parseInt(b.tagId));
+      const distributionData = Object.entries(distributionMap)
+        .map(([tagId, count]) => {
+          const sdg = getSDGById(tagId);
+          return {
+            name: `SDG ${tagId}`,
+            tagId,
+            count,
+            fullName: sdg?.name || 'Unknown'
+          };
+        })
+        .sort((a, b) => parseInt(a.tagId, 10) - parseInt(b.tagId, 10));
 
-      // 2. Aggregate Timeline (by month)
+      // 3. Aggregate Timeline (Last 6 Months)
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const timelineMap = {};
       allItems.forEach(item => {
-        const month = new Date(item.created_at).toLocaleString('default', { month: 'short' });
-        timelineMap[month] = (timelineMap[month] || 0) + 1;
+        const date = new Date(item.created_at);
+        const key = `${months[date.getMonth()]} ${date.getFullYear()}`;
+        timelineMap[key] = (timelineMap[key] || 0) + 1;
       });
 
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const currentMonthIndex = new Date().getMonth();
-      const last4Months = [];
-      for (let i = 3; i >= 0; i--) {
-        const idx = (currentMonthIndex - i + 12) % 12;
-        last4Months.push(months[idx]);
+      const timelineData = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+        timelineData.push({
+          month: months[d.getMonth()],
+          fullKey: key,
+          initiatives: timelineMap[key] || 0
+        });
       }
 
-      const timelineData = last4Months.map(month => ({
-        month,
-        initiatives: timelineMap[month] || 0
-      }));
+      // 4. Calculate Stats
+      const totalGoals = Object.keys(distributionMap).length;
+      const goalCoverage = Math.round((totalGoals / 17) * 100);
+      
+      // Calculate Impact Leaders (Top Contributors)
+      const authorMap = {};
+      allItems.forEach(item => {
+        if (item.author_id && item.sdg_tags?.length > 0) {
+          authorMap[item.author_id] = (authorMap[item.author_id] || 0) + item.sdg_tags.length;
+        }
+      });
 
-      // 3. Stats
+      const leaderEntries = Object.entries(authorMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+      // Fetch names for leaders
+      let impactLeaders = [];
+      if (leaderEntries.length > 0) {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('id, full_name')
+          .in('id', leaderEntries.map(l => l[0]));
+
+        impactLeaders = leaderEntries.map(([id, score], i) => {
+          const profile = profiles?.find(p => p.id === id);
+          return {
+            name: profile?.full_name?.split(' ')[0] || `User ${id.slice(0, 4)}`,
+            score,
+            color: i === 0 ? '#800000' : '#475569'
+          };
+        });
+      }
+
+      const totalTags = allItems.reduce((acc, item) => acc + (item.sdg_tags?.length || 0), 0);
+      const intensity = allItems.length > 0 ? (totalTags / allItems.length).toFixed(1) : 0;
+
       const stats = [
         { label: "Total Initiatives", value: allItems.length, icon: Target, color: "text-blue-600", bg: "bg-blue-50" },
-        { label: "Goals Targeted", value: Object.keys(distributionMap).length, icon: Award, color: "text-emerald-600", bg: "bg-emerald-50" },
-        { label: "Engagement Rate", value: "82%", icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
-        { label: "Growth", value: "+12%", icon: TrendingUp, color: "text-rose-600", bg: "bg-rose-50" },
+        { label: "Goals Targeted", value: totalGoals, icon: Award, color: "text-emerald-600", bg: "bg-emerald-50" },
+        { label: "Impact Intensity", value: `${intensity}x`, icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
+        { label: "Goal Coverage", value: `${goalCoverage}%`, icon: ShieldCheck, color: "text-rose-600", bg: "bg-rose-50" },
       ];
 
       setData({
         distribution: distributionData,
         timeline: timelineData,
+        leaders: impactLeaders,
         stats
       });
     } catch (error) {
@@ -213,24 +256,30 @@ const SDGImpactDashboard = () => {
             </div>
           </div>
 
-          {/* Growth Chart */}
+          {/* Impact Leaders Chart */}
           <div className="p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 uppercase tracking-tight">Monthly Growth</h3>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 uppercase tracking-tight">Impact Leaders</h3>
             <div className="h-[180px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data.timeline}>
+                <BarChart layout="vertical" data={data.leaders}>
+                  <XAxis type="number" hide />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }} 
+                  />
                   <Tooltip 
+                    cursor={{ fill: 'transparent' }}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="initiatives" 
-                    stroke="#800000" 
-                    strokeWidth={4} 
-                    dot={{ r: 6, fill: '#800000', strokeWidth: 2, stroke: '#fff' }} 
-                    activeDot={{ r: 8 }}
-                  />
-                </LineChart>
+                  <Bar dataKey="score" radius={[0, 8, 8, 0]}>
+                    {data.leaders.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>

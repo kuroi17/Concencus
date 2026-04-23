@@ -332,9 +332,13 @@ function AnnouncementDetailHero({ notice, onClose, onImageClick, isAdmin, onDele
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [localNotice, setLocalNotice] = useState(notice);
+  const [prevNotice, setPrevNotice] = useState(notice);
 
   // Sync if parent notice changes (e.g. after realtime update)
-  useEffect(() => { setLocalNotice(notice); }, [notice]);
+  if (notice !== prevNotice) {
+    setPrevNotice(notice);
+    setLocalNotice(notice);
+  }
 
   const dateObj = localNotice.created_at ? new Date(localNotice.created_at) : null;
   const postedAt = dateObj && !isNaN(dateObj)

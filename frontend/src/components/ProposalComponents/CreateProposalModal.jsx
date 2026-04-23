@@ -32,7 +32,7 @@ function CreateProposalModal({ isOpen, onClose, onSubmit }) {
     if (!title.trim() || !description.trim()) return;
 
     setIsSubmitting(true);
-    await onSubmit({ 
+    const success = await onSubmit({ 
       title, 
       description, 
       category, 
@@ -40,7 +40,9 @@ function CreateProposalModal({ isOpen, onClose, onSubmit }) {
       isAnonymous
     });
     setIsSubmitting(false);
-    closeModal();
+    if (success) {
+      closeModal();
+    }
   };
 
   return createPortal(
