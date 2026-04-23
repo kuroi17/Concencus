@@ -97,10 +97,7 @@ function AnnouncementCard({ item, delay = 0, onOpen }) {
               {postedAt}
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.15em] text-[#800000] dark:text-[#ff4d4d]">
-            Full Notice
-            <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </div>
+         
         </footer>
       </div>
     </button>

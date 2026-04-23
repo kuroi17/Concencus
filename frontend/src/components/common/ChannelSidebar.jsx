@@ -157,7 +157,7 @@ function ChannelSidebar({
     return (
         <>
             <aside
-                className="flex h-full flex-col bg-white/80 dark:bg-slate-950/90 px-4 py-6 backdrop-blur-xl transition-all duration-300"
+                className="flex h-full max-h-screen sticky top-0 flex-col bg-white/80 dark:bg-slate-950/90 px-4 py-6 backdrop-blur-xl transition-all duration-300"
                 aria-label="Channel sidebar"
             >
                 {/* Header */}
@@ -203,7 +203,7 @@ function ChannelSidebar({
                 </div>
 
                 {/* Category accordion */}
-                <nav className="flex-1 space-y-6 overflow-y-auto no-scrollbar">
+                <nav className="flex-1 space-y-6 overflow-y-auto pr-1">
                     {loadingChannels ? (
                         <div className="space-y-6 px-1">
                             {[...Array(4)].map((_, i) => (

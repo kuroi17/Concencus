@@ -107,10 +107,8 @@ function HubPage() {
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 rounded-full bg-red-600 animate-pulse" />
-              <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-                Active Governance Channel
-              </p>
+             
+             
             </div>
             <h2 className="m-0 text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
               {currentChannel.name}

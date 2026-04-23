@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Search, X } from "lucide-react";
 import ChatThread from "../components/ChatComponents/ChatThread";
 import ConversationListPanel from "../components/ChatComponents/ConversationListPanel";
 import { useDmConversations } from "../hooks/useDmConversations";
@@ -178,16 +178,42 @@ function ChatPage() {
     });
   };
 
+  const chatSearchSlot = (
+    <div className="relative w-full">
+      <Search
+        size={16}
+        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+      />
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search"
+        className="w-90 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none transition-all focus:border-[#800000] focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-red-900/5"
+      />
+      {searchQuery && (
+        <button
+          type="button"
+          onClick={() => setSearchQuery("")}
+          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+        >
+          <X size={14} />
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <MainLayout
       title="Communications"
+      searchSlot={chatSearchSlot}
       sidebarSlot={
         <div className="flex h-full flex-col p-6">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
-              Messages
+              Communications
             </h2>
-            <div className="h-2 w-12 rounded-full bg-[#800000]" />
+           
           </div>
           <div className="flex-1 min-h-0">
             <ConversationListPanel
@@ -207,8 +233,8 @@ function ChatPage() {
         </div>
       }
     >
-      <div className="flex h-[calc(100vh-120px)] pt-4 overflow-hidden">
-        <div className={`flex min-w-0 flex-1 flex-col rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-xl dark:shadow-black/20 overflow-hidden`}>
+      <div className="flex h-[calc(100vh-96px)] overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/5 overflow-hidden">
           {activeConversationId ? (
             <ChatThread
               conversation={activeConversation}
@@ -225,41 +251,56 @@ function ChatPage() {
               onDeleteMessage={deleteMessage}
             />
           ) : (
-            /* On mobile, show the conversation list in the main area if none selected */
-            <div className="flex h-full flex-col">
-              <div className="lg:hidden flex h-full flex-col p-4">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
-                    Messages
-                  </h2>
-                  <div className="h-1.5 w-10 rounded-full bg-[#800000]" />
-                </div>
-                <div className="flex-1 min-h-0">
-                  <ConversationListPanel
-                    conversations={conversations}
-                    isLoadingConversations={isLoadingConversations}
-                    onOpenConversation={handleOpenConversation}
-                    activeConversationId={activeConversationId}
-                    unreadCounts={unreadCounts}
-                    searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
-                    searchResults={searchResults}
-                    isSearchingProfiles={isSearchingProfiles}
-                    isOpeningConversation={isOpeningConversation}
-                    onSelectSearchResult={handleSelectSearchResult}
-                  />
-                </div>
-              </div>
+            <div className="flex h-full flex-col bg-slate-50/50 dark:bg-slate-950/50">
+              <div className="flex-1 min-h-0 flex flex-col">
+                {/* Mobile: Show conversations list if none selected */}
+                <div className="lg:hidden flex h-full flex-col p-4 bg-white dark:bg-slate-900">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
+                      Communications
+                    </h2>
+                    <div className="h-1.5 w-10 rounded-full bg-[#800000]" />
+                  </div>
+                  
+                  {/* Mobile Search Bar */}
+                  <div className="relative mb-4">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 py-2 pl-9 text-sm outline-none focus:border-[#800000]"
+                    />
+                  </div>
 
-              {/* Desktop Empty State */}
-              <div className="hidden lg:flex flex-1 flex-col items-center justify-center text-center p-12">
-                <div className="h-20 w-20 rounded-[32px] bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 mb-6">
-                  <MessageSquare size={40} />
+                  <div className="flex-1 min-h-0">
+                    <ConversationListPanel
+                      conversations={conversations}
+                      isLoadingConversations={isLoadingConversations}
+                      onOpenConversation={handleOpenConversation}
+                      activeConversationId={activeConversationId}
+                      unreadCounts={unreadCounts}
+                      searchQuery={searchQuery}
+                      onSearchChange={setSearchQuery}
+                      searchResults={searchResults}
+                      isSearchingProfiles={isSearchingProfiles}
+                      isOpeningConversation={isOpeningConversation}
+                      onSelectSearchResult={handleSelectSearchResult}
+                    />
+                  </div>
                 </div>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white">Your Inbox</h3>
-                <p className="mt-2 max-w-xs text-sm font-medium text-slate-400 dark:text-slate-500">
-                  Select a student from the list or search to start a new discussion.
-                </p>
+
+                {/* Desktop: Show Empty State */}
+                <div className="hidden lg:flex flex-1 flex-col items-center justify-center text-center p-12">
+                  <div className="h-24 w-24 rounded-[40px] bg-white dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 mb-8 shadow-sm">
+                    <MessageSquare size={48} />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white">Your Inbox</h3>
+                  <p className="mt-4 max-w-sm text-base font-medium text-slate-400 dark:text-slate-500 leading-relaxed">
+                    Select a student from the list or search to start a new discussion.
+                  </p>
+                </div>
               </div>
             </div>
           )}

@@ -68,36 +68,6 @@ function ConversationListPanel({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Search Bar */}
-      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
-        <div className="relative">
-          <Search
-            size={15}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-          />
-
-          <input
-            id="chat-search-input"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search people…"
-            className="w-full rounded-[10px] border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 py-2 pl-9 pr-8 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-slate-400 dark:focus:border-slate-600 focus:bg-white dark:focus:bg-slate-800 focus:shadow-[0_0_0_3px_rgba(15,23,42,0.06)] dark:focus:shadow-[0_0_0_3px_rgba(255,255,255,0.03)]"
-          />
-
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => onSearchChange("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-slate-400 dark:text-slate-500 transition hover:text-slate-700 dark:hover:text-slate-300"
-              aria-label="Clear search"
-            >
-              <X size={13} />
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Scrollable Content */}
       <div className="min-h-0 flex-1 overflow-y-auto bg-white dark:bg-slate-900">
         {hasSearchText ? (

@@ -29,17 +29,21 @@ function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
           >
             <Menu size={20} />
           </button>
-          <h1 className="m-0 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-[1.5rem] font-extrabold tracking-tight text-transparent sm:text-[1.85rem]">
-            {title}
-          </h1>
+         
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Navigation */}
-          <nav
-            className="flex items-center gap-1.5 rounded-2xl bg-slate-100/50 dark:bg-slate-800/50 p-1.5 ring-1 ring-slate-200/50 dark:ring-slate-700/50"
-            aria-label="Primary Navigation"
-          >
+          {/* Navigation & Search Slot */}
+          <div className="flex flex-1 items-center justify-end gap-4">
+            {searchSlot && (
+              <div className="hidden lg:block w-full max-w-sm">
+                {searchSlot}
+              </div>
+            )}
+
+            <nav
+              className="flex items-center gap-1.5 rounded-2xl bg-slate-100/50 dark:bg-slate-800/50 p-1.5 ring-1 ring-slate-200/50 dark:ring-slate-700/50"
+              aria-label="Primary Navigation"
+            >
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -92,7 +96,7 @@ function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
         </div>
       </div>
 
-      {searchSlot && <div className="pb-3 w-full">{searchSlot}</div>}
+      {searchSlot && <div className="lg:hidden pb-3 w-full">{searchSlot}</div>}
     </header>
   );
 }

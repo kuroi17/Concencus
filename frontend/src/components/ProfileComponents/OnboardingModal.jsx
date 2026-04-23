@@ -158,10 +158,15 @@ export default function OnboardingModal({ isOpen, onClose, userProfile }) {
                     <input
                       type="text"
                       value={srCode}
-                      onChange={(e) => setSrCode(e.target.value)}
-                      placeholder="e.g. 21-0000-000"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9-]/g, "").slice(0, 8);
+                        setSrCode(val);
+                      }}
+                      placeholder="e.g. 24-04667"
+                      maxLength={8}
                       className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all focus:border-[#800000] focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-red-900/5 dark:focus:ring-red-500/5"
                     />
+                    <p className="mt-1 text-[9px] font-bold text-slate-400">Max 8 characters (Numbers and hyphens only)</p>
                   </div>
                   <div>
                     <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
@@ -170,10 +175,12 @@ export default function OnboardingModal({ isOpen, onClose, userProfile }) {
                     <input
                       type="text"
                       value={block}
-                      onChange={(e) => setBlock(e.target.value)}
-                      placeholder="e.g. CS 2201"
+                      onChange={(e) => setBlock(e.target.value.slice(0, 6))}
+                      placeholder="e.g. CS2205"
+                      maxLength={6}
                       className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all focus:border-[#800000] focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-red-900/5 dark:focus:ring-red-500/5"
                     />
+                    <p className="mt-1 text-[9px] font-bold text-slate-400">Max 6 characters</p>
                   </div>
                 </div>
               )}
