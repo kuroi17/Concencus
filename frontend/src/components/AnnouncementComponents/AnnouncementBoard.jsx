@@ -1,16 +1,370 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Megaphone, X, CalendarDays, ShieldCheck, Flag, UserRound } from "lucide-react";
+import {
+  Megaphone, X, CalendarDays, ShieldCheck, Flag, UserRound,
+  ChevronLeft, ChevronRight, Pencil, Trash2, Check, Images,
+} from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import AnnouncementCard from "./AnnouncementCard";
 import CreateAnnouncementModal from "./CreateAnnouncementModal";
 import { useCurrentUserProfile } from "../../hooks/useCurrentUserProfile";
-import { uploadPublicImage } from "../../lib/storage";
+import { uploadPublicImage, deletePublicImage } from "../../lib/storage";
 import { AnnouncementSkeleton } from "../../common/Skeleton";
 import { EmptyState } from "../../common/EmptyState";
 
+// ── Tags + Priorities ─────────────────────────────────────────────────────────
+const TAGS = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
+const PRIORITIES = ["FYI", "Normal", "Important", "Urgent"];
+
+// ── Image Carousel ─────────────────────────────────────────────────────────────
+function ImageCarousel({ images, onImageClick }) {
+  const [current, setCurrent] = useState(0);
+
+  if (!images || images.length === 0) return null;
+
+  const prev = (e) => {
+    e.stopPropagation();
+    setCurrent((c) => (c - 1 + images.length) % images.length);
+  };
+  const next = (e) => {
+    e.stopPropagation();
+    setCurrent((c) => (c + 1) % images.length);
+  };
+
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-slate-900 dark:bg-black group/carousel">
+      {/* Main image */}
+      <img
+        src={images[current]}
+        alt={`Image ${current + 1} of ${images.length}`}
+        className="h-full w-full object-cover cursor-zoom-in transition-opacity duration-300"
+        onClick={() => onImageClick(images[current])}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 md:from-transparent to-transparent pointer-events-none" />
+
+      {/* Prev/Next buttons — only if multiple images */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={prev}
+            className="absolute left-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/80"
+            aria-label="Previous image"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={next}
+            className="absolute right-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/80"
+            aria-label="Next image"
+          >
+            <ChevronRight size={18} />
+          </button>
+
+          {/* Dot indicators */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === current ? "w-5 bg-white" : "w-1.5 bg-white/50"
+                }`}
+                aria-label={`Go to image ${i + 1}`}
+              />
+            ))}
+          </div>
+
+          {/* Counter badge */}
+          <div className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-lg bg-black/50 px-2 py-1 text-[10px] font-black text-white backdrop-blur-sm pointer-events-none">
+            <Images size={10} />
+            {current + 1}/{images.length}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Edit Panel (inline inside detail hero) ────────────────────────────────────
+function EditPanel({ notice, onSave, onCancel, isSaving }) {
+  const [title, setTitle] = useState(notice.title || "");
+  const [excerpt, setExcerpt] = useState(notice.excerpt || notice.content || "");
+  const [tag, setTag] = useState(notice.tag || TAGS[0]);
+  const [priority, setPriority] = useState(notice.priority || PRIORITIES[0]);
+  const [unit, setUnit] = useState(notice.unit || "");
+
+  const handleSave = () => {
+    if (!title.trim() || !excerpt.trim()) return;
+    onSave({ title: title.trim(), excerpt: excerpt.trim(), tag, priority, unit: unit.trim() });
+  };
+
+  const inputCls = "w-full rounded-[10px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#800000]";
+  const labelCls = "mb-1 block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500";
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className={labelCls}>Title</label>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
+      </div>
+      <div>
+        <label className={labelCls}>Message</label>
+        <textarea
+          value={excerpt}
+          onChange={(e) => setExcerpt(e.target.value)}
+          rows={5}
+          className={`${inputCls} resize-none`}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls}>Tag</label>
+          <select value={tag} onChange={(e) => setTag(e.target.value)} className={inputCls}>
+            {TAGS.map((t) => <option key={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Priority</label>
+          <select value={priority} onChange={(e) => setPriority(e.target.value)} className={inputCls}>
+            {PRIORITIES.map((p) => <option key={p}>{p}</option>)}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label className={labelCls}>Unit / Office</label>
+        <input value={unit} onChange={(e) => setUnit(e.target.value)} className={inputCls} placeholder="CICS Student Affairs" />
+      </div>
+      <div className="flex items-center gap-2 pt-2">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving}
+          className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#800000] px-4 py-2 text-sm font-semibold text-white hover:bg-[#a00000] disabled:opacity-70 transition-colors"
+        >
+          <Check size={14} />
+          {isSaving ? "Saving..." : "Save Changes"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSaving}
+          className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-70 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Priority Style Helper ─────────────────────────────────────────────────────
+function getPriorityStyle(priorityText) {
+  if (!priorityText) return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
+  const p = priorityText.trim().toLowerCase();
+  if (p.includes("urgent")) return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800";
+  if (p.includes("important")) return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800";
+  if (p.includes("fyi") || p.includes("notice")) return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800";
+  return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
+}
+
+// ── Announcement Detail Hero ───────────────────────────────────────────────────
+function AnnouncementDetailHero({ notice, onClose, onImageClick, isAdmin, onDelete, onEdit }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [localNotice, setLocalNotice] = useState(notice);
+
+  // Sync if parent notice changes (e.g. after realtime update)
+  useEffect(() => { setLocalNotice(notice); }, [notice]);
+
+  const dateObj = localNotice.created_at ? new Date(localNotice.created_at) : null;
+  const postedAt = dateObj && !isNaN(dateObj)
+    ? dateObj.toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" })
+    : "—";
+
+  // Normalize images: support new image_urls array and legacy image_url
+  const images = Array.isArray(localNotice.image_urls) && localNotice.image_urls.length > 0
+    ? localNotice.image_urls
+    : localNotice.image_url
+    ? [localNotice.image_url]
+    : [];
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const success = await onDelete(localNotice.id, images);
+    if (!success) setIsDeleting(false);
+  };
+
+  const handleSaveEdit = async (fields) => {
+    setIsSaving(true);
+    const success = await onEdit(localNotice.id, fields);
+    if (success) {
+      setLocalNotice((prev) => ({ ...prev, ...fields }));
+      setIsEditing(false);
+    }
+    setIsSaving(false);
+  };
+
+  return (
+    <div className="relative w-full h-full overflow-hidden rounded-[32px] sm:rounded-[48px] bg-white dark:bg-slate-900 shadow-[0_32px_128px_rgba(0,0,0,0.5)] flex flex-col md:flex-row soft-rise">
+      {/* ── Hero Visual (Left/Top) ── */}
+      <div className="relative h-[300px] w-full shrink-0 md:h-full md:w-[40%] lg:w-[45%] overflow-hidden">
+        {images.length > 0 ? (
+          <ImageCarousel images={images} onImageClick={onImageClick} />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+            <Megaphone size={80} className="text-white/10" />
+          </div>
+        )}
+
+        {/* Mobile tag badge */}
+        <div className="absolute bottom-6 left-6 md:hidden z-10">
+          <span className="rounded-xl bg-[#800000] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-xl">
+            {localNotice.tag}
+          </span>
+        </div>
+      </div>
+
+      {/* ── Content (Right/Bottom) ── */}
+      <div className="relative flex flex-1 flex-col overflow-hidden bg-white dark:bg-slate-900">
+        {/* Header bar */}
+        <header className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 px-8 py-6 md:px-12">
+          <div className="hidden md:flex gap-3">
+            <span className="rounded-xl bg-[#800000]/10 dark:bg-[#800000]/20 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#800000] dark:text-red-400">
+              {localNotice.tag}
+            </span>
+            <span className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${getPriorityStyle(localNotice.priority)} ring-1 ring-inset`}>
+              <Flag size={12} />
+              {localNotice.priority}
+            </span>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            {/* Edit button (admin only) */}
+            {isAdmin && !isEditing && (
+              <button
+                onClick={() => { setConfirmDelete(false); setIsEditing(true); }}
+                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all hover:bg-[#800000]/10 hover:text-[#800000] dark:hover:text-red-400"
+                aria-label="Edit announcement"
+              >
+                <Pencil size={18} />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white transition-all hover:bg-[#800000] hover:text-white"
+              aria-label="Close notice"
+            >
+              <X size={22} />
+            </button>
+          </div>
+        </header>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-8 py-10 md:px-16 md:py-14 no-scrollbar">
+          <div className="max-w-3xl">
+            {isEditing ? (
+              <>
+                <p className="mb-6 text-xs font-black uppercase tracking-widest text-[#800000] dark:text-red-400">
+                  Editing Announcement
+                </p>
+                <EditPanel
+                  notice={localNotice}
+                  onSave={handleSaveEdit}
+                  onCancel={() => setIsEditing(false)}
+                  isSaving={isSaving}
+                />
+              </>
+            ) : (
+              <>
+                <div className="mb-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                  {localNotice.unit && (
+                    <span className="inline-flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-[#800000] dark:text-red-500" />
+                      {localNotice.unit}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-2">
+                    <CalendarDays size={16} />
+                    {postedAt}
+                  </span>
+                </div>
+
+                <h1 className="mb-8 text-3xl font-black leading-[1.2] tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
+                  {localNotice.title}
+                </h1>
+
+                <div className="mb-10 h-1.5 w-20 rounded-full bg-[#800000]" />
+
+                <article className="prose prose-slate dark:prose-invert prose-lg lg:prose-xl max-w-none">
+                  <p className="whitespace-pre-wrap font-medium leading-relaxed text-slate-600 dark:text-slate-400">
+                    {localNotice.content || localNotice.excerpt}
+                  </p>
+                </article>
+
+                <div className="mt-16 border-t border-slate-100 dark:border-slate-800 pt-10">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-[#800000] dark:text-red-400 font-black">
+                      <UserRound size={22} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Official Publisher</p>
+                      <p className="text-lg font-black text-slate-900 dark:text-white">{localNotice.author || "Institutional Admin"}</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Admin Delete Footer */}
+        {isAdmin && !isEditing && (
+          <footer className="border-t border-slate-100 dark:border-slate-800 px-8 py-5 md:px-12">
+            {confirmDelete ? (
+              <div className="flex flex-col gap-3 rounded-[12px] border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4">
+                <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+                  Delete this announcement? This cannot be undone.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="inline-flex items-center gap-1.5 rounded-[10px] bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-70 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                    {isDeleting ? "Deleting..." : "Yes, Delete"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    disabled={isDeleting}
+                    className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-70 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-sm font-semibold text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
+                <Trash2 size={14} />
+                Delete Announcement
+              </button>
+            )}
+          </footer>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main Board ─────────────────────────────────────────────────────────────────
 function AnnouncementBoard({ channelId }) {
-  // ... state and logic remain the same ...
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,17 +372,12 @@ function AnnouncementBoard({ channelId }) {
   const [postError, setPostError] = useState("");
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
+  const [selectedTag, setSelectedTag] = useState("All");
   const { user, isAdmin } = useCurrentUserProfile();
 
   const fetchAnnouncements = useCallback(async () => {
-    if (!channelId) {
-      setAnnouncements([]);
-      setLoading(false);
-      return;
-    }
-    queueMicrotask(() => {
-      setLoading(true);
-    });
+    if (!channelId) { setAnnouncements([]); setLoading(false); return; }
+    queueMicrotask(() => setLoading(true));
 
     const { data, error } = await supabase
       .from("announcements")
@@ -36,62 +385,47 @@ function AnnouncementBoard({ channelId }) {
       .eq("channel_id", channelId)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setAnnouncements(data);
-    } else if (error) {
-      console.error("AnnouncementBoard fetch error:", error);
-    }
+    if (!error && data) setAnnouncements(data);
+    else if (error) console.error("AnnouncementBoard fetch error:", error);
     setLoading(false);
   }, [channelId]);
 
+  // ── Create ──────────────────────────────────────────────────────────────────
   const handleCreateAnnouncement = async (announcementData) => {
-    if (!channelId) {
-      setPostError("Please select a channel first.");
-      return false;
-    }
-
-    if (!user || !isAdmin) {
-      setPostError("Only admins can post announcements.");
-      return false;
-    }
+    if (!channelId) { setPostError("Please select a channel first."); return false; }
+    if (!user || !isAdmin) { setPostError("Only admins can post announcements."); return false; }
 
     setIsPosting(true);
     setPostError("");
 
     try {
-      let finalImageUrl = null;
-
-      // 🚀 1. UPLOAD IMAGE SA SUPABASE BUCKET
-      if (announcementData.imageFile) {
-        try {
-          finalImageUrl = await uploadPublicImage(
-            announcementData.imageFile,
-            'announcement-images'
-          );
-        } catch (uploadErr) {
-          console.error('Upload error details:', uploadErr);
-          throw new Error(`Image upload failed: ${uploadErr.message}`);
+      // Upload all images in order, collect URLs
+      const imageUrls = [];
+      if (announcementData.imageFiles && announcementData.imageFiles.length > 0) {
+        for (const file of announcementData.imageFiles) {
+          try {
+            const url = await uploadPublicImage(file, "announcement-images");
+            imageUrls.push(url);
+          } catch (uploadErr) {
+            throw new Error(`Image upload failed: ${uploadErr.message}`);
+          }
         }
       }
 
-      // 🚀 2. I-SAVE SA DATABASE KASAMA YUNG LINK NG PICTURE
-      const { error } = await supabase.from("announcements").insert([
-        {
-          channel_id: channelId,
-          author_id: user.id,
-          title: announcementData.title,
-          excerpt: announcementData.excerpt,
-          tag: announcementData.tag,
-          priority: announcementData.priority,
-          unit: announcementData.unit || null,
-          image_url: finalImageUrl // Mapupuno ito kung may picture
-        },
-      ]);
+      const { error } = await supabase.from("announcements").insert([{
+        channel_id: channelId,
+        author_id: user.id,
+        title: announcementData.title,
+        excerpt: announcementData.excerpt,
+        tag: announcementData.tag,
+        priority: announcementData.priority,
+        unit: announcementData.unit || null,
+        // Store array; keep legacy image_url as first image for backwards compat
+        image_urls: imageUrls.length > 0 ? imageUrls : null,
+        image_url: imageUrls[0] || null,
+      }]);
 
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       setIsModalOpen(false);
       await fetchAnnouncements();
       return true;
@@ -103,27 +437,18 @@ function AnnouncementBoard({ channelId }) {
     }
   };
 
-  const handleDeleteAnnouncement = async (announcementId, imageUrl) => {
+  // ── Delete ──────────────────────────────────────────────────────────────────
+  const handleDeleteAnnouncement = async (announcementId, images = []) => {
     if (!isAdmin) return false;
-
     try {
-      // 1. I-delete sa database muna
-      const { error } = await supabase
-        .from("announcements")
-        .delete()
-        .eq("id", announcementId);
-
+      const { error } = await supabase.from("announcements").delete().eq("id", announcementId);
       if (error) throw error;
 
-      // 2. Kapag successful sa DB, tanggalin na rin sa bucket (kung may image)
-      if (imageUrl) {
-        try {
-          await deletePublicImage(imageUrl, 'announcement-images');
-        } catch (storageErr) {
-          // Hindi natin i-block ang success kahit may storage error
-          // DB record na deleted na, yung image lang ang naiwan sa bucket
-          console.warn('Announcement deleted but image cleanup failed:', storageErr.message);
-        }
+      // Delete all images from storage
+      const imageList = Array.isArray(images) ? images : [images].filter(Boolean);
+      for (const url of imageList) {
+        try { await deletePublicImage(url, "announcement-images"); }
+        catch (e) { console.warn("Image cleanup failed:", e.message); }
       }
 
       setSelectedAnnouncement(null);
@@ -135,48 +460,55 @@ function AnnouncementBoard({ channelId }) {
     }
   };
 
+  // ── Edit ────────────────────────────────────────────────────────────────────
+  const handleEditAnnouncement = async (announcementId, fields) => {
+    if (!isAdmin) return false;
+    try {
+      const { error } = await supabase
+        .from("announcements")
+        .update({
+          title: fields.title,
+          excerpt: fields.excerpt,
+          tag: fields.tag,
+          priority: fields.priority,
+          unit: fields.unit || null,
+        })
+        .eq("id", announcementId);
+
+      if (error) throw error;
+      await fetchAnnouncements();
+      return true;
+    } catch (error) {
+      console.error("Edit error:", error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
+    if (isMounted) queueMicrotask(() => fetchAnnouncements());
 
-    if (isMounted) {
-      queueMicrotask(() => {
-        fetchAnnouncements();
-      });
-    }
-
-    // Realtime: re-fetch if any announcement is inserted/updated/deleted
     const subscription = supabase
       .channel(`announcements_${channelId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "announcements" },
-        fetchAnnouncements,
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, fetchAnnouncements)
       .subscribe();
 
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(subscription);
-    };
+    return () => { isMounted = false; supabase.removeChannel(subscription); };
   }, [channelId, fetchAnnouncements]);
 
-  const [selectedTag, setSelectedTag] = useState("All");
-
-  const tags = ["All", ...new Set(announcements.map(a => a.tag).filter(Boolean))];
-
+  const tags = ["All", ...new Set(announcements.map((a) => a.tag).filter(Boolean))];
   const filteredAnnouncements = selectedTag === "All"
     ? announcements
-    : announcements.filter(a => a.tag === selectedTag);
+    : announcements.filter((a) => a.tag === selectedTag);
 
   return (
     <section className="soft-enter pb-2 w-full overflow-visible box-border" aria-label="Announcement board">
-      {/* ── Board header ──────────────────────────────────────────────────── */}
+      {/* Board header */}
       <div className="mb-8 space-y-6 pt-2">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="m-0 text-lg font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
             Institutional Notices
           </h2>
-
           {isAdmin && (
             <button
               type="button"
@@ -190,7 +522,11 @@ function AnnouncementBoard({ channelId }) {
           )}
         </header>
 
-        {/* ── Tag Filters ────────────────────────────────────────────────── */}
+        {postError && (
+          <p className="text-sm font-semibold text-red-600 dark:text-red-400">{postError}</p>
+        )}
+
+        {/* Tag Filters */}
         <nav className="flex flex-wrap items-center gap-2" aria-label="Filter notices by tag">
           {tags.map((tag) => (
             <button
@@ -199,7 +535,7 @@ function AnnouncementBoard({ channelId }) {
               className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
                 selectedTag === tag
                   ? "bg-[#800000] text-white shadow-lg shadow-red-900/20"
-                  : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 ring-1 ring-slate-200/60 dark:ring-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
               }`}
             >
               {tag}
@@ -208,46 +544,43 @@ function AnnouncementBoard({ channelId }) {
         </nav>
       </div>
 
-      {postError && (
-        <p className="mb-4 rounded-2xl border border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-900/10 px-4 py-3 text-xs font-bold text-rose-600 dark:text-rose-400">
-          {postError}
-        </p>
-      )}
-
-      {/* ── Content ───────────────────────────────────────────────────────── */}
+      {/* Detail Hero (portal) */}
       {selectedAnnouncement && createPortal(
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-2xl p-4 sm:p-8 md:p-12 soft-enter no-scrollbar cursor-pointer"
-          onClick={(e) => e.target === e.currentTarget && setSelectedAnnouncement(null)}
-        >
-          <div className="cursor-default w-full max-w-6xl h-[85vh] max-h-[900px]">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 lg:p-12">
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"
+            onClick={() => setSelectedAnnouncement(null)}
+          />
+          <div className="relative w-full max-w-6xl" style={{ height: "min(90vh, 700px)" }}>
             <AnnouncementDetailHero
               key={selectedAnnouncement.id}
               notice={selectedAnnouncement}
               onClose={() => setSelectedAnnouncement(null)}
               onImageClick={(url) => setLightboxImage(url)}
+              isAdmin={isAdmin}
+              onDelete={handleDeleteAnnouncement}
+              onEdit={handleEditAnnouncement}
             />
           </div>
         </div>,
         document.body
       )}
 
+      {/* Cards grid */}
       {loading ? (
         <div className="w-full columns-1 gap-6 px-1 sm:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="mb-6 break-inside-avoid">
-              <AnnouncementSkeleton />
-            </div>
+            <div key={i} className="mb-6 break-inside-avoid"><AnnouncementSkeleton /></div>
           ))}
         </div>
       ) : filteredAnnouncements.length === 0 ? (
-        <EmptyState 
+        <EmptyState
           icon={Megaphone}
           title="No matching notices"
           description="There are currently no announcements under this category."
           action={
             selectedTag !== "All" && (
-              <button 
+              <button
                 onClick={() => setSelectedTag("All")}
                 className="mt-6 text-xs font-black uppercase tracking-widest text-[#800000] dark:text-red-400 hover:underline"
               >
@@ -269,6 +602,7 @@ function AnnouncementBoard({ channelId }) {
         </div>
       )}
 
+      {/* Create modal */}
       {createPortal(
         <CreateAnnouncementModal
           isOpen={isModalOpen}
@@ -278,7 +612,7 @@ function AnnouncementBoard({ channelId }) {
         document.body
       )}
 
-      {/* ── Fullscreen Image Lightbox ─────────────────────────────────────── */}
+      {/* Fullscreen Lightbox */}
       {lightboxImage && createPortal(
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 backdrop-blur-xl soft-enter cursor-zoom-out"
@@ -294,7 +628,7 @@ function AnnouncementBoard({ channelId }) {
           <img
             src={lightboxImage}
             alt="Full view"
-            className="h-auto max-h-[90vh] w-auto max-w-[95vw] rounded-2xl shadow-2xl transition-transform duration-500"
+            className="h-auto max-h-[90vh] w-auto max-w-[95vw] rounded-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
         </div>,
@@ -303,122 +637,5 @@ function AnnouncementBoard({ channelId }) {
     </section>
   );
 }
-
-/** ── Integrated Detail View ────────────────────────────────────────────── */
-function AnnouncementDetailHero({ notice, onClose, onImageClick }) {
-  const getPriorityStyle = (priorityText) => {
-    if (!priorityText) return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
-    const p = priorityText.trim().toLowerCase();
-    if (p.includes("urgent")) return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800";
-    if (p.includes("important")) return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800";
-    if (p.includes("fyi") || p.includes("notice")) return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800";
-    return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
-  };
-
-  const dateObj = notice.created_at ? new Date(notice.created_at) : null;
-  const postedAt =
-    dateObj && !isNaN(dateObj)
-      ? dateObj.toLocaleDateString("en-PH", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-      : "—";
-
-  return (
-    <div className="relative w-full h-full overflow-hidden rounded-[32px] sm:rounded-[48px] bg-white dark:bg-slate-900 shadow-[0_32px_128px_rgba(0,0,0,0.5)] flex flex-col md:flex-row soft-rise">
-      {/* Hero Visual Area (Left/Top) */}
-      <div className="relative h-[300px] w-full shrink-0 md:h-full md:w-[40%] lg:w-[45%] overflow-hidden bg-slate-900 dark:bg-black">
-        {notice.image_url ? (
-          <img
-            src={notice.image_url}
-            className="h-full w-full object-cover cursor-zoom-in"
-            alt=""
-            onClick={() => onImageClick(notice.image_url)}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
-            <Megaphone size={80} className="text-white/10" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 md:from-transparent to-transparent pointer-events-none" />
-
-        {/* Tag on Image (Mobile only or just for flair) */}
-        <div className="absolute bottom-6 left-6 md:hidden">
-          <span className="rounded-xl bg-[#800000] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-xl">
-            {notice.tag}
-          </span>
-        </div>
-      </div>
-
-      {/* Content Area (Right/Bottom) */}
-      <div className="relative flex flex-1 flex-col overflow-hidden bg-white dark:bg-slate-900">
-        {/* Header Action Bar */}
-        <header className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 px-8 py-6 md:px-12">
-          <div className="hidden md:flex gap-3">
-            <span className="rounded-xl bg-[#800000]/10 dark:bg-[#800000]/20 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#800000] dark:text-red-400">
-              {notice.tag}
-            </span>
-            <span className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${getPriorityStyle(notice.priority)} ring-1 ring-inset`}>
-              <Flag size={12} />
-              {notice.priority}
-            </span>
-          </div>
-          <button
-            onClick={onClose}
-            className="ml-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white transition-all hover:bg-[#800000] hover:text-white"
-            aria-label="Close Notice"
-          >
-            <X size={24} />
-          </button>
-        </header>
-
-        {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto px-8 py-10 md:px-16 md:py-14 no-scrollbar">
-          <div className="max-w-3xl">
-            <div className="mb-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-              {notice.unit && (
-                <span className="inline-flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-[#800000] dark:text-red-500" />
-                  {notice.unit}
-                </span>
-              )}
-              <span className="inline-flex items-center gap-2">
-                <CalendarDays size={16} />
-                {postedAt}
-              </span>
-            </div>
-
-            <h1 className="mb-8 text-3xl font-black leading-[1.2] tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
-              {notice.title}
-            </h1>
-
-            <div className="mb-10 h-1.5 w-20 rounded-full bg-[#800000]" />
-
-            <article className="prose prose-slate dark:prose-invert prose-lg lg:prose-xl max-w-none">
-              <p className="whitespace-pre-wrap font-medium leading-relaxed text-slate-600 dark:text-slate-400">
-                {notice.content || notice.excerpt}
-              </p>
-            </article>
-
-            <div className="mt-16 border-t border-slate-100 dark:border-slate-800 pt-10">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-[#800000] dark:text-red-400 font-black">
-                  <UserRound size={22} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Official Publisher</p>
-                  <p className="text-lg font-black text-slate-900 dark:text-white">{notice.author || "Institutional Admin"}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
 
 export default AnnouncementBoard;
