@@ -295,43 +295,69 @@ const SDGImpactDashboard = () => {
             </div>
           </div>
 
-          {/* Impact Leaders Chart */}
-          <div className="p-8 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 uppercase tracking-tight">Impact Leaders</h3>
-            <div className="h-[180px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart layout="vertical" data={data.leaders}>
-                  <XAxis type="number" hide />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    axisLine={false} 
-                    tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 800, fill: isDark ? "#94A3B8" : "#64748B" }} 
-                  />
-                  <Tooltip 
-                    cursor={{ fill: 'transparent' }}
-                  contentStyle={{
-                    borderRadius: '12px',
-                    border: 'none',
-                    backgroundColor: isDark ? "#0f172a" : "#ffffff",
-                    color: isDark ? "#e2e8f0" : "#0f172a",
-                    boxShadow: isDark
-                      ? '0 10px 25px rgba(0,0,0,0.5)'
-                      : '0 10px 25px rgba(0,0,0,0.1)'
-                  }}
-                  labelStyle={{ fontWeight: 800, color: isDark ? "#f8fafc" : "#0f172a" }}
-                  itemStyle={{ color: isDark ? "#cbd5e1" : "#334155" }}
-                  />
-                  <Bar dataKey="score" radius={[0, 8, 8, 0]}>
-                    {data.leaders.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+          {/* Impact Leaders — Podium */}
+          <div className="p-6 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Impact Leaders</h3>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-full px-2.5 py-1">Top Contributors</span>
             </div>
+
+            {!data.leaders || data.leaders.length === 0 ? (
+              <div className="flex h-[180px] items-center justify-center text-sm font-medium text-slate-400">
+                No contributors yet
+              </div>
+            ) : (() => {
+              const [first, second, third, ...rest] = data.leaders;
+              const maxScore = data.leaders[0]?.score || 1;
+
+              const podiumItem = (leader, rank) => {
+                const heights = { 1: 'h-24', 2: 'h-16', 3: 'h-12' };
+                const colors  = {
+                  1: 'bg-gradient-to-b from-amber-400 to-amber-500 shadow-amber-300/40',
+                  2: 'bg-gradient-to-b from-slate-300 to-slate-400 shadow-slate-300/40',
+                  3: 'bg-gradient-to-b from-orange-400 to-orange-500 shadow-orange-300/40',
+                };
+                const medals  = { 1: '🥇', 2: '🥈', 3: '🥉' };
+                if (!leader) return <div key={rank} className="flex-1" />;
+                return (
+                  <div key={rank} className="flex flex-1 flex-col items-center gap-2">
+                    <p className="text-xs font-black text-slate-700 dark:text-slate-200 truncate max-w-[64px] text-center">{leader.name}</p>
+                    <p className="text-[10px] font-bold text-slate-400">{leader.score} pts</p>
+                    <div className={`w-full ${heights[rank]} rounded-t-xl ${colors[rank]} shadow-lg flex items-end justify-center pb-2 text-lg`}>
+                      {medals[rank]}
+                    </div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">#{rank}</p>
+                  </div>
+                );
+              };
+
+              return (
+                <>
+                  {/* Podium columns: 2nd | 1st | 3rd */}
+                  <div className="flex items-end gap-2 mb-4">
+                    {podiumItem(second, 2)}
+                    {podiumItem(first, 1)}
+                    {podiumItem(third, 3)}
+                  </div>
+                  {/* 4th & 5th as a compact list */}
+                  {rest.length > 0 && (
+                    <div className="mt-2 space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+                      {rest.map((leader, i) => (
+                        <div key={leader.name} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-slate-400 w-4">#{i + 4}</span>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{leader.name}</span>
+                          </div>
+                          <span className="text-[11px] font-black text-slate-500">{leader.score} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
+
         </div>
       </div>
     </div>

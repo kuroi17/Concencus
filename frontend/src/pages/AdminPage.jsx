@@ -301,55 +301,148 @@ function AdminPage() {
               <SDGImpactDashboard />
             ) : (
               <section className="overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-200/40 dark:shadow-black/40">
-                <div className="overflow-x-auto no-scrollbar">
-                  {adminView === "users" ? (
-                    <table className="w-full min-w-[860px] text-left">
-                      <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                        <tr>
-                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Identity</th>
-                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">SR Code</th>
-                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Block</th>
-                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Governance Role</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {isLoadingUsers ? (
-                          <LoadingRows cols={4} />
-                        ) : filteredUsers.length === 0 ? (
-                          <EmptyRows label="No users matched your search" cols={4} />
-                        ) : (
-                          filteredUsers.map((user) => (
-                            <UserRow key={user.id} user={user} isSelf={profile?.id === user.id} isSaving={savingIds.includes(user.id)} onRoleChange={updateUserRole} />
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <table className="w-full min-w-[860px] text-left">
-                      <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                        <tr>
-                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Proposal Title</th>
-                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Channel</th>
-                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Author</th>
-                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {isLoadingProposals ? (
-                          <LoadingRows cols={4} />
-                        ) : filteredProposals.length === 0 ? (
-                          <EmptyRows label="No proposals found" cols={4} />
-                        ) : (
-                          filteredProposals.map((p) => (
-                            <ProposalRow key={p.id} p={p} />
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
+                {adminView === "users" ? (
+                  <>
+                    {/* Mobile card view */}
+                    <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                      {isLoadingUsers ? (
+                        <div className="flex flex-col items-center gap-3 py-16">
+                          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-[#800000]" />
+                          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Syncing records...</p>
+                        </div>
+                      ) : filteredUsers.length === 0 ? (
+                        <div className="flex flex-col items-center gap-4 py-16">
+                          <p className="text-sm font-black text-slate-900 dark:text-white uppercase">No users found</p>
+                        </div>
+                      ) : filteredUsers.map((user) => (
+                        <div key={user.id} className="flex items-center gap-3 p-4">
+                          <div className="relative shrink-0">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-sm font-black text-white shadow-md">
+                              {user.full_name?.[0]}
+                            </div>
+                            {user.campus_role === "admin" && (
+                              <div className="absolute -right-1 -top-1 rounded-full bg-amber-400 p-0.5 text-slate-900 ring-2 ring-white dark:ring-slate-900">
+                                <ShieldCheck size={9} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-black text-slate-900 dark:text-white truncate">
+                              {user.full_name}
+                              {profile?.id === user.id && <span className="ml-1.5 rounded-full bg-[#800000]/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-[#800000]">You</span>}
+                            </p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{user.sr_code || "—"} · {user.block || "—"}</p>
+                          </div>
+                          <select
+                            value={user.campus_role}
+                            onChange={(e) => updateUserRole(user.id, e.target.value)}
+                            disabled={savingIds.includes(user.id) || profile?.id === user.id}
+                            className="shrink-0 appearance-none rounded-xl border-none bg-slate-100 dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 outline-none ring-1 ring-slate-200 dark:ring-slate-700 disabled:opacity-50"
+                          >
+                            {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Desktop table view */}
+                    <div className="hidden md:block overflow-x-auto no-scrollbar">
+                      <table className="w-full min-w-[700px] text-left">
+                        <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                          <tr>
+                            <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Identity</th>
+                            <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">SR Code</th>
+                            <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Block</th>
+                            <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Governance Role</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {isLoadingUsers ? (
+                            <LoadingRows cols={4} />
+                          ) : filteredUsers.length === 0 ? (
+                            <EmptyRows label="No users matched your search" cols={4} />
+                          ) : (
+                            filteredUsers.map((user) => (
+                              <UserRow key={user.id} user={user} isSelf={profile?.id === user.id} isSaving={savingIds.includes(user.id)} onRoleChange={updateUserRole} />
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Mobile card view */}
+                    <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                      {isLoadingProposals ? (
+                        <div className="flex flex-col items-center gap-3 py-16">
+                          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-[#800000]" />
+                          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Loading proposals...</p>
+                        </div>
+                      ) : filteredProposals.length === 0 ? (
+                        <div className="flex flex-col items-center gap-4 py-16">
+                          <p className="text-sm font-black text-slate-900 dark:text-white uppercase">No proposals found</p>
+                        </div>
+                      ) : filteredProposals.map((p) => {
+                        const statusStyles = {
+                          Pending: "bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700",
+                          Approved: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30",
+                          Implemented: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30",
+                          Rejected: "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/30",
+                        };
+                        return (
+                          <div key={p.id} className="p-4 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm font-black text-slate-900 dark:text-white line-clamp-2 flex-1">{p.title}</p>
+                              <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest border ${statusStyles[p.status] || statusStyles.Pending}`}>
+                                {p.status === "Pending" || p.status === "Under Review" ? <Clock size={9} /> : p.status === "Rejected" ? <ShieldAlert size={9} /> : <CheckCircle size={9} />}
+                                {p.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <span className="bg-slate-100 dark:bg-slate-800 rounded-lg px-2 py-0.5">{p.channel?.name}</span>
+                              <span>·</span>
+                              <div className="flex items-center gap-1.5">
+                                <div className="h-5 w-5 rounded-full bg-[#800000]/10 flex items-center justify-center text-[9px] font-black text-[#800000]">
+                                  {p.author?.full_name?.[0]}
+                                </div>
+                                {p.author?.full_name}
+                              </div>
+                              <span>·</span>
+                              <span>{new Date(p.created_at).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Desktop table view */}
+                    <div className="hidden md:block overflow-x-auto no-scrollbar">
+                      <table className="w-full min-w-[700px] text-left">
+                        <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                          <tr>
+                            <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Proposal Title</th>
+                            <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Channel</th>
+                            <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Author</th>
+                            <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {isLoadingProposals ? (
+                            <LoadingRows cols={4} />
+                          ) : filteredProposals.length === 0 ? (
+                            <EmptyRows label="No proposals found" cols={4} />
+                          ) : (
+                            filteredProposals.map((p) => (
+                              <ProposalRow key={p.id} p={p} />
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
               </section>
             )}
+
           </motion.div>
         </AnimatePresence>
       </motion.div>
