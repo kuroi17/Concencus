@@ -1,18 +1,9 @@
 import { createPortal } from 'react-dom';
-
 import { useState } from 'react';
 import {
-    ChevronDown,
-    ChevronLeft,
-    ChevronRight,
-    GraduationCap,
-    BookOpen,
-    LayoutGrid,
-    Users,
-    Plus,
-    Pencil,
-    Trash2,
-    X,
+    ChevronDown, ChevronLeft, ChevronRight,
+    GraduationCap, BookOpen, LayoutGrid, Users,
+    Plus, Pencil, Trash2, X,
 } from 'lucide-react';
 import { useChannel } from '../../context/useChannel';
 import { useUser } from '../../context/UserContext';
@@ -20,6 +11,7 @@ import SidebarLogoutAction from '../../common/SidebarLogoutAction';
 import { useNavigate } from 'react-router-dom';
 import ChannelFormModal from './ChannelFormModal';
 import CategoryFormModal from './CategoryFormModal';
+import ConcensusLogo from './ConcensusLogo';
 
 const categoryIcons = {
     colleges: GraduationCap,
@@ -86,14 +78,14 @@ function ChannelSidebar({
                 className="hidden lg:flex flex-col items-center border-r border-slate-200/60 bg-white/80 dark:border-slate-800/60 dark:bg-slate-950/90 py-6 backdrop-blur-xl lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:overflow-x-hidden no-scrollbar transition-all duration-300"
                 aria-label="Channel sidebar (collapsed)"
             >
-                <button
-                    type="button"
-                    onClick={toggleCollapse}
-                    className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-900/20 transition-all hover:scale-110 active:scale-95 dark:bg-slate-100 dark:text-slate-900"
-                    aria-label="Expand sidebar"
-                >
-                    <ChevronRight size={18} />
-                </button>
+                    <button
+                        type="button"
+                        onClick={toggleCollapse}
+                        className="mb-6 flex h-11 w-11 items-center justify-center rounded-2xl bg-white dark:bg-slate-900 shadow-md ring-1 ring-slate-200 dark:ring-slate-700 transition-all hover:scale-110 active:scale-95"
+                        aria-label="Expand sidebar"
+                    >
+                        <ConcensusLogo size={28} className="rounded-lg" />
+                    </button>
 
                 <nav className="flex flex-1 flex-col items-center gap-4">
                     {loadingChannels ? (
@@ -157,17 +149,24 @@ function ChannelSidebar({
     return (
         <>
             <aside
-                className="flex h-full max-h-screen sticky top-0 flex-col bg-white/80 dark:bg-slate-950/90 px-4 py-6 backdrop-blur-xl transition-all duration-300"
+                className="flex h-full max-h-screen sticky top-0 flex-col bg-white/90 dark:bg-slate-950/95 px-4 py-5 backdrop-blur-xl transition-all duration-300 border-r border-slate-200/60 dark:border-slate-800/60"
                 aria-label="Channel sidebar"
             >
-                {/* Header */}
-                <div className="mb-8">
+                {/* ── Brand header ─────────────────────────────── */}
+                <div className="mb-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="m-0 text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
-                            Channels
-                        </h2>
+                        {/* Logo + wordmark */}
+                        <div className="flex items-center gap-2.5">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-white dark:bg-slate-800 shadow-md ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden">
+                                <ConcensusLogo size={26} />
+                            </div>
+                            <div>
+                                <span className="text-base font-black tracking-tight text-slate-900 dark:text-white">Concensus</span>
+                                <div className="h-0.5 w-full rounded-full bg-gradient-to-r from-[#800000] to-transparent mt-0.5" />
+                            </div>
+                        </div>
+
                         <div className="flex items-center gap-1">
-                            {/* Mobile Close Button */}
                             <button
                                 onClick={onCloseMobile}
                                 className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 lg:hidden"
@@ -175,18 +174,6 @@ function ChannelSidebar({
                             >
                                 <X size={16} />
                             </button>
-
-                            {/* Add category — disabled for now */}
-                            {/* {isAdmin && (
-                                <button
-                                onClick={() => setCategoryModal({ mode: "create" })}
-                                className="hidden lg:flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-teal-50 hover:text-teal-600 transition-all"
-                                title="Add category"
-                                >
-                                <Plus size={15} />
-                                </button>
-                            )} */}
-
                             {onCollapseChange && (
                                 <button
                                     type="button"
@@ -199,7 +186,12 @@ function ChannelSidebar({
                             )}
                         </div>
                     </div>
-                    <div className="mt-2 h-1 w-8 rounded-full bg-[#800000]" />
+
+                    {/* Channel label */}
+                    <div className="mt-5 flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Channels</span>
+                        <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                    </div>
                 </div>
 
                 {/* Category accordion */}
@@ -379,8 +371,27 @@ function ChannelSidebar({
                     )}
                 </nav>
 
-                <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-4">
-                    <SidebarLogoutAction />
+                {/* ── User mini-card ───────────────────────────── */}
+                <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">
+                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 dark:bg-slate-900 px-3 py-2.5">
+                        {/* Avatar */}
+                        {profile?.avatar_url ? (
+                            <img src={profile.avatar_url} alt="avatar" className="h-9 w-9 shrink-0 rounded-xl object-cover" />
+                        ) : (
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#800000] to-[#b00000] text-xs font-black text-white">
+                                {profile?.full_name?.split(" ").slice(0,2).map(w => w[0]).join("") || "ME"}
+                            </div>
+                        )}
+                        {/* Info */}
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-bold text-slate-900 dark:text-white">{profile?.full_name || "User"}</p>
+                            <span className="inline-block rounded-md bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#800000] dark:text-red-400">
+                                {profile?.campus_role || "student"}
+                            </span>
+                        </div>
+                        {/* Logout */}
+                        <SidebarLogoutAction compact />
+                    </div>
                 </div>
             </aside>
 
