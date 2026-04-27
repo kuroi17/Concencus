@@ -1,11 +1,19 @@
-import React, { useState, createContext, useContext } from "react";
+import React, { useState, createContext, useContext, useCallback, useMemo } from "react";
 import ChannelSidebar from "../common/ChannelSidebar";
 import Header from "../../common/Header";
 import ChatWidget from "../ChatComponents/ChatWidget";
 
 const LayoutContext = createContext();
 
-export const useLayout = () => useContext(LayoutContext);
+const fallbackLayoutContext = {
+  isMobileMenuOpen: false,
+  setIsMobileMenuOpen: () => {},
+  toggleMobileMenu: () => {},
+  closeMobileMenu: () => {},
+  setGlobalBackdropVisible: () => {}
+};
+
+export const useLayout = () => useContext(LayoutContext) || fallbackLayoutContext;
 
 /**
  * MainLayout — Unified shell for the application.
@@ -16,10 +24,11 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot, f
   const [activeBackdrops, setActiveBackdrops] = useState({});
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-  const setGlobalBackdropVisible = (id, isVisible) => {
+  const setGlobalBackdropVisible = useCallback((id, isVisible) => {
     if (!id) return;
     setActiveBackdrops((prev) => {
       if (isVisible) {
+        if (prev[id]) return prev;
         return { ...prev, [id]: true };
       }
       if (!prev[id]) return prev;
@@ -27,7 +36,7 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot, f
       delete next[id];
       return next;
     });
-  };
+  }, []);
 
   const renderSidebar = (slot) => (
     <>
@@ -54,13 +63,14 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot, f
     </>
   );
 
-  const layoutValue = {
+  const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), []);
+  const layoutValue = useMemo(() => ({
     isMobileMenuOpen,
     setIsMobileMenuOpen,
     toggleMobileMenu,
-    closeMobileMenu: () => setIsMobileMenuOpen(false),
+    closeMobileMenu,
     setGlobalBackdropVisible
-  };
+  }), [isMobileMenuOpen, closeMobileMenu, setGlobalBackdropVisible]);
   const hasGlobalBackdrop = forceBackdrop || Object.keys(activeBackdrops).length > 0;
 
   const renderContent = () => {
@@ -131,7 +141,7 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot, f
     <LayoutContext.Provider value={layoutValue}>
       {renderContent()}
       {hasGlobalBackdrop && (
-        <div className="pointer-events-none fixed inset-0 z-[95] bg-slate-900/60 backdrop-blur-md" />
+        <div className="pointer-events-none fixed inset-0 z-[90] bg-slate-900/60 backdrop-blur-md" />
       )}
     </LayoutContext.Provider>
   );
