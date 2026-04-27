@@ -223,21 +223,19 @@ function ProfilePage() {
 
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div className="min-w-0">
-                  <h2 className="m-0 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-                    {isLoading ? "Loading profile..." : profile?.full_name}
+                  <h2 className="m-0 text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+                    {isLoading ? "Loading profile…" : profile?.full_name}
                   </h2>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center rounded-lg bg-red-50 dark:bg-red-900/20 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[#800000] dark:text-red-400 ring-1 ring-inset ring-red-100 dark:ring-red-900/30">
-                      {isLoading ? "..." : profile?.campus_role || "student"}
+                      {isLoading ? "…" : profile?.campus_role || "student"}
                     </span>
-                    <span className="text-sm text-slate-500">•</span>
+                    <span className="text-sm text-slate-400">·</span>
                     <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">
-                      Digital Governance ID for BatStateU
+                      BatStateU Governance Platform
                     </p>
                   </div>
                 </div>
-
-               
               </div>
             </div>
           </section>
