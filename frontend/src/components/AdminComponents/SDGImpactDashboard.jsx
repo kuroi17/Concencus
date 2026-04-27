@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { SDGs, CORE_SDGS, getSDGById } from '../../common/SDGConstants';
 import { supabase } from '../../lib/supabaseClient';
+import { useTheme } from '../../context/ThemeContext';
 import { 
   BarChart, 
   Bar, 
@@ -20,6 +21,8 @@ import {
 } from 'lucide-react';
 
 const SDGImpactDashboard = () => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
     distribution: [],
@@ -223,22 +226,35 @@ const SDGImpactDashboard = () => {
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.distribution}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke={isDark ? "#334155" : "#E2E8F0"}
+                />
                 <XAxis 
                   dataKey="name" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }} 
+                  tick={{ fontSize: 10, fontWeight: 800, fill: isDark ? "#94A3B8" : "#64748B" }} 
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }} 
+                  tick={{ fontSize: 10, fontWeight: 800, fill: isDark ? "#94A3B8" : "#64748B" }} 
                 />
                 <Tooltip 
-                  cursor={{ fill: '#F8FAFC' }}
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
-                  labelStyle={{ fontWeight: 800 }}
+                  cursor={{ fill: isDark ? "rgba(51,65,85,0.25)" : "#F8FAFC" }}
+                  contentStyle={{
+                    borderRadius: '16px',
+                    border: 'none',
+                    backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                    color: isDark ? "#e2e8f0" : "#0f172a",
+                    boxShadow: isDark
+                      ? '0 10px 25px rgba(0,0,0,0.5)'
+                      : '0 10px 25px rgba(0,0,0,0.1)'
+                  }}
+                  labelStyle={{ fontWeight: 800, color: isDark ? "#f8fafc" : "#0f172a" }}
+                  itemStyle={{ color: isDark ? "#cbd5e1" : "#334155" }}
                 />
                 <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                   {data.distribution.map((entry, index) => {
@@ -291,11 +307,21 @@ const SDGImpactDashboard = () => {
                     type="category" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }} 
+                  tick={{ fontSize: 10, fontWeight: 800, fill: isDark ? "#94A3B8" : "#64748B" }} 
                   />
                   <Tooltip 
                     cursor={{ fill: 'transparent' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                  contentStyle={{
+                    borderRadius: '12px',
+                    border: 'none',
+                    backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                    color: isDark ? "#e2e8f0" : "#0f172a",
+                    boxShadow: isDark
+                      ? '0 10px 25px rgba(0,0,0,0.5)'
+                      : '0 10px 25px rgba(0,0,0,0.1)'
+                  }}
+                  labelStyle={{ fontWeight: 800, color: isDark ? "#f8fafc" : "#0f172a" }}
+                  itemStyle={{ color: isDark ? "#cbd5e1" : "#334155" }}
                   />
                   <Bar dataKey="score" radius={[0, 8, 8, 0]}>
                     {data.leaders.map((entry, index) => (
