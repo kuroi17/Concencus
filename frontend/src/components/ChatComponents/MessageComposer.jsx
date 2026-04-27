@@ -1,9 +1,7 @@
 import { useRef, useState } from "react";
-import { Send, Image, Paperclip, X, Smile } from "lucide-react";
+import { Send, Image, X, Smile } from "lucide-react";
 import { uploadPublicImage } from "../../lib/storage";
 import { useUser } from "../../context/UserContext";
-
-const POPULAR_EMOJIS = ["😀", "😂", "🥰", "😎", "🤔", "👍", "🔥", "✨"];
 
 function MessageComposer({ onSendMessage, disabled = false }) {
   const [draft, setDraft] = useState("");
@@ -128,7 +126,7 @@ function MessageComposer({ onSendMessage, disabled = false }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="overflow-hidden rounded-[24px] border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all focus-within:border-[#800000]/30 dark:focus-within:border-red-900/30 focus-within:shadow-[0_12px_40px_rgba(15,23,42,0.12)]"
+      className="overflow-visible rounded-[24px] border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all focus-within:border-[#800000]/30 dark:focus-within:border-red-900/30 focus-within:shadow-[0_12px_40px_rgba(15,23,42,0.12)]"
       aria-label="Message composer"
     >
       {sendError && (
@@ -221,15 +219,15 @@ function MessageComposer({ onSendMessage, disabled = false }) {
               {showEmojiPicker && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
-                  <div className="absolute bottom-full left-0 mb-4 z-50 w-[280px] rounded-[24px] border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.2)] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-200">
-                    <p className="mb-3 px-1 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Expressions</p>
-                    <div className="grid grid-cols-4 gap-2">
+                  <div className="absolute bottom-full left-0 mb-2 z-50 w-[220px] rounded-[20px] border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-200 sm:left-auto sm:right-0">
+                    <p className="mb-2 px-1 text-[9px] font-black uppercase tracking-[0.15em] text-slate-400">Expressions</p>
+                    <div className="grid grid-cols-6 gap-1">
                       {POPULAR_EMOJIS.map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
                           onClick={() => addEmoji(emoji)}
-                          className="flex h-11 w-11 items-center justify-center rounded-[14px] text-2xl transition-all hover:bg-[#800000]/5 dark:hover:bg-white/5 hover:scale-110 hover:rotate-3 active:scale-95"
+                          className="flex h-8 w-8 items-center justify-center rounded-[10px] text-lg transition-all hover:bg-[#800000]/5 dark:hover:bg-white/5 hover:scale-105 active:scale-95"
                         >
                           {emoji}
                         </button>
