@@ -10,11 +10,24 @@ export const useLayout = () => useContext(LayoutContext);
 /**
  * MainLayout — Unified shell for the application.
  */
-export default function MainLayout({ children, title, searchSlot, sidebarSlot }) {
+export default function MainLayout({ children, title, searchSlot, sidebarSlot, forceBackdrop = false }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeBackdrops, setActiveBackdrops] = useState({});
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const setGlobalBackdropVisible = (id, isVisible) => {
+    if (!id) return;
+    setActiveBackdrops((prev) => {
+      if (isVisible) {
+        return { ...prev, [id]: true };
+      }
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
 
   const renderSidebar = (slot) => (
     <>
@@ -45,8 +58,10 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot })
     isMobileMenuOpen,
     setIsMobileMenuOpen,
     toggleMobileMenu,
-    closeMobileMenu: () => setIsMobileMenuOpen(false)
+    closeMobileMenu: () => setIsMobileMenuOpen(false),
+    setGlobalBackdropVisible
   };
+  const hasGlobalBackdrop = forceBackdrop || Object.keys(activeBackdrops).length > 0;
 
   const renderContent = () => {
     // For chat page, show custom sidebar if provided
@@ -115,6 +130,9 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot })
   return (
     <LayoutContext.Provider value={layoutValue}>
       {renderContent()}
+      {hasGlobalBackdrop && (
+        <div className="pointer-events-none fixed inset-0 z-[95] bg-slate-900/60 backdrop-blur-md" />
+      )}
     </LayoutContext.Provider>
   );
 }
