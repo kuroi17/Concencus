@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Send, Image, X, Smile } from "lucide-react";
 import { uploadPublicImage } from "../../lib/storage";
 import { useUser } from "../../context/UserContext";
@@ -10,8 +11,24 @@ function MessageComposer({ onSendMessage, disabled = false }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [pickerStyle, setPickerStyle] = useState({});
   const textareaRef = useRef(null);
+  const emojiButtonRef = useRef(null);
   const { user } = useUser();
+
+  const handleTogglePicker = () => {
+    if (!showEmojiPicker && emojiButtonRef.current) {
+      const rect = emojiButtonRef.current.getBoundingClientRect();
+      const pickerWidth = 228;
+      const pickerHeight = 200; // approx
+      // Prefer opening above the button
+      const spaceAbove = rect.top;
+      const left = Math.max(8, Math.min(rect.left, window.innerWidth - pickerWidth - 8));
+      const bottom = window.innerHeight - rect.top + 8;
+      setPickerStyle({ position: "fixed", bottom, left, zIndex: 9999, width: pickerWidth });
+    }
+    setShowEmojiPicker((v) => !v);
+  };
 
   const handleChange = (e) => {
     setDraft(e.target.value);
@@ -208,18 +225,22 @@ function MessageComposer({ onSendMessage, disabled = false }) {
             
             <div className="relative">
               <button
+                ref={emojiButtonRef}
                 type="button"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                onClick={handleTogglePicker}
                 className={`group inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-800/50 transition-all hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 ${showEmojiPicker ? "ring-2 ring-[#800000]/20 border-[#800000]" : ""}`}
                 title="Add emoji"
               >
                 <Smile size={18} className={`${showEmojiPicker ? "text-[#800000]" : "text-slate-400"} transition-colors group-hover:text-[#800000]`} />
               </button>
 
-              {showEmojiPicker && (
+              {showEmojiPicker && createPortal(
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
-                  <div className="absolute bottom-full left-0 mb-2 z-50 w-[220px] rounded-[20px] border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-200 sm:left-auto sm:right-0">
+                  <div className="fixed inset-0 z-[9998]" onClick={() => setShowEmojiPicker(false)} />
+                  <div
+                    style={pickerStyle}
+                    className="rounded-[20px] border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-200"
+                  >
                     <p className="mb-2 px-1 text-[9px] font-black uppercase tracking-[0.15em] text-slate-400">Expressions</p>
                     <div className="grid grid-cols-6 gap-1">
                       {POPULAR_EMOJIS.map((emoji) => (
@@ -234,7 +255,8 @@ function MessageComposer({ onSendMessage, disabled = false }) {
                       ))}
                     </div>
                   </div>
-                </>
+                </>,
+                document.body
               )}
             </div>
           </div>
