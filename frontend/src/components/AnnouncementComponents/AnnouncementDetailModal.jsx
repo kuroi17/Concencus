@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { X, CalendarDays, ShieldCheck, Megaphone, Flag, UserRound, Trash2 } from "lucide-react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
+import { useEffect } from "react";
+import { useLayout } from "../layouts/MainLayout";
 
 const getPriorityStyle = (priorityText) => {
   if (!priorityText) return "bg-slate-100 text-slate-600 border-slate-200";
@@ -12,10 +14,15 @@ const getPriorityStyle = (priorityText) => {
 };
 
 function AnnouncementDetailModal({ isOpen, onClose, notice, isAdmin, onDelete }) {
+  const { setGlobalBackdropVisible } = useLayout();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEscapeKey(Boolean(isOpen && notice), onClose);
+  useEffect(() => {
+    setGlobalBackdropVisible("announcement-detail-modal", Boolean(isOpen && notice));
+    return () => setGlobalBackdropVisible("announcement-detail-modal", false);
+  }, [isOpen, notice, setGlobalBackdropVisible]);
 
   if (!isOpen || !notice) return null;
 
@@ -43,7 +50,7 @@ function AnnouncementDetailModal({ isOpen, onClose, notice, isAdmin, onDelete })
     >
       {/* Integrated Backdrop */}
       <div 
-        className={`absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity duration-500 ${
+        className={`absolute inset-0 transition-opacity duration-500 ${
           isOpen && notice ? "opacity-100" : "opacity-0"
         }`}
         onClick={onClose}
@@ -51,7 +58,7 @@ function AnnouncementDetailModal({ isOpen, onClose, notice, isAdmin, onDelete })
 
       {/* Modal Container */}
       <div
-        className={`relative w-full max-w-4xl overflow-hidden rounded-[40px] bg-white shadow-2xl transition-all duration-500 ease-out ${
+        className={`relative w-full max-w-4xl overflow-hidden rounded-[40px] bg-white dark:bg-slate-900 shadow-2xl transition-all duration-500 ease-out ${
           isOpen && notice ? "scale-100 opacity-100 translate-y-0" : "scale-95 opacity-0 translate-y-8"
         }`}
       >

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { useLayout } from "../layouts/MainLayout";
 
 function slugify(str) {
   return str.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -12,6 +13,7 @@ function slugWithSuffix(str) {
 }
 
 export default function ChannelFormModal({ initial, fixedCategory, categories, onSave, onClose }) {
+  const { setGlobalBackdropVisible } = useLayout();
   const [name, setName] = useState(initial?.name || "");
   const [description, setDescription] = useState(initial?.description || "");
   const [category, setCategory] = useState(initial?.category || fixedCategory || "");
@@ -53,8 +55,13 @@ export default function ChannelFormModal({ initial, fixedCategory, categories, o
     }
   };
 
+  useEffect(() => {
+    setGlobalBackdropVisible("channel-form-modal", true);
+    return () => setGlobalBackdropVisible("channel-form-modal", false);
+  }, [setGlobalBackdropVisible]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-black text-slate-900 dark:text-white">

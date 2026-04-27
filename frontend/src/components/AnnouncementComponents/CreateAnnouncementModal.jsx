@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Images, Trash2, GripVertical } from "lucide-react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 import SDGSelector from "../common/SDGSelector";
+import { useLayout } from "../layouts/MainLayout";
 
 const tags = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
 const priorities = ["FYI", "Normal", "Important", "Urgent"];
@@ -34,7 +35,7 @@ function MultiImageUploader({ images, onAdd, onRemove, onReorder, disabled }) {
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-semibold text-slate-700">
+      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
         Images
         <span className="ml-1.5 text-xs font-normal text-slate-400">(optional · first image = cover)</span>
       </label>
@@ -48,7 +49,7 @@ function MultiImageUploader({ images, onAdd, onRemove, onReorder, disabled }) {
               className={`relative group rounded-[10px] overflow-hidden border-2 transition-colors ${
                 index === 0
                   ? "border-[#7f1d1d] ring-2 ring-[#7f1d1d]/20"
-                  : "border-slate-200"
+                : "border-slate-200 dark:border-slate-700"
               }`}
               style={{ width: 80, height: 80 }}
               draggable={!disabled}
@@ -91,10 +92,10 @@ function MultiImageUploader({ images, onAdd, onRemove, onReorder, disabled }) {
 
           {/* Add more button */}
           {!disabled && (
-            <label className="flex flex-col items-center justify-center rounded-[10px] border-2 border-dashed border-slate-200 cursor-pointer hover:border-[#7f1d1d] hover:bg-[#7f1d1d]/5 transition-colors"
+            <label className="flex flex-col items-center justify-center rounded-[10px] border-2 border-dashed border-slate-200 dark:border-slate-700 cursor-pointer hover:border-[#7f1d1d] hover:bg-[#7f1d1d]/5 transition-colors"
               style={{ width: 80, height: 80 }}>
-              <Images size={18} className="text-slate-400" />
-              <span className="text-[9px] font-bold text-slate-400 mt-1">Add More</span>
+              <Images size={18} className="text-slate-400 dark:text-slate-500" />
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">Add More</span>
               <input
                 type="file"
                 accept="image/*"
@@ -110,11 +111,11 @@ function MultiImageUploader({ images, onAdd, onRemove, onReorder, disabled }) {
 
       {/* Empty drop zone */}
       {images.length === 0 && (
-        <label className="flex flex-col items-center justify-center gap-2 rounded-[10px] border-2 border-dashed border-slate-200 bg-slate-50 h-32 cursor-pointer hover:border-[#7f1d1d] hover:bg-[#7f1d1d]/5 transition-colors">
-          <Images size={24} className="text-slate-300" />
+        <label className="flex flex-col items-center justify-center gap-2 rounded-[10px] border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 h-32 cursor-pointer hover:border-[#7f1d1d] hover:bg-[#7f1d1d]/5 transition-colors">
+          <Images size={24} className="text-slate-300 dark:text-slate-600" />
           <div className="text-center">
-            <p className="text-xs font-semibold text-slate-500">Click to upload images</p>
-            <p className="text-[10px] text-slate-400">PNG, JPG, WEBP · Multiple allowed</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Click to upload images</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500">PNG, JPG, WEBP · Multiple allowed</p>
           </div>
           <input
             type="file"
@@ -128,7 +129,7 @@ function MultiImageUploader({ images, onAdd, onRemove, onReorder, disabled }) {
       )}
 
       {images.length > 0 && (
-        <p className="text-[10px] text-slate-400 font-medium">
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
           Drag thumbnails to reorder · First image is the cover shown on the card
         </p>
       )}
@@ -138,6 +139,7 @@ function MultiImageUploader({ images, onAdd, onRemove, onReorder, disabled }) {
 
 // ── Main Modal ────────────────────────────────────────────────────────────────
 function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
+  const { setGlobalBackdropVisible } = useLayout();
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [tag, setTag] = useState(tags[0]);
@@ -157,6 +159,10 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
   };
 
   useEscapeKey(Boolean(isOpen), onClose);
+  useEffect(() => {
+    setGlobalBackdropVisible("create-announcement-modal", isOpen);
+    return () => setGlobalBackdropVisible("create-announcement-modal", false);
+  }, [isOpen, setGlobalBackdropVisible]);
 
   if (!isOpen) return null;
 
@@ -212,7 +218,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Post announcement"
@@ -220,13 +226,13 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
         if (event.target === event.currentTarget) closeModal();
       }}
     >
-      <div className="soft-enter w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-[16px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.1)] no-scrollbar">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-bold text-slate-900">Post Announcement</h2>
+      <div className="soft-enter w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-[16px] bg-white dark:bg-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.1)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-slate-200 dark:border-slate-800 no-scrollbar">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-4">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Post Announcement</h2>
           <button
             type="button"
             onClick={closeModal}
-            className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300"
           >
             <X size={20} />
           </button>
@@ -235,7 +241,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
         <form onSubmit={handleSubmit} className="space-y-4 p-5">
           {/* Title */}
           <div>
-            <label htmlFor="announcement-title" className="mb-1.5 block text-sm font-semibold text-slate-700">
+            <label htmlFor="announcement-title" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
               Title
             </label>
             <input
@@ -244,14 +250,14 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter announcement title"
-              className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+              className="w-full rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d]"
               required
             />
           </div>
 
           {/* Message */}
           <div>
-            <label htmlFor="announcement-excerpt" className="mb-1.5 block text-sm font-semibold text-slate-700">
+            <label htmlFor="announcement-excerpt" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
               Message
             </label>
             <textarea
@@ -260,7 +266,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
               onChange={(e) => setExcerpt(e.target.value)}
               placeholder="Write your announcement details"
               rows={4}
-              className="w-full resize-none rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+              className="w-full resize-none rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d]"
               required
             />
           </div>
@@ -268,14 +274,14 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
           {/* Tag + Priority */}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="announcement-tag" className="mb-1.5 block text-sm font-semibold text-slate-700">
+              <label htmlFor="announcement-tag" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Tag
               </label>
               <select
                 id="announcement-tag"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
-                className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+                className="w-full rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d]"
               >
                 {tags.map((entry) => (
                   <option key={entry} value={entry}>{entry}</option>
@@ -283,14 +289,14 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
               </select>
             </div>
             <div>
-              <label htmlFor="announcement-priority" className="mb-1.5 block text-sm font-semibold text-slate-700">
+              <label htmlFor="announcement-priority" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Priority
               </label>
               <select
                 id="announcement-priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+                className="w-full rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d]"
               >
                 {priorities.map((entry) => (
                   <option key={entry} value={entry}>{entry}</option>
@@ -301,7 +307,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
 
           {/* Unit */}
           <div>
-            <label htmlFor="announcement-unit" className="mb-1.5 block text-sm font-semibold text-slate-700">
+            <label htmlFor="announcement-unit" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
               Unit / Office (optional)
             </label>
             <input
@@ -310,7 +316,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               placeholder="Example: CICS Student Affairs"
-              className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+              className="w-full rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d]"
             />
           </div>
 
@@ -333,7 +339,7 @@ function CreateAnnouncementModal({ isOpen, onClose, onSubmit }) {
             <button
               type="button"
               onClick={closeModal}
-              className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+              className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Cancel
             </button>

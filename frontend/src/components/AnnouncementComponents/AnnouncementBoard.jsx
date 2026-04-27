@@ -13,6 +13,7 @@ import { AnnouncementSkeleton } from "../../common/Skeleton";
 import { EmptyState } from "../../common/EmptyState";
 import SDGBadge from "../common/SDGBadge";
 import { linkifyText } from "../../common/linkifyText";
+import { useLayout } from "../layouts/MainLayout";
 
 // ── Tags + Priorities ─────────────────────────────────────────────────────────
 const TAGS = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
@@ -540,6 +541,7 @@ function AnnouncementDetailHero({ notice, onClose, onImageClick, isAdmin, onDele
 
 // ── Main Board ─────────────────────────────────────────────────────────────────
 function AnnouncementBoard({ channelId }) {
+  const { setGlobalBackdropVisible } = useLayout();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -549,6 +551,11 @@ function AnnouncementBoard({ channelId }) {
   const [lightboxImage, setLightboxImage] = useState(null);
   const [selectedTag, setSelectedTag] = useState("All");
   const { user, isAdmin } = useCurrentUserProfile();
+  useEffect(() => {
+    const hasModal = Boolean(isModalOpen || selectedAnnouncement || lightboxImage);
+    setGlobalBackdropVisible("announcement-board-modals", hasModal);
+    return () => setGlobalBackdropVisible("announcement-board-modals", false);
+  }, [isModalOpen, selectedAnnouncement, lightboxImage, setGlobalBackdropVisible]);
 
   const fetchAnnouncements = useCallback(async () => {
     if (!channelId) { setAnnouncements([]); setLoading(false); return; }
@@ -751,10 +758,7 @@ function AnnouncementBoard({ channelId }) {
       {/* Detail Hero (portal) */}
       {selectedAnnouncement && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 lg:p-12">
-          <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"
-            onClick={() => setSelectedAnnouncement(null)}
-          />
+          <div className="absolute inset-0" onClick={() => setSelectedAnnouncement(null)} />
           <div className="relative w-full max-w-6xl" style={{ height: "min(90vh, 700px)" }}>
             <AnnouncementDetailHero
               key={selectedAnnouncement.id}
@@ -819,7 +823,7 @@ function AnnouncementBoard({ channelId }) {
       {/* Fullscreen Lightbox */}
       {lightboxImage && createPortal(
         <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 backdrop-blur-xl soft-enter cursor-zoom-out"
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 soft-enter cursor-zoom-out"
           onClick={() => setLightboxImage(null)}
         >
           <button

@@ -5,6 +5,7 @@ import { Sparkles, User, LayoutGrid, ChevronRight, Check } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useUser } from "../../context/UserContext";
 import toast from "react-hot-toast";
+import { useLayout } from "../layouts/MainLayout";
 
 const steps = [
   {
@@ -28,6 +29,7 @@ const steps = [
 ];
 
 export default function OnboardingModal({ isOpen, onClose, userProfile }) {
+  const { setGlobalBackdropVisible } = useLayout();
   const { refreshProfile } = useUser();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,6 +58,10 @@ export default function OnboardingModal({ isOpen, onClose, userProfile }) {
       });
     }
   }, [isOpen]);
+  useEffect(() => {
+    setGlobalBackdropVisible("onboarding-modal", isOpen);
+    return () => setGlobalBackdropVisible("onboarding-modal", false);
+  }, [isOpen, setGlobalBackdropVisible]);
 
   if (!isOpen) return null;
 
@@ -120,7 +126,7 @@ export default function OnboardingModal({ isOpen, onClose, userProfile }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="w-full max-w-md overflow-hidden rounded-[24px] bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800">
         
         {/* Progress Bar */}

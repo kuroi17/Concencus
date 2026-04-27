@@ -1,12 +1,14 @@
 import { ImageUp, X } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
 import SDGSelector from "../common/SDGSelector";
+import { useLayout } from "../layouts/MainLayout";
 
 const MAX_IMAGES = 5;
 const tags = ["General", "Announcement", "Curriculum", "Feedback"];
 
 function CreatePostModal({ isOpen, onClose, onSubmit }) {
+  const { setGlobalBackdropVisible } = useLayout();
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [tag, setTag] = useState(tags[0]);
@@ -32,6 +34,10 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
   };
 
   useEscapeKey(isOpen, closeModal);
+  useEffect(() => {
+    setGlobalBackdropVisible("create-forum-post-modal", isOpen);
+    return () => setGlobalBackdropVisible("create-forum-post-modal", false);
+  }, [isOpen, setGlobalBackdropVisible]);
 
   if (!isOpen) return null;
 
@@ -73,7 +79,7 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Start discussion"
@@ -81,13 +87,13 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
         if (event.target === event.currentTarget) closeModal();
       }}
     >
-      <div className="soft-enter w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-[16px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.1)] no-scrollbar">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-bold text-slate-900">Start Discussion</h2>
+      <div className="soft-enter w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-[16px] bg-white dark:bg-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.1)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-slate-200 dark:border-slate-800 no-scrollbar">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-4">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Start Discussion</h2>
           <button
             type="button"
             onClick={closeModal}
-            className="rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 p-1"
+            className="rounded text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 p-1"
           >
             <X size={20} />
           </button>
@@ -96,7 +102,7 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
         <form onSubmit={handleSubmit} className="p-5">
           <div className="space-y-4">
             <div>
-              <label htmlFor="title" className="mb-1.5 block text-sm font-semibold text-slate-700">
+              <label htmlFor="title" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Title
               </label>
               <input
@@ -105,13 +111,13 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Keep it clear and descriptive"
-                className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+                className="w-full rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d]"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="excerpt" className="mb-1.5 block text-sm font-semibold text-slate-700">
+              <label htmlFor="excerpt" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Content
               </label>
               <textarea
@@ -120,21 +126,21 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
                 onChange={(e) => setExcerpt(e.target.value)}
                 placeholder="What's on your mind?"
                 rows={4}
-                className="w-full resize-none rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+                className="w-full resize-none rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d]"
                 required
               />
             </div>
 
             <div className="flex flex-col gap-4">
               <div className="flex-1">
-                <label htmlFor="tag" className="mb-1.5 block text-sm font-semibold text-slate-700">
+                <label htmlFor="tag" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Tag
                 </label>
                 <select
                   id="tag"
                   value={tag}
                   onChange={(e) => setTag(e.target.value)}
-                  className="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-[#7f1d1d]"
+                  className="w-full rounded-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none transition-colors focus:border-[#7f1d1d]"
                 >
                   {tags.map((t) => (
                     <option key={t} value={t}>
@@ -152,14 +158,14 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
 
             {/* ── Multi-Image Upload ─────────────────────────────────── */}
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Photos ({imageFiles.length}/{MAX_IMAGES})
               </label>
 
               <div
-                className={`rounded-[12px] border bg-white transition-colors ${
+                className={`rounded-[12px] border bg-white dark:bg-slate-900 transition-colors ${
                   isSubmitting ? "cursor-not-allowed opacity-70" : ""
-                } border-slate-300`}
+                } border-slate-300 dark:border-slate-700`}
               >
                 {/* Preview grid */}
                 {imagePreviews.length > 0 && (
@@ -167,14 +173,14 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
                     {imagePreviews.map((url, idx) => (
                       <div
                         key={url}
-                        className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[10px] border border-slate-200 bg-slate-100"
+                        className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[10px] border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800"
                       >
                         <img src={url} alt="" className="h-full w-full object-cover" />
                         {!isSubmitting && (
                           <button
                             type="button"
                             onClick={() => removeImage(idx)}
-                            className="absolute right-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-sm backdrop-blur transition-colors hover:bg-white hover:text-rose-600"
+                            className="absolute right-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 shadow-sm backdrop-blur transition-colors hover:bg-white dark:hover:bg-slate-800 hover:text-rose-600"
                             aria-label={`Remove image ${idx + 1}`}
                           >
                             <X size={12} />
@@ -188,8 +194,8 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
                 {/* Add button / dropzone */}
                 {imageFiles.length < MAX_IMAGES && (
                   <div
-                    className={`flex cursor-pointer items-center justify-center gap-2 px-4 py-3 text-center transition-colors hover:bg-slate-50 ${
-                      imagePreviews.length > 0 ? "border-t border-slate-200" : ""
+                    className={`flex cursor-pointer items-center justify-center gap-2 px-4 py-3 text-center transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                      imagePreviews.length > 0 ? "border-t border-slate-200 dark:border-slate-700" : ""
                     }`}
                     onClick={() => {
                       if (!isSubmitting) fileInputRef.current?.click();
@@ -213,10 +219,10 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
                       }
                     }}
                   >
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300">
                       <ImageUp size={16} />
                     </span>
-                    <span className="text-sm text-slate-600">
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
                       {imagePreviews.length === 0
                         ? "Add photos (up to 5)"
                         : `Add more (${MAX_IMAGES - imageFiles.length} remaining)`}
@@ -248,7 +254,7 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
                 onChange={(e) => setIsAnonymous(e.target.checked)}
                 className="h-4 w-4 rounded border-slate-300 text-[#7f1d1d] focus:ring-[#7f1d1d]"
               />
-              <label htmlFor="anonymous" className="text-sm text-slate-700">
+              <label htmlFor="anonymous" className="text-sm text-slate-700 dark:text-slate-300">
                 Post Anonymously (Hides author ID from public)
               </label>
             </div>
@@ -258,7 +264,7 @@ function CreatePostModal({ isOpen, onClose, onSubmit }) {
             <button
               type="button"
               onClick={closeModal}
-              className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+              className="rounded-[10px] px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Cancel
             </button>

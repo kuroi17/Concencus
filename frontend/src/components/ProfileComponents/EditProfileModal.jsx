@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import ImageDropzone from "../common/ImageDropzone";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
+import { useLayout } from "../layouts/MainLayout";
 
 function EditProfileModal({ isOpen, initialProfile, onClose, onSave }) {
+  const { setGlobalBackdropVisible } = useLayout();
   const [srCode, setSrCode] = useState("");
   const [block, setBlock] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
@@ -37,12 +39,16 @@ function EditProfileModal({ isOpen, initialProfile, onClose, onSave }) {
   };
 
   useEscapeKey(isOpen, closeModal);
+  useEffect(() => {
+    setGlobalBackdropVisible("edit-profile-modal", isOpen);
+    return () => setGlobalBackdropVisible("edit-profile-modal", false);
+  }, [isOpen, setGlobalBackdropVisible]);
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Edit profile"
