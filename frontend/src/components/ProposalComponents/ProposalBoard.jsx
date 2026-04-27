@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Plus, LayoutGrid } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import ProposalCard from "./ProposalCard";
@@ -396,8 +397,8 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
       />
 
       {/* Modern Confirmation Modal for Delete */}
-      {deletingProposalId && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      {deletingProposalId && createPortal(
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm overflow-hidden rounded-[24px] bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
             <h3 className="mb-2 text-lg font-black text-slate-900 dark:text-white">Delete Proposal?</h3>
             <p className="mb-6 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -418,12 +419,13 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modern Modal for Official Response */}
-      {respondingProposalId && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      {respondingProposalId && createPortal(
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md overflow-hidden rounded-[24px] bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
             <h3 className="mb-2 text-lg font-black text-slate-900 dark:text-white">Add Official Response</h3>
             <p className="mb-4 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -455,7 +457,8 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
