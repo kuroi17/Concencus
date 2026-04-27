@@ -127,7 +127,7 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot, f
         )}
 
         <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden">
-          <div className="shrink-0 px-4 sm:px-6 lg:px-8 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200/60 dark:border-slate-800/60">
+          <div className="shrink-0 px-4 sm:px-6 lg:px-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-40 border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm shadow-slate-900/5">
             <Header
               title={title}
               searchSlot={searchSlot}
@@ -135,7 +135,7 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot, f
             />
           </div>
 
-          <main className="flex-1 overflow-y-auto px-4 pb-8 sm:px-6 lg:px-8">
+          <main className="flex-1 overflow-y-auto px-4 pb-8 pt-2 sm:px-6 sm:pt-4 lg:px-8">
             {children}
           </main>
         </div>

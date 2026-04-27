@@ -194,51 +194,51 @@ function TransparencyPage() {
         className="mx-auto max-w-7xl space-y-12 py-10 px-4"
       >
         {/* Header Section */}
-        <header className="space-y-6 text-center">
+        <header className="space-y-4 text-center">
           <motion.div variants={itemVariants} className="inline-flex items-center gap-2 rounded-full bg-[#800000]/10 px-5 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#800000] border border-[#800000]/20">
             <Target size={14} />
             Institutional Accountability
           </motion.div>
-          <motion.h1 variants={itemVariants} className="text-5xl font-black tracking-tight text-slate-900 dark:text-white sm:text-7xl">
+          <motion.h1 variants={itemVariants} className="text-4xl font-black tracking-tight text-slate-900 dark:text-white sm:text-6xl">
             Transparency Hub
           </motion.h1>
-          <motion.p variants={itemVariants} className="mx-auto max-w-3xl text-lg font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+          <motion.p variants={itemVariants} className="mx-auto max-w-2xl text-base font-medium text-slate-500 dark:text-slate-400 leading-relaxed px-2">
             Every submission is a step toward a better campus. We track administrative responses 
             in real-time to ensure every student voice results in measurable impact.
           </motion.p>
         </header>
 
         {/* Top Metric Cards */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {METRICS.map((metric, i) => (
             <motion.div 
               key={metric.label}
               variants={itemVariants}
-              whileHover={{ y: -5 }}
-              className="relative overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-8 shadow-sm"
+              whileHover={{ y: -4 }}
+              className="relative overflow-hidden rounded-[24px] border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md p-6 shadow-sm"
             >
-              <div className={`mb-4 inline-flex rounded-2xl p-3 ${metric.bg} dark:bg-slate-800 ${metric.color}`}>
-                <metric.icon size={24} strokeWidth={2.5} />
+              <div className={`mb-3 inline-flex rounded-2xl p-2.5 ${metric.bg} dark:bg-slate-800 ${metric.color}`}>
+                <metric.icon size={20} strokeWidth={2.5} />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">{metric.label}</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-black text-slate-900 dark:text-white">{metric.value}</p>
-                  <ArrowUpRight size={16} className="text-emerald-500" />
+                  <p className="text-3xl font-black text-slate-900 dark:text-white">{metric.value}</p>
+                  <ArrowUpRight size={14} className="text-emerald-500" />
                 </div>
                 <p className="text-[10px] font-bold text-slate-400">{metric.trend}</p>
               </div>
-              <div className="absolute -right-6 -bottom-6 h-32 w-32 rounded-full bg-slate-50/50 dark:bg-slate-800/20" />
+              <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-slate-50/50 dark:bg-slate-800/20" />
             </motion.div>
           ))}
         </div>
 
         {/* Main Analytics Row */}
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Velocity Chart */}
           <motion.section 
             variants={itemVariants}
-            className="lg:col-span-2 rounded-[40px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-10 shadow-sm"
+            className="md:col-span-2 rounded-[28px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 lg:p-10 shadow-sm"
           >
             <div className="mb-8 flex items-center justify-between">
               <div>
@@ -290,7 +290,7 @@ function TransparencyPage() {
           {/* Success Rate Card */}
           <motion.section 
             variants={itemVariants}
-            className="rounded-[40px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-10 flex flex-col items-center justify-center text-center shadow-sm"
+            className="rounded-[28px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 lg:p-10 flex flex-col items-center justify-center text-center shadow-sm"
           >
             <h3 className="text-xl font-black text-slate-900 dark:text-white mb-8 uppercase tracking-tight">Impact Success Rate</h3>
             <div className="relative h-56 w-56">
@@ -336,9 +336,9 @@ function TransparencyPage() {
             </button>
           </div>
           
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {stats.sdgDistribution.length > 0 ? (
-              stats.sdgDistribution.slice(0, 3).map(sdg => (
+              stats.sdgDistribution.slice(0, 6).map(sdg => (
                 <div 
                   key={sdg.id} 
                   className="flex flex-col gap-6 rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-8 shadow-xl backdrop-blur-md overflow-hidden relative"

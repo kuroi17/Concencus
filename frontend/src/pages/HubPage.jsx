@@ -103,27 +103,33 @@ function HubPage() {
 
   return (
     <MainLayout>
-      <section className="mb-6 space-y-6 pt-4 sm:pt-6">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-             
-             
+      <section className="mb-6 space-y-5 pt-4 sm:pt-6">
+        {/* ── Channel hero header ─────────────────────────────── */}
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2 min-w-0">
+            {/* Category / breadcrumb chip */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#800000]/8 dark:bg-[#800000]/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#800000] dark:text-red-400 border border-[#800000]/15 dark:border-[#800000]/30">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#800000] dark:bg-red-400" />
+                Active Channel
+              </span>
             </div>
-            <h2 className="m-0 text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
+            <h2 className="m-0 text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl">
               {currentChannel.name}
             </h2>
-            <p className="max-w-2xl text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
-              {currentChannel.description}
+            <p className="max-w-xl text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+              {currentChannel.description || "Explore announcements, join the discussion, and submit proposals for this channel."}
             </p>
           </div>
 
-          <div className="shrink-0 self-start sm:self-center">
+          {/* Tab switcher — right-aligned on sm+ */}
+          <div className="shrink-0 self-start">
             <TabSwitcher view={view} onChangeView={setView} />
           </div>
         </header>
 
-        <div className="h-px w-full bg-gradient-to-r from-slate-200 via-slate-200 to-transparent dark:from-slate-800 dark:via-slate-800 dark:to-transparent" />
+        {/* Separator */}
+        <div className="h-px w-full bg-gradient-to-r from-[#800000]/20 via-slate-200 to-transparent dark:from-[#800000]/20 dark:via-slate-800 dark:to-transparent" />
 
         {view === "announcement" ? (
           <div className="soft-rise">

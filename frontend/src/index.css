@@ -1,10 +1,15 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── Brand tokens ──────────────────────────────────────────────── */
 :root {
+  --brand:        #800000;
+  --brand-light:  #a00000;
+  --brand-dim:    rgba(128,0,0,0.08);
+
   font-family: "Manrope", "Segoe UI", sans-serif;
   color: #0f172a;
   background-color: #f3f5f8;
@@ -16,12 +21,10 @@
   background-color: #020617;
 }
 
-* {
-  box-sizing: border-box;
-}
+/* ── Reset ─────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
 
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -31,39 +34,30 @@ body {
   scroll-behavior: smooth;
 }
 
+/* ── Global background ─────────────────────────────────────────── */
 body {
   min-height: 100vh;
   min-height: 100dvh;
   background:
-    radial-gradient(
-      circle at 15% 12%,
-      rgba(148, 163, 184, 0.2),
-      transparent 32%
-    ),
-    radial-gradient(
-      circle at 78% 6%,
-      rgba(226, 232, 240, 0.5),
-      transparent 34%
-    ),
-    linear-gradient(180deg, #f8f9fb 0%, #f2f4f7 100%);
+    radial-gradient(ellipse 80% 40% at 10% 0%, rgba(128,0,0,0.05), transparent),
+    radial-gradient(circle at 85% 8%, rgba(226, 232, 240, 0.5), transparent 34%),
+    linear-gradient(180deg, #f8f9fb 0%, #f1f3f7 100%);
   transition: background-color 0.3s ease;
 }
 
 body.dark {
-  background: 
-    radial-gradient(
-      circle at 15% 12%,
-      rgba(30, 41, 59, 0.4),
-      transparent 32%
-    ),
-    radial-gradient(
-      circle at 78% 6%,
-      rgba(15, 23, 42, 0.6),
-      transparent 34%
-    ),
-    linear-gradient(180deg, #020617 0%, #0f172a 100%);
+  background:
+    radial-gradient(ellipse 80% 40% at 10% 0%, rgba(128,0,0,0.07), transparent),
+    radial-gradient(circle at 85% 8%, rgba(15, 23, 42, 0.8), transparent 34%),
+    linear-gradient(180deg, #020617 0%, #0a0f1e 100%);
 }
 
+/* ── Display font for headings ─────────────────────────────────── */
+h1, h2, h3, .font-display {
+  font-family: "Outfit", "Manrope", sans-serif;
+}
+
+/* ── Page transition animations ───────────────────────────────── */
 .soft-enter {
   animation: soft-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -73,73 +67,69 @@ body.dark {
 }
 
 @keyframes soft-enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes soft-rise {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Custom Scrollbar Styles */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* ── Glow pulse for primary buttons ──────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(128,0,0,0.3); }
+  50%       { box-shadow: 0 0 0 8px rgba(128,0,0,0); }
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+.btn-brand-glow {
+  animation: pulse-glow 2.4s ease-in-out infinite;
 }
 
+/* ── Float animation for decorative elements ─────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+.float-slow { animation: float 6s ease-in-out infinite; }
+.float-medium { animation: float 4s ease-in-out infinite; }
+
+/* ── Scrollbars ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.3);
   border-radius: 10px;
   transition: background 0.2s ease;
 }
+::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+.dark ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.5); }
+.dark ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 0.7); }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.5);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(71, 85, 105, 0.7);
-}
-
-/* Firefox Support */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
 }
+.dark * { scrollbar-color: rgba(51, 65, 85, 0.5) transparent; }
 
-.dark * {
-  scrollbar-color: rgba(51, 65, 85, 0.5) transparent;
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Glassmorphism card utility ──────────────────────────────── */
+.glass-card {
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.5);
+}
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
-/* Existing no-scrollbar utilities */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* ── Focus ring override ─────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
