@@ -35,7 +35,7 @@ function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
           {/* Navigation & Search Slot */}
           <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
             {searchSlot && (
-              <div className="hidden xl:block w-full max-w-sm shrink-0">
+              <div className="hidden 2xl:block w-full max-w-sm shrink-0">
                 {searchSlot}
               </div>
             )}
@@ -96,7 +96,7 @@ function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
         </div>
       </div>
 
-      {searchSlot && <div className="xl:hidden pb-3 w-full">{searchSlot}</div>}
+      {searchSlot && <div className="2xl:hidden pb-3 w-full">{searchSlot}</div>}
     </header>
   );
 }
