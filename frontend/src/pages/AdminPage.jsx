@@ -201,7 +201,7 @@ function AdminPage() {
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="mx-auto flex w-full max-w-[1400px] flex-col gap-10 py-8 px-4"
+        className="mx-auto flex w-full max-w-none flex-col gap-8 py-6 px-1 sm:px-2"
       >
         {/* Premium Header */}
         <header className="relative overflow-hidden rounded-[40px] bg-slate-900 px-8 py-12 text-white shadow-2xl dark:shadow-black/40">
@@ -300,16 +300,16 @@ function AdminPage() {
             {adminView === "impact" ? (
               <SDGImpactDashboard />
             ) : (
-              <section className="overflow-hidden rounded-[40px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-200/40 dark:shadow-black/40">
+              <section className="overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-200/40 dark:shadow-black/40">
                 <div className="overflow-x-auto no-scrollbar">
                   {adminView === "users" ? (
-                    <table className="w-full text-left">
+                    <table className="w-full min-w-[960px] text-left">
                       <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                         <tr>
-                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Identity</th>
-                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">SR Code</th>
-                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Block</th>
-                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Governance Role</th>
+                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Identity</th>
+                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">SR Code</th>
+                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Block</th>
+                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Governance Role</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -325,13 +325,13 @@ function AdminPage() {
                       </tbody>
                     </table>
                   ) : (
-                    <table className="w-full text-left">
+                    <table className="w-full min-w-[960px] text-left">
                       <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                         <tr>
-                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Proposal Title</th>
-                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Channel</th>
-                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Author</th>
-                          <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status</th>
+                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Proposal Title</th>
+                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Channel</th>
+                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Author</th>
+                          <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -401,7 +401,7 @@ function UserRow({ user, isSelf, isSaving, onRoleChange }) {
       variants={itemVariants}
       className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
     >
-      <td className="px-10 py-5">
+      <td className="px-5 py-5 sm:px-7">
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-slate-900 text-[14px] font-black text-white shadow-lg shadow-slate-900/20">
@@ -422,9 +422,9 @@ function UserRow({ user, isSelf, isSaving, onRoleChange }) {
           </div>
         </div>
       </td>
-      <td className="px-10 py-5 text-xs font-black text-slate-600 dark:text-slate-400 tabular-nums">{user.sr_code || "—"}</td>
-      <td className="px-10 py-5 text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">{user.block || "—"}</td>
-      <td className="px-10 py-5">
+      <td className="px-5 py-5 text-xs font-black text-slate-600 dark:text-slate-400 tabular-nums sm:px-7">{user.sr_code || "—"}</td>
+      <td className="px-5 py-5 text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest sm:px-7">{user.block || "—"}</td>
+      <td className="px-5 py-5 sm:px-7">
         <div className="flex items-center gap-4">
           <div className="relative">
             <select
@@ -462,18 +462,18 @@ function ProposalRow({ p }) {
       variants={itemVariants}
       className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
     >
-      <td className="px-10 py-5">
+      <td className="px-5 py-5 sm:px-7">
         <div className="space-y-1">
           <p className="text-sm font-black text-slate-900 dark:text-white line-clamp-1">{p.title}</p>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider tabular-nums">{new Date(p.created_at).toLocaleDateString()}</p>
         </div>
       </td>
-      <td className="px-10 py-5">
+      <td className="px-5 py-5 sm:px-7">
         <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
           {p.channel?.name}
         </span>
       </td>
-      <td className="px-10 py-5">
+      <td className="px-5 py-5 sm:px-7">
         <div className="flex items-center gap-2">
           <div className="h-6 w-6 rounded-full bg-[#800000]/10 flex items-center justify-center text-[10px] font-black text-[#800000]">
             {p.author?.full_name?.[0]}
@@ -481,7 +481,7 @@ function ProposalRow({ p }) {
           <span className="text-xs font-black text-slate-600 dark:text-slate-400">{p.author?.full_name}</span>
         </div>
       </td>
-      <td className="px-10 py-5">
+      <td className="px-5 py-5 sm:px-7">
         <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border ${statusStyles[p.status] || (p.status === "Under Review" ? statusStyles.Pending : "")}`}>
           {(p.status === "Pending" || p.status === "Under Review") ? <Clock size={12} /> : p.status === "Rejected" ? <ShieldAlert size={12} /> : <CheckCircle size={12} />}
           {p.status}
@@ -494,7 +494,7 @@ function ProposalRow({ p }) {
 function LoadingRows({ cols }) {
   return (
     <motion.tr variants={itemVariants}>
-      <td colSpan={cols} className="px-10 py-20 text-center">
+      <td colSpan={cols} className="px-5 py-20 text-center sm:px-7">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-[#800000]" />
           <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Syncing database records...</p>
@@ -506,7 +506,7 @@ function LoadingRows({ cols }) {
 function EmptyRows({ label, cols }) {
   return (
     <motion.tr variants={itemVariants}>
-      <td colSpan={cols} className="px-10 py-24 text-center">
+      <td colSpan={cols} className="px-5 py-24 text-center sm:px-7">
         <div className="flex flex-col items-center gap-6">
           <div className="relative">
             <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800 blur-2xl rounded-full opacity-20" />
