@@ -4,8 +4,10 @@ import { Plus, LayoutGrid } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import ProposalCard from "./ProposalCard";
 import CreateProposalModal from "./CreateProposalModal";
+import ProposalDetailModal from "./ProposalDetailModal";
 import toast from "react-hot-toast";
 import { ProposalCardSkeleton } from "../../common/Skeleton";
+
 import { EmptyState } from "../../common/EmptyState";
 import { useLayout } from "../layouts/MainLayout";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
@@ -19,9 +21,12 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
   const [sortBy, setSortBy] = useState("recent");
   const [userVotes, setUserVotes] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [selectedProposal, setSelectedProposal] = useState(null);
+
 
   useEffect(() => {
     const loadProposals = async () => {
+      if (!channelId) { setIsLoading(false); return; }
       setIsLoading(true);
       const { data: authData } = await supabase.auth.getUser();
       if (authData?.user) setCurrentUserId(authData.user.id);
@@ -300,6 +305,14 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
+  // Stats for the summary bar
+  const stats = {
+    total: proposals.length,
+    underReview: proposals.filter(p => p.status === "Under Review").length,
+    approved: proposals.filter(p => p.status === "Approved").length,
+    implemented: proposals.filter(p => p.status === "Implemented").length,
+  };
+
   useEffect(() => {
     const hasOpenModal = Boolean(isModalOpen || deletingProposalId || respondingProposalId);
     setGlobalBackdropVisible("proposal-board-modals", hasOpenModal);
@@ -313,6 +326,7 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
 
   return (
     <div className="space-y-6">
+<<<<<<< HEAD
       <div className="mb-8">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
@@ -335,22 +349,46 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
 
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 
+=======
+      {/* ── Board Header ─────────────────────────────────────── */}
+      <div className="space-y-5">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="m-0 text-lg font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Proposals</h2>
+            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 font-medium">
+              {stats.total} total · {stats.underReview} under review · {stats.approved} approved · {stats.implemented} implemented
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+>>>>>>> 260d440 (feat: improve Proposals page UX with modal detail view and layout fixes)
             <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
-              <button 
+              <button
                 onClick={() => setSortBy("recent")}
                 className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${sortBy === "recent" ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400"}`}
               >
                 Recent
               </button>
-              <button 
+              <button
                 onClick={() => setSortBy("votes")}
                 className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${sortBy === "votes" ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400"}`}
               >
                 Top Voted
               </button>
             </div>
+<<<<<<< HEAD
+=======
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#800000] px-5 py-2.5 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-[#a00000] active:translate-y-0"
+            >
+              <Plus size={15} />
+              <span>New Proposal</span>
+            </button>
+>>>>>>> 260d440 (feat: improve Proposals page UX with modal detail view and layout fixes)
           </div>
 
+<<<<<<< HEAD
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
@@ -360,21 +398,64 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
             <span>Create Proposal</span>
           </button>
         </header>
+=======
+        {/* ── Status summary strip ────────────────────────────── */}
+        {!isLoading && proposals.length > 0 && (
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { label: "Under Review", count: stats.underReview, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20", border: "border-amber-200 dark:border-amber-800/30" },
+              { label: "Approved", count: stats.approved, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-200 dark:border-blue-800/30" },
+              { label: "Implemented", count: stats.implemented, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-200 dark:border-emerald-800/30" },
+              { label: "Total", count: stats.total, color: "text-slate-700 dark:text-slate-300", bg: "bg-slate-100 dark:bg-slate-800", border: "border-slate-200 dark:border-slate-700" },
+            ].map(s => (
+              <div key={s.label} className={`flex flex-col items-center rounded-xl border px-2 py-2 ${s.bg} ${s.border}`}>
+                <span className={`text-xl font-black tabular-nums ${s.color}`}>{s.count}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 text-center leading-tight mt-0.5">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Category filters ────────────────────────────────── */}
+        <nav className="flex flex-wrap items-center gap-2" aria-label="Filter proposals by category">
+          {["All", "Academic", "Facilities", "Policy"].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setFilter(cat)}
+              className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all duration-200 ${
+                filter === cat
+                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-md"
+                  : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 ring-1 ring-slate-200/60 dark:ring-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              {cat}
+              {cat !== "All" && (
+                <span className="ml-1.5 opacity-60">
+                  {proposals.filter(p => p.category === cat).length}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+>>>>>>> 260d440 (feat: improve Proposals page UX with modal detail view and layout fixes)
       </div>
 
+      {/* ── Card Grid ──────────────────────────────────────────── */}
       {isLoading ? (
-        <div className="grid gap-6 sm:grid-cols-2">
-          {[1, 2, 3, 4].map(i => (
-            <ProposalCardSkeleton key={i} />
+        <div className="columns-1 sm:columns-2 gap-4 space-y-0">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="mb-4 break-inside-avoid">
+              <ProposalCardSkeleton />
+            </div>
           ))}
         </div>
       ) : filteredProposals.length === 0 ? (
-        <EmptyState 
+        <EmptyState
           icon={LayoutGrid}
           title={filter === "All" ? "No proposals yet" : `No ${filter.toLowerCase()} proposals`}
           description={filter === "All" ? "Be the first to submit a proposal for this channel and drive positive change." : `There are no proposals in the ${filter} category yet.`}
           action={
-            <button 
+            <button
               onClick={() => setIsModalOpen(true)}
               className="rounded-xl bg-slate-900 dark:bg-slate-100 px-6 py-2.5 text-sm font-bold text-white dark:text-slate-900 shadow-lg transition-all hover:bg-slate-800 dark:hover:bg-slate-200"
             >
@@ -383,19 +464,21 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
           }
         />
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="columns-1 sm:columns-2 gap-4">
           {filteredProposals.map(proposal => (
-            <ProposalCard 
-              key={proposal.id} 
-              proposal={proposal} 
-              onVote={handleVote}
-              userVote={userVotes[proposal.id]}
-              isAdmin={isAdmin}
-              currentUserId={currentUserId}
-              onStatusChange={handleStatusChange}
-              onAddResponse={(id) => setRespondingProposalId(id)}
-              onDelete={(id) => setDeletingProposalId(id)}
-            />
+            <div key={proposal.id} className="mb-4 break-inside-avoid">
+              <ProposalCard
+                proposal={proposal}
+                onVote={handleVote}
+                userVote={userVotes[proposal.id]}
+                isAdmin={isAdmin}
+                currentUserId={currentUserId}
+                onStatusChange={handleStatusChange}
+                onAddResponse={(id) => setRespondingProposalId(id)}
+                onDelete={(id) => setDeletingProposalId(id)}
+                onOpen={() => setSelectedProposal(proposal)}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -405,6 +488,20 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
         onClose={() => setIsModalOpen(false)} 
         onSubmit={handleCreateProposal}
       />
+
+      <ProposalDetailModal 
+        isOpen={Boolean(selectedProposal)} 
+        onClose={() => setSelectedProposal(null)} 
+        proposal={proposals.find(p => p.id === selectedProposal?.id)} 
+        onVote={handleVote}
+        userVote={selectedProposal ? userVotes[selectedProposal.id] : undefined}
+        isAdmin={isAdmin}
+        currentUserId={currentUserId}
+        onStatusChange={handleStatusChange}
+        onAddResponse={(id) => setRespondingProposalId(id)}
+        onDelete={(id) => setDeletingProposalId(id)}
+      />
+
 
       {/* Modern Confirmation Modal for Delete */}
       {deletingProposalId && createPortal(
