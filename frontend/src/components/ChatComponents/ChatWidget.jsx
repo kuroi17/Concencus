@@ -153,15 +153,15 @@ export default function ChatWidget() {
   if (location.pathname === "/chat" || !currentUser) return null;
 
   return (
-    <div className="fixed bottom-0 right-6 z-[100] flex flex-col items-end gap-0 pointer-events-none">
+    <div className="fixed bottom-0 right-2 sm:right-6 z-[100] flex flex-col items-end gap-0 pointer-events-none">
       {isOpen && (
         <div 
-          className={`bg-white dark:bg-slate-900 shadow-[0_-20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_-20px_50px_rgba(0,0,0,0.5)] rounded-t-[24px] overflow-hidden flex border-x border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ease-in-out pointer-events-auto h-[480px] ${
-            activeConversationId ? "w-[680px]" : "w-[320px]"
+          className={`bg-white dark:bg-slate-900 shadow-[0_-20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_-20px_50px_rgba(0,0,0,0.5)] rounded-t-[24px] overflow-hidden flex border-x border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ease-in-out pointer-events-auto h-[480px] max-h-[70vh] ${
+            activeConversationId ? "w-[calc(100vw-1rem)] sm:w-[680px]" : "w-[calc(100vw-1rem)] sm:w-[320px]"
           }`}
         >
           {/* Left Pane (Conversations) */}
-          <div className={`flex flex-col border-r border-slate-100 dark:border-slate-800 transition-all duration-300 ${activeConversationId ? "w-[240px]" : "w-full"}`}>
+          <div className={`flex flex-col border-r border-slate-100 dark:border-slate-800 transition-all duration-300 ${activeConversationId ? "hidden sm:flex sm:w-[240px]" : "w-full"}`}>
             <header className="bg-slate-900 dark:bg-black px-4 py-3 flex items-center justify-between text-white shrink-0">
               <span className="font-black text-[11px] uppercase tracking-widest">Messages</span>
               {!activeConversationId && (
@@ -311,7 +311,7 @@ export default function ChatWidget() {
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)} 
-          className="mb-6 h-16 w-16 bg-[#800000] text-white rounded-[24px] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 pointer-events-auto relative group"
+          className="mb-4 sm:mb-6 h-14 w-14 sm:h-16 sm:w-16 bg-[#800000] text-white rounded-[20px] sm:rounded-[24px] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 pointer-events-auto relative group"
         >
           <MessageSquare size={28} className="transition-transform group-hover:rotate-12" />
           {totalUnread > 0 && (

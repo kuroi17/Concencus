@@ -246,7 +246,7 @@ function AdminPage() {
 
         {/* Action Header & Tabs */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <motion.div variants={itemVariants} className="relative flex items-center gap-2 rounded-[24px] bg-slate-100 dark:bg-slate-900/50 p-1.5 ring-1 ring-slate-200 dark:ring-slate-800">
+          <motion.div variants={itemVariants} className="relative flex max-w-full items-center gap-2 overflow-x-auto no-scrollbar rounded-[24px] bg-slate-100 dark:bg-slate-900/50 p-1.5 ring-1 ring-slate-200 dark:ring-slate-800">
             {[
               { id: "users", label: "User Roles", icon: Users },
               { id: "proposals", label: "Proposals", icon: FileText },
@@ -255,7 +255,7 @@ function AdminPage() {
               <button
                 key={tab.id}
                 onClick={() => setAdminView(tab.id)}
-                className={`relative flex items-center gap-2 rounded-[18px] px-6 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                className={`relative flex shrink-0 items-center gap-2 rounded-[18px] px-4 py-2.5 text-[11px] sm:px-6 sm:py-3 sm:text-xs font-black uppercase tracking-widest transition-all ${
                   adminView === tab.id ? "text-white" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
@@ -303,7 +303,7 @@ function AdminPage() {
               <section className="overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-200/40 dark:shadow-black/40">
                 <div className="overflow-x-auto no-scrollbar">
                   {adminView === "users" ? (
-                    <table className="w-full min-w-[960px] text-left">
+                    <table className="w-full min-w-[860px] text-left">
                       <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                         <tr>
                           <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Identity</th>
@@ -325,7 +325,7 @@ function AdminPage() {
                       </tbody>
                     </table>
                   ) : (
-                    <table className="w-full min-w-[960px] text-left">
+                    <table className="w-full min-w-[860px] text-left">
                       <thead className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                         <tr>
                           <th className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:px-7">Proposal Title</th>

@@ -103,7 +103,7 @@ function InlineVotes({ itemId, baseScore }) {
 
 const AVATAR_SIZE = 28;
 const THREAD_GAP = 10;
-const MAX_INDENT_DEPTH = 7;
+const MAX_INDENT_DEPTH = 4;
 
 function CommentItem({ comment, allComments, onReplySubmit, depth = 0 }) {
   const [isReplying, setIsReplying] = useState(false);

@@ -266,7 +266,7 @@ function ProfilePage() {
 
                   <article className="group relative overflow-hidden rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 p-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Official Email</p>
-                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                    <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white break-all">
                       <AtSign size={16} className="text-slate-400 dark:text-slate-500" />
                       {isLoading ? "..." : profile?.email || "No email"}
                     </p>

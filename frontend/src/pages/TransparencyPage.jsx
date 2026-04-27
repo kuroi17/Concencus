@@ -322,14 +322,14 @@ function TransparencyPage() {
 
         {/* SDG Section */}
         <section className="space-y-8">
-          <div className="flex items-center justify-between px-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-2">
             <div>
               <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">SDG Global Alignment</h2>
               <p className="text-sm font-medium text-slate-500">How our campus initiatives align with United Nations goals.</p>
             </div>
             <button 
               onClick={() => setIsSdgModalOpen(true)}
-              className="group flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-800 px-5 py-2.5 text-sm font-black uppercase tracking-widest text-[#800000] dark:text-red-400 shadow-sm transition-all hover:bg-[#800000] hover:text-white"
+              className="group flex shrink-0 items-center gap-2 rounded-2xl bg-white dark:bg-slate-800 px-4 py-2 text-xs sm:px-5 sm:py-2.5 sm:text-sm font-black uppercase tracking-widest text-[#800000] dark:text-red-400 shadow-sm transition-all hover:bg-[#800000] hover:text-white"
             >
               Explore All Goals
               <ArrowUpRight size={16} />
@@ -398,12 +398,14 @@ function TransparencyPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+              onClick={() => setIsSdgModalOpen(false)}
             >
               <motion.div 
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
                 className="w-full max-w-4xl overflow-hidden rounded-[48px] bg-white dark:bg-slate-950 shadow-2xl border border-white/10"
+                onClick={(event) => event.stopPropagation()}
               >
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-10 py-8">
                   <div>

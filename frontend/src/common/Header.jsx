@@ -33,7 +33,7 @@ function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
         </div>
 
           {/* Navigation & Search Slot */}
-          <div className="flex flex-1 items-center justify-end gap-4">
+          <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4 min-w-0">
             {searchSlot && (
               <div className="hidden lg:block w-full max-w-sm">
                 {searchSlot}
@@ -41,7 +41,7 @@ function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
             )}
 
             <nav
-              className="flex items-center gap-1.5 rounded-2xl bg-slate-100/50 dark:bg-slate-800/50 p-1.5 ring-1 ring-slate-200/50 dark:ring-slate-700/50"
+              className="flex max-w-full items-center gap-1 rounded-2xl bg-slate-100/50 dark:bg-slate-800/50 p-1 ring-1 ring-slate-200/50 dark:ring-slate-700/50 overflow-x-auto no-scrollbar"
               aria-label="Primary Navigation"
             >
             {navItems.map((item) => (
@@ -49,7 +49,7 @@ function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center rounded-[12px] px-4 py-2 text-sm font-bold transition-all duration-200 ${
+                  `flex shrink-0 items-center rounded-[12px] px-3 py-2 text-xs sm:text-sm font-bold transition-all duration-200 ${
                     isActive
                       ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm shadow-slate-200 dark:shadow-slate-900 ring-1 ring-slate-200 dark:ring-slate-600"
                       : "text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white"
