@@ -20,8 +20,8 @@ function Header({ title = "Concensus", searchSlot = null, onMenuClick }) {
 
   return (
     <header className="w-full transition-all duration-300">
-      <div className="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="flex flex-col gap-3 py-3 md:flex-row md:items-center">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onMenuClick}
             className="md:hidden flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 active:scale-95 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
