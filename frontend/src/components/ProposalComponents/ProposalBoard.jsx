@@ -75,38 +75,88 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
     loadProposals();
     loadUserVotes();
 
-    if (socket && channelId) {
-      socket.emit("proposals:join_channel", { channelId });
+    // ── Supabase Realtime ───────────────────────────────────────────
+    const channel = supabase
+      .channel(`proposals:${channelId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "proposals",
+          filter: `channel_id=eq.${channelId}`
+        },
+        async (payload) => {
+          if (payload.eventType === "INSERT") {
+            const { data, error } = await supabase
+              .from("proposals")
+              .select(`
+                *,
+                author:user_profiles!author_id(full_name, avatar_url),
+                responses:proposal_responses(
+                  *,
+                  admin:user_profiles!admin_id(full_name)
+                )
+              `)
+              .eq("id", payload.new.id)
+              .single();
 
-      socket.on("proposal:vote_update", (data) => {
-        setProposals(prev => prev.map(p => 
-          p.id === data.proposalId 
-            ? { ...p, upvotes_count: data.upvotes, downvotes_count: data.downvotes }
-            : p
-        ));
-      });
+            if (!error && data) {
+              const formatted = {
+                ...data,
+                author_name: data.author?.full_name,
+                author_avatar: data.author?.avatar_url,
+                responses: (data.responses || []).map(r => ({ ...r, admin_name: r.admin?.full_name }))
+              };
+              setProposals(prev => {
+                if (prev.find(p => p.id === formatted.id)) return prev;
+                return [formatted, ...prev];
+              });
+            }
+          } else if (payload.eventType === "UPDATE") {
+            setProposals(prev => prev.map(p => 
+              p.id === payload.new.id 
+                ? { ...p, ...payload.new } 
+                : p
+            ));
+          } else if (payload.eventType === "DELETE") {
+            setProposals(prev => prev.filter(p => p.id === payload.old.id));
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "proposal_votes"
+        },
+        async (payload) => {
+          // When a vote changes, we need to refresh the counts for that proposal
+          const proposalId = payload.new?.proposal_id || payload.old?.proposal_id;
+          if (!proposalId) return;
 
-      socket.on("proposal:status_changed", (data) => {
-        setProposals(prev => prev.map(p => 
-          p.id === data.proposalId ? { ...p, status: data.status } : p
-        ));
-      });
+          const { data, error } = await supabase
+            .from("proposals")
+            .select("upvotes_count, downvotes_count")
+            .eq("id", proposalId)
+            .single();
 
-      socket.on("proposal:response_added", (data) => {
-        setProposals(prev => prev.map(p => 
-          p.id === data.proposalId 
-            ? { ...p, responses: [...(p.responses || []), data.response] }
-            : p
-        ));
-      });
+          if (!error && data) {
+            setProposals(prev => prev.map(p => 
+              p.id === proposalId 
+                ? { ...p, upvotes_count: data.upvotes_count, downvotes_count: data.downvotes_count }
+                : p
+            ));
+          }
+        }
+      )
+      .subscribe();
 
-      return () => {
-        socket.off("proposal:vote_update");
-        socket.off("proposal:status_changed");
-        socket.off("proposal:response_added");
-      };
-    }
-  }, [channelId, socket]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [channelId]);
 
   const handleCreateProposal = async (proposalData) => {
     const { data: authData } = await supabase.auth.getUser();
@@ -119,8 +169,7 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
     const { title, description, category, sdgTags, isAnonymous } = proposalData;
 
     try {
-      // 1. Insert proposal base data
-      const { data: insertedProposal, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from("proposals")
         .insert([{
           title,
@@ -130,12 +179,7 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
           is_anonymous: !!isAnonymous,
           author_id: user.id,
           channel_id: channelId
-        }])
-        .select(`
-          *,
-          author:user_profiles!author_id(full_name, avatar_url)
-        `)
-        .single();
+        }]);
 
       if (insertError) {
         console.error("Database Error:", insertError);
@@ -143,14 +187,6 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
         return false;
       }
 
-    
-      const formatted = {
-        ...insertedProposal,
-        author_name: insertedProposal.author?.full_name,
-        author_avatar: insertedProposal.author?.avatar_url,
-        responses: []
-      };
-      setProposals([formatted, ...proposals]);
       toast.success("Proposal submitted successfully!");
       return true;
     } catch (err) {
@@ -169,35 +205,14 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
     }
 
     const currentVote = userVotes[proposalId];
-    const prevProposals = [...proposals];
     const prevUserVotes = { ...userVotes };
 
-    // ── Optimistic Update ─────────────────────────────────────────
-    let upDelta = 0;
-    let downDelta = 0;
-
+    // ── Optimistic Update (Local UI Only) ─────────────────────────
     if (currentVote === voteType) {
-      // Removing vote
-      if (voteType === 1) upDelta = -1;
-      else downDelta = -1;
       setUserVotes(prev => { const n = { ...prev }; delete n[proposalId]; return n; });
     } else {
-      // Changing or adding vote
-      if (voteType === 1) {
-        upDelta = 1;
-        if (currentVote === -1) downDelta = -1;
-      } else {
-        downDelta = 1;
-        if (currentVote === 1) upDelta = -1;
-      }
       setUserVotes(prev => ({ ...prev, [proposalId]: voteType }));
     }
-
-    setProposals(prev => prev.map(p => 
-      p.id === proposalId 
-        ? { ...p, upvotes_count: p.upvotes_count + upDelta, downvotes_count: p.downvotes_count + downDelta }
-        : p
-    ));
 
     // ── Database Sync ─────────────────────────────────────────────
     try {
@@ -220,8 +235,6 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
       }
     } catch (err) {
       console.error("Vote sync failed:", err);
-      // Revert on error
-      setProposals(prevProposals);
       setUserVotes(prevUserVotes);
       toast.error("Failed to sync vote: " + (err.message || "Unknown error"));
     }
@@ -233,8 +246,8 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
       .update({ status: nextStatus })
       .eq("id", proposalId);
 
-    if (!error && socket) {
-      socket.emit("proposal:status_update", { proposalId, channelId, status: nextStatus });
+    if (error) {
+      toast.error("Failed to update status: " + error.message);
     }
   };
 
@@ -249,26 +262,19 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
     const user = authData?.user;
     if (!user) return;
     
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("proposal_responses")
       .insert([{
         proposal_id: respondingProposalId,
         admin_id: user.id,
         body: adminResponseBody.trim()
-      }])
-      .select(`
-        *,
-        admin:user_profiles!admin_id(full_name)
-      `)
-      .single();
+      }]);
 
-    if (!error && socket) {
-      const response = { ...data, admin_name: data.admin?.full_name };
-      socket.emit("proposal:new_response", { proposalId: respondingProposalId, channelId, response });
+    if (!error) {
       toast.success("Response added");
       setRespondingProposalId(null);
       setAdminResponseBody("");
-    } else if (error) {
+    } else {
       toast.error("Failed to add response: " + error.message);
     }
   };
@@ -282,7 +288,6 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
     if (error) {
       toast.error("Failed to delete proposal: " + error.message);
     } else {
-      setProposals(prev => prev.filter(p => p.id !== deletingProposalId));
       toast.success("Proposal deleted");
       setDeletingProposalId(null);
     }
@@ -308,13 +313,28 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
 
   return (
     <div className="space-y-6">
-      <div className="mb-8 space-y-6">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="m-0 text-lg font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-            Proposals
-          </h2>
+      <div className="mb-8">
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* ── Tag Filters ────────────────────────────────────────────────── */}
+            <nav className="flex flex-wrap items-center gap-2" aria-label="Filter proposals by category">
+              {["All", "Academic", "Facilities", "Policy"].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
+                    filter === cat
+                      ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-lg shadow-slate-900/20"
+                      : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 ring-1 ring-slate-200/60 dark:ring-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </nav>
 
-          <div className="flex items-center gap-3">
+            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+
             <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
               <button 
                 onClick={() => setSortBy("recent")}
@@ -329,33 +349,17 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
                 Top Voted
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-2xl bg-[#800000] px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-[#a00000] active:translate-y-0 disabled:opacity-70"
-            >
-              <Plus size={16} />
-              <span>Create Proposal</span>
-            </button>
           </div>
-        </header>
 
-        {/* ── Tag Filters ────────────────────────────────────────────────── */}
-        <nav className="flex flex-wrap items-center gap-2" aria-label="Filter proposals by category">
-          {["All", "Academic", "Facilities", "Policy"].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
-                filter === cat
-                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-lg shadow-slate-900/20"
-                  : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 ring-1 ring-slate-200/60 dark:ring-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </nav>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#800000] px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-[#a00000] active:translate-y-0 disabled:opacity-70"
+          >
+            <Plus size={16} />
+            <span>Create Proposal</span>
+          </button>
+        </header>
       </div>
 
       {isLoading ? (
