@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { ProposalCardSkeleton } from "../../common/Skeleton";
 import { EmptyState } from "../../common/EmptyState";
 import { useLayout } from "../layouts/MainLayout";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 function ProposalBoard({ channelId, isAdmin, socket }) {
   const { setGlobalBackdropVisible } = useLayout();
@@ -299,6 +300,11 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
     setGlobalBackdropVisible("proposal-board-modals", hasOpenModal);
     return () => setGlobalBackdropVisible("proposal-board-modals", false);
   }, [isModalOpen, deletingProposalId, respondingProposalId, setGlobalBackdropVisible]);
+  useEscapeKey(Boolean(deletingProposalId), () => setDeletingProposalId(null));
+  useEscapeKey(Boolean(respondingProposalId), () => {
+    setRespondingProposalId(null);
+    setAdminResponseBody("");
+  });
 
   return (
     <div className="space-y-6">
@@ -398,7 +404,15 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
 
       {/* Modern Confirmation Modal for Delete */}
       {deletingProposalId && createPortal(
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Delete proposal"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setDeletingProposalId(null);
+          }}
+        >
           <div className="w-full max-w-sm overflow-hidden rounded-[24px] bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
             <h3 className="mb-2 text-lg font-black text-slate-900 dark:text-white">Delete Proposal?</h3>
             <p className="mb-6 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -425,7 +439,18 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
 
       {/* Modern Modal for Official Response */}
       {respondingProposalId && createPortal(
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Add official response"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setRespondingProposalId(null);
+              setAdminResponseBody("");
+            }
+          }}
+        >
           <div className="w-full max-w-md overflow-hidden rounded-[24px] bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
             <h3 className="mb-2 text-lg font-black text-slate-900 dark:text-white">Add Official Response</h3>
             <p className="mb-4 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">

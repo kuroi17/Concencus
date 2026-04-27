@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useLayout } from "../layouts/MainLayout";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 function slugify(str) {
   return str.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -57,9 +58,18 @@ export default function CategoryFormModal({ initial, onSave, onClose }) {
     setGlobalBackdropVisible("category-form-modal", true);
     return () => setGlobalBackdropVisible("category-form-modal", false);
   }, [setGlobalBackdropVisible]);
+  useEscapeKey(true, onClose);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="New Category"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
       <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-black text-slate-900 dark:text-white">

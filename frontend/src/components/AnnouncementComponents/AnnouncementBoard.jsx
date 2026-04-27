@@ -14,6 +14,7 @@ import { EmptyState } from "../../common/EmptyState";
 import SDGBadge from "../common/SDGBadge";
 import { linkifyText } from "../../common/linkifyText";
 import { useLayout } from "../layouts/MainLayout";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 // ── Tags + Priorities ─────────────────────────────────────────────────────────
 const TAGS = ["Academic", "Event", "Opportunity", "Governance", "Maintenance"];
@@ -551,6 +552,8 @@ function AnnouncementBoard({ channelId }) {
   const [lightboxImage, setLightboxImage] = useState(null);
   const [selectedTag, setSelectedTag] = useState("All");
   const { user, isAdmin } = useCurrentUserProfile();
+  useEscapeKey(Boolean(selectedAnnouncement), () => setSelectedAnnouncement(null));
+  useEscapeKey(Boolean(lightboxImage), () => setLightboxImage(null));
   useEffect(() => {
     const hasModal = Boolean(isModalOpen || selectedAnnouncement || lightboxImage);
     setGlobalBackdropVisible("announcement-board-modals", hasModal);
@@ -728,7 +731,7 @@ function AnnouncementBoard({ channelId }) {
               className="inline-flex items-center gap-2 rounded-xl bg-[#800000] px-6 py-3 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-[#a00000] active:translate-y-0 disabled:opacity-70"
             >
               <Megaphone size={16} />
-              <span>{isPosting ? "Posting..." : ""}</span>
+              <span>{isPosting ? "Posting..." : "Post Announcement"}</span>
             </button>
           )}
         </header>

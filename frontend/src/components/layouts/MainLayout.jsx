@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext, useCallback, useMemo } from "react";
+import React, { useState, createContext, useContext, useCallback, useMemo, useEffect } from "react";
 import ChannelSidebar from "../common/ChannelSidebar";
 import Header from "../../common/Header";
 import ChatWidget from "../ChatComponents/ChatWidget";
@@ -72,6 +72,14 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot, f
     setGlobalBackdropVisible
   }), [isMobileMenuOpen, closeMobileMenu, setGlobalBackdropVisible]);
   const hasGlobalBackdrop = forceBackdrop || Object.keys(activeBackdrops).length > 0;
+  useEffect(() => {
+    if (!hasGlobalBackdrop) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [hasGlobalBackdrop]);
 
   const renderContent = () => {
     // For chat page, show custom sidebar if provided
