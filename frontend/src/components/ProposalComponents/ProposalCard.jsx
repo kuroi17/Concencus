@@ -16,6 +16,9 @@ function ProposalCard({ proposal, onVote, userVote, isAdmin, currentUserId, onSt
   const status = STATUS_CONFIG[proposal.status] || STATUS_CONFIG["Under Review"];
   const StatusIcon = status.icon;
 
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isDescriptionLong = proposal.description?.length > 150; // simple heuristic or we just let it toggle
+
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-black/50">
       {/* Vote Sidebar */}
@@ -36,9 +39,9 @@ function ProposalCard({ proposal, onVote, userVote, isAdmin, currentUserId, onSt
       </div>
 
       <div className="pl-16 p-6 space-y-4">
-        <header className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
+        <header className="flex items-start justify-between gap-3">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${status.bg} dark:bg-slate-800 ${status.color} border ${status.border} dark:border-slate-700`}>
                 <StatusIcon size={12} />
                 {proposal.status}
@@ -50,23 +53,26 @@ function ProposalCard({ proposal, onVote, userVote, isAdmin, currentUserId, onSt
             <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight group-hover:text-red-600 transition-colors">
               {proposal.title}
             </h3>
+            
+            {(proposal.sdg_tags?.length > 0 || proposal.sdg_tag) && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {proposal.sdg_tags?.length > 0 ? (
+                  proposal.sdg_tags.map(tagId => (
+                    <SDGBadge key={tagId} sdgId={tagId} />
+                  ))
+                ) : (
+                  <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30">
+                    {proposal.sdg_tag}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          {proposal.sdg_tags && proposal.sdg_tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {proposal.sdg_tags.map(tagId => (
-                <SDGBadge key={tagId} sdgId={tagId} />
-              ))}
-            </div>
-          )}
-          {proposal.sdg_tag && (!proposal.sdg_tags || proposal.sdg_tags.length === 0) && (
-            <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30">
-              {proposal.sdg_tag}
-            </div>
-          )}
+          
           {canDelete && (
             <button 
               onClick={() => onDelete(proposal.id)}
-              className="rounded-full p-2 text-slate-300 dark:text-slate-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
+              className="shrink-0 rounded-full p-2 text-slate-300 dark:text-slate-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
               title="Delete Proposal"
             >
               <Trash2 size={16} />
@@ -74,9 +80,19 @@ function ProposalCard({ proposal, onVote, userVote, isAdmin, currentUserId, onSt
           )}
         </header>
 
-        <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
-          {proposal.description}
-        </p>
+        <div>
+          <p className={`text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
+            {proposal.description}
+          </p>
+          {isDescriptionLong && (
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-1 text-xs font-bold text-[#800000] dark:text-red-400 hover:underline"
+            >
+              {isExpanded ? "Show less" : "Read more"}
+            </button>
+          )}
+        </div>
 
         <footer className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-400 dark:text-slate-500">

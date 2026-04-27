@@ -278,6 +278,8 @@ function ForumThread({
     const [lightboxIndex, setLightboxIndex] = useState(-1); // -1 = closed
     const [isSaved, setIsSaved] = useState(false);
     const [showCopied, setShowCopied] = useState(false);
+    const [isTextExpanded, setIsTextExpanded] = useState(false);
+    const isTextLong = item.excerpt?.length > 150;
 
     // Check if user has saved this post
     useEffect(() => {
@@ -396,9 +398,22 @@ function ForumThread({
                         />
                     )}
 
-                    <p className="m-0 mt-3 text-sm leading-relaxed font-medium text-slate-600 dark:text-slate-400 whitespace-pre-wrap line-clamp-3 group-hover:line-clamp-none transition-all duration-500">
-                        {item.excerpt}
-                    </p>
+                    <div>
+                        <p className={`m-0 mt-3 text-sm leading-relaxed font-medium text-slate-600 dark:text-slate-400 whitespace-pre-wrap transition-all duration-500 ${!isTextExpanded ? 'line-clamp-3' : ''}`}>
+                            {item.excerpt}
+                        </p>
+                        {isTextLong && (
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsTextExpanded(!isTextExpanded);
+                                }}
+                                className="mt-1 text-xs font-bold text-[#800000] dark:text-red-400 hover:underline"
+                            >
+                                {isTextExpanded ? "Show less" : "Read more"}
+                            </button>
+                        )}
+                    </div>
 
                     <div className="mt-5 flex flex-wrap items-center gap-3 text-[12px] font-bold text-slate-500 dark:text-slate-400">
                         <button
