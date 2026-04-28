@@ -45,6 +45,12 @@ function ChannelSidebar({
     const { profile, isAdmin } = useUser();
     const navigate = useNavigate();
 
+    // 🔍 Debug: log block vs available channels to catch name mismatches
+    if (process.env.NODE_ENV !== 'production') {
+        const blockChannels = categories.find((c) => c.id === 'blocks')?.channels || [];
+        console.log('[Sidebar] profile.block:', profile?.block, '| block channels:', blockChannels.map((c) => c.name));
+    }
+
     const [openCategories, setOpenCategories] = useState(() =>
         Object.fromEntries(
             ['colleges', 'programs', 'blocks', 'organizations'].map((id) => [
@@ -100,7 +106,21 @@ function ChannelSidebar({
                     ) : (
                         categories.map((category) => {
                             const Icon = categoryIcons[category.id] ?? Users;
-                            const hasActiveChild = category.channels.some(
+                            // Apply block filtering in collapsed mode.
+                            // Only filter when the user has a block explicitly assigned.
+                            // If profile.block is null/empty, show all blocks (safe fallback).
+                            // normalizeBlock strips spaces/dashes so "CS 2205" matches "CS2205".
+                            const normalizeBlock = (s) => s.replace(/[^a-z0-9]/gi, "").toLowerCase();
+                            const userBlockCollapsed = profile?.block?.trim() ? normalizeBlock(profile.block) : null;
+                            const visibleChannelsCollapsed =
+                                category.id === "blocks" && !isAdmin && userBlockCollapsed
+                                    ? category.channels.filter(
+                                          (ch) =>
+                                              normalizeBlock(ch.name) ===
+                                              userBlockCollapsed,
+                                      )
+                                    : category.channels;
+                            const hasActiveChild = visibleChannelsCollapsed.some(
                                 (ch) => currentChannel?.id === ch.id,
                             );
                             return (
@@ -111,11 +131,11 @@ function ChannelSidebar({
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            if (category.channels.length > 0) {
+                                            if (visibleChannelsCollapsed.length > 0) {
                                                 if (onCloseMobile)
                                                     onCloseMobile();
                                                 setCurrentChannel(
-                                                    category.channels[0],
+                                                    visibleChannelsCollapsed[0],
                                                 );
                                                 navigate('/hub');
                                             }
@@ -212,6 +232,23 @@ function ChannelSidebar({
                         </div>
                     ) : (
                         categories.map((category) => {
+                            // ── Block filtering ───────────────────────────
+                            // Only filter when the user has a block explicitly
+                            // assigned. If profile.block is null/empty, fall back
+                            // to showing all blocks so nothing is hidden for
+                            // users who haven't completed onboarding yet.
+                            // Admins always see all channels.
+                            // normalizeBlock strips spaces/dashes: "CS 2205" === "CS2205".
+                            const normalizeBlock = (s) => s.replace(/[^a-z0-9]/gi, "").toLowerCase();
+                            const userBlock = profile?.block?.trim() ? normalizeBlock(profile.block) : null;
+                            const visibleChannels =
+                                category.id === "blocks" && !isAdmin && userBlock
+                                    ? category.channels.filter(
+                                          (ch) =>
+                                              normalizeBlock(ch.name) ===
+                                              userBlock,
+                                      )
+                                    : category.channels;
                             const Icon = categoryIcons[category.id] ?? Users;
                             const isOpen = openCategories[category.id] ?? true;
 
@@ -264,7 +301,7 @@ function ChannelSidebar({
                                     </button>
                                     {isOpen && (
                                         <ul className="space-y-1" role="list">
-                                            {category.channels.map((ch) => {
+                                            {visibleChannels.map((ch) => {
                                                 const isActive =
                                                     currentChannel?.id ===
                                                     ch.id;
