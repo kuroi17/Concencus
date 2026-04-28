@@ -10,7 +10,8 @@ const fallbackLayoutContext = {
   setIsMobileMenuOpen: () => {},
   toggleMobileMenu: () => {},
   closeMobileMenu: () => {},
-  setGlobalBackdropVisible: () => {}
+  setGlobalBackdropVisible: () => {},
+  hasGlobalBackdrop: false,
 };
 
 export const useLayout = () => useContext(LayoutContext) || fallbackLayoutContext;
@@ -64,14 +65,15 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot, f
   );
 
   const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), []);
+  const hasGlobalBackdrop = forceBackdrop || Object.keys(activeBackdrops).length > 0;
   const layoutValue = useMemo(() => ({
     isMobileMenuOpen,
     setIsMobileMenuOpen,
     toggleMobileMenu,
     closeMobileMenu,
-    setGlobalBackdropVisible
-  }), [isMobileMenuOpen, closeMobileMenu, setGlobalBackdropVisible]);
-  const hasGlobalBackdrop = forceBackdrop || Object.keys(activeBackdrops).length > 0;
+    setGlobalBackdropVisible,
+    hasGlobalBackdrop,
+  }), [isMobileMenuOpen, closeMobileMenu, setGlobalBackdropVisible, hasGlobalBackdrop]);
   useEffect(() => {
     if (!hasGlobalBackdrop) return undefined;
     const previousOverflow = document.body.style.overflow;
@@ -149,7 +151,7 @@ export default function MainLayout({ children, title, searchSlot, sidebarSlot, f
     <LayoutContext.Provider value={layoutValue}>
       {renderContent()}
       {hasGlobalBackdrop && (
-        <div className="pointer-events-none fixed inset-0 z-[90] bg-slate-900/60 backdrop-blur-md" />
+        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md" />
       )}
     </LayoutContext.Provider>
   );
