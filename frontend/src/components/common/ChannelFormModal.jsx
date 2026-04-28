@@ -64,7 +64,7 @@ export default function ChannelFormModal({ initial, fixedCategory, categories, o
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[300] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label={initial ? "Edit Channel" : "New Channel"}
