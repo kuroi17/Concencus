@@ -159,7 +159,7 @@ function GalleryLightbox({ images, startIndex, onClose }) {
 
     return (
         <div
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl animate-in fade-in duration-300"
+            className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl animate-in fade-in duration-300"
             onClick={onClose}
         >
             {/* Header / Controls */}
