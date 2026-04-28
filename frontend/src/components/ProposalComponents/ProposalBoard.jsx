@@ -326,30 +326,6 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
 
   return (
     <div className="space-y-6">
-<<<<<<< HEAD
-      <div className="mb-8">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-4">
-            {/* ── Tag Filters ────────────────────────────────────────────────── */}
-            <nav className="flex flex-wrap items-center gap-2" aria-label="Filter proposals by category">
-              {["All", "Academic", "Facilities", "Policy"].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
-                    filter === cat
-                      ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-lg shadow-slate-900/20"
-                      : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 ring-1 ring-slate-200/60 dark:ring-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </nav>
-
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
-
-=======
       {/* ── Board Header ─────────────────────────────────────── */}
       <div className="space-y-5">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -360,7 +336,6 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
             </p>
           </div>
           <div className="flex items-center gap-3">
->>>>>>> 260d440 (feat: improve Proposals page UX with modal detail view and layout fixes)
             <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
               <button
                 onClick={() => setSortBy("recent")}
@@ -375,8 +350,6 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
                 Top Voted
               </button>
             </div>
-<<<<<<< HEAD
-=======
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
@@ -385,20 +358,9 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
               <Plus size={15} />
               <span>New Proposal</span>
             </button>
->>>>>>> 260d440 (feat: improve Proposals page UX with modal detail view and layout fixes)
           </div>
-
-<<<<<<< HEAD
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-2xl bg-[#800000] px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:-translate-y-0.5 hover:bg-[#a00000] active:translate-y-0 disabled:opacity-70"
-          >
-            <Plus size={16} />
-            <span>Create Proposal</span>
-          </button>
         </header>
-=======
+
         {/* ── Status summary strip ────────────────────────────── */}
         {!isLoading && proposals.length > 0 && (
           <div className="grid grid-cols-4 gap-2">
@@ -437,8 +399,8 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
             </button>
           ))}
         </nav>
->>>>>>> 260d440 (feat: improve Proposals page UX with modal detail view and layout fixes)
       </div>
+
 
       {/* ── Card Grid ──────────────────────────────────────────── */}
       {isLoading ? (
