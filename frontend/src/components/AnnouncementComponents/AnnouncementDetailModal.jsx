@@ -44,7 +44,7 @@ function AnnouncementDetailModal({ isOpen, onClose, notice, isAdmin, onDelete })
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-500 ${
+      className={`fixed inset-0 z-[300] flex items-center justify-center p-4 transition-all duration-500 ${
         isOpen && notice ? "visible pointer-events-auto" : "invisible pointer-events-none"
       }`}
     >

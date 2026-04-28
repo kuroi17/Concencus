@@ -760,7 +760,7 @@ function AnnouncementBoard({ channelId }) {
 
       {/* Detail Hero (portal) */}
       {selectedAnnouncement && createPortal(
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 lg:p-12">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-6 lg:p-12">
           <div className="absolute inset-0" onClick={() => setSelectedAnnouncement(null)} />
           <div className="relative w-full max-w-6xl" style={{ height: "min(90vh, 700px)" }}>
             <AnnouncementDetailHero
