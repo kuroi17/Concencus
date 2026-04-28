@@ -138,6 +138,18 @@ function HubPage() {
         ) : view === "forum" ? (
           <div className="soft-rise grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-4">
+              {/* Mobile-only inline Start Discussion button (hidden on xl where the side panel has it) */}
+              <div className="xl:hidden flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
+                  aria-label="Start Discussion"
+                  className="flex items-center gap-2 rounded-2xl bg-[#800000] px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-red-900/25 transition-all hover:-translate-y-0.5 hover:bg-[#a00000] active:translate-y-0 active:scale-95"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+                  Start Discussion
+                </button>
+              </div>
               <ForumBoard channelId={currentChannel.id} refreshKey={refreshKey} />
             </div>
             <aside className="hidden xl:block">
@@ -150,6 +162,9 @@ function HubPage() {
           </div>
         )}
       </section>
+
+
+
 
       <CreatePostModal
         isOpen={isModalOpen}
