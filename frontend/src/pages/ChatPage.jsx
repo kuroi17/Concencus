@@ -262,17 +262,6 @@ function ChatPage() {
                     <div className="h-1.5 w-10 rounded-full bg-[#800000]" />
                   </div>
                   
-                  {/* Mobile Search Bar */}
-                  <div className="relative mb-4">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search"
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 py-2 pl-9 text-sm outline-none focus:border-[#800000]"
-                    />
-                  </div>
 
                   <div className="flex-1 min-h-0">
                     <ConversationListPanel
