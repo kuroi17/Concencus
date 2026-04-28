@@ -468,7 +468,7 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
       {/* Modern Confirmation Modal for Delete */}
       {deletingProposalId && createPortal(
         <div
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-in fade-in duration-200"
           role="dialog"
           aria-modal="true"
           aria-label="Delete proposal"
@@ -503,7 +503,7 @@ function ProposalBoard({ channelId, isAdmin, socket }) {
       {/* Modern Modal for Official Response */}
       {respondingProposalId && createPortal(
         <div
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-in fade-in duration-200"
           role="dialog"
           aria-modal="true"
           aria-label="Add official response"

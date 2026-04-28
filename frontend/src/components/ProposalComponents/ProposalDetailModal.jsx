@@ -90,7 +90,7 @@ function ProposalDetailModal({
   const netVotes = (proposal.upvotes_count ?? 0) - (proposal.downvotes_count ?? 0);
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4 p-0">
+    <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center sm:p-4 p-0">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
