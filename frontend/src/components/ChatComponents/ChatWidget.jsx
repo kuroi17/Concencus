@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { MessageSquare, X, Send, Search, ChevronLeft, Loader2, ExternalLink, AlertCircle } from "lucide-react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { MessageSquare, X, Send, Search, ChevronLeft, Loader2, ExternalLink } from "lucide-react";
 import { useDmConversations } from "../../hooks/useDmConversations";
 import { useDmMessages } from "../../hooks/useDmMessages";
 import { useUnreadCounts } from "../../hooks/useUnreadCounts";
@@ -7,6 +7,8 @@ import { createSocketClient } from "../../lib/socketClient";
 import { supabase } from "../../lib/supabaseClient";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import { useLayout } from "../layouts/MainLayout";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 function getInitials(name) {
   if (!name) return "?";
@@ -20,19 +22,30 @@ function getInitials(name) {
 
 export default function ChatWidget() {
   const { user: currentUser } = useUser();
+  const { hasGlobalBackdrop, isMobileMenuOpen } = useLayout() || {};
   const [isOpen, setIsOpen] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [miniSearchResults, setMiniSearchResults] = useState([]);
   const [socket, setSocket] = useState(null);
   const [messageInput, setMessageInput] = useState("");
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
   const currentUserId = currentUser?.id;
+
+  // Escape closes the active conversation first, then closes the widget
+  const handleEscape = useCallback(() => {
+    if (activeConversationId) {
+      setActiveConversationId(null);
+    } else {
+      setIsOpen(false);
+    }
+  }, [activeConversationId]);
+  useEscapeKey(isOpen, handleEscape);
 
   const {
     conversations = [],
@@ -152,12 +165,18 @@ export default function ChatWidget() {
 
   if (location.pathname === "/chat" || !currentUser) return null;
 
+  // Hide when a modal backdrop is active OR the mobile sidebar is open
+  if (hasGlobalBackdrop || isMobileMenuOpen) return null;
+
   return (
     <div className="fixed bottom-0 right-2 sm:right-6 z-[100] flex flex-col items-end gap-0 pointer-events-none">
       {isOpen && (
-        <div 
-          className={`bg-white dark:bg-slate-900 shadow-[0_-20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_-20px_50px_rgba(0,0,0,0.5)] rounded-t-[24px] overflow-hidden flex border-x border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ease-in-out pointer-events-auto h-[480px] max-h-[70vh] ${
-            activeConversationId ? "w-[calc(100vw-1rem)] sm:w-[680px]" : "w-[calc(100vw-1rem)] sm:w-[320px]"
+        <div
+          className={`bg-white dark:bg-slate-900 shadow-[0_-20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_-20px_50px_rgba(0,0,0,0.5)] rounded-t-[24px] overflow-hidden flex border-x border-t border-slate-200 dark:border-slate-800 transition-all duration-300 ease-in-out pointer-events-auto ${
+            activeConversationId
+              // Mobile: almost full width for convo, matching right-2 margin
+              ? "w-[calc(100vw-1rem)] h-[85dvh] sm:w-[680px] sm:h-[480px] sm:max-h-[70vh]"
+              : "w-[calc(100vw-1rem)] h-[480px] max-h-[70vh] sm:w-[320px]"
           }`}
         >
           {/* Left Pane (Conversations) */}
@@ -278,7 +297,7 @@ export default function ChatWidget() {
                 ) : (
                   messages.map((m, i) => (
                     <div key={m.id || i} className={`flex ${m.sender_id === currentUserId ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[85%] px-3 py-2 rounded-[16px] text-[12px] leading-relaxed shadow-sm ${m.sender_id === currentUserId ? "bg-[#800000] dark:bg-red-900/80 text-white rounded-br-none" : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-slate-800"}`}>
+                      <div className={`max-w-[85%] px-3 py-2 rounded-[16px] text-[12px] leading-relaxed shadow-sm break-words break-all ${m.sender_id === currentUserId ? "bg-[#800000] dark:bg-red-900/80 text-white rounded-br-none" : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-slate-800"}`}>
                         {m.body}
                       </div>
                     </div>
